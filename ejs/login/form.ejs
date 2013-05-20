@@ -1,0 +1,27 @@
+<%= form_tag('#', {"id": "login_form"}) %>
+<table>
+<%
+for (var name in form)
+{
+  if (name === 'length' || !form.hasOwnProperty(name)) continue;
+  var type = form[name];
+  var value = '';
+//  if (values.hasOwnProperty(name))
+    //value = values[name];
+   %>
+<tr><td>
+<% if (type != 'hidden')
+   {
+   %>
+<%= name %>
+<% } %>
+</td><td>
+<%= input_field_tag(name, value, type, {"requered":"true"}) %>
+</td></tr>
+
+<%
+}
+%>
+<tr><td></td><td><%= submit_tag('Login') %><%= link_to('Register', 'javascript:PrefferRegister()') %></td></tr>
+</table>
+</form>
