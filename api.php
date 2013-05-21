@@ -2,9 +2,12 @@
 
 class api
 {
+  protected $addons;
   public function __call( $name, $arguments )
   {
+    $this->addons = array();
     $ret = $this->Call($name, $arguments);
+    $ret = array_merge($this->addons, $ret);
     $conf = phoxy_conf();
     if (!is_null($conf['js_prefix']) && isset($ret['script']) && count($ret['script']))
       foreach ($ret['script'] as $key => $val)
@@ -21,7 +24,7 @@ class api
     $reflection = new ReflectionMethod($this, $name);
     if (!$reflection->isProtected())
       return array("error" => "Security violation");
-    $ret =  call_user_func_array(array($this, $name), $arguments);    
+    $ret = call_user_func_array(array($this, $name), $arguments);    
     return $ret;
   }
   private function Headers( &$ret )
