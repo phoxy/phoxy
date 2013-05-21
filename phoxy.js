@@ -12,14 +12,26 @@ require([
       {
         phoxy.SimpleApiRequest($(this).attr("phoxy"));
       });
+      var hash = location.hash.substring(1);
+      if (hash.length)
+        setTimeout(function()
+        {
+          phoxy.SimpleApiRequest(hash);
+        }, 1000);
     }
   );
 
 var phoxy =
 {
-  ApiAnswer : function ApiAnswer( answer, callback )
+  ApiAnswer : function( answer, callback )
     {
-      if (answer.reset)
+      if (answer.hash !== undefined)
+      {
+        if (answer.hash === null)
+          answer.hash = "";
+        location.hash = answer.hash;
+      }      
+      if (answer.reset !== undefined)
         location.reload(answer.reset);
       if (answer.error)
       {
@@ -56,4 +68,5 @@ var phoxy =
         $.getJSON(url, function(data) { phoxy.ApiAnswer(data); });
       });
     }
+  
 }

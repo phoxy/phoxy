@@ -16,7 +16,7 @@ function phoxy_default_conf()
 {
   return array(
     "ip" => $_SERVER['REMOTE_ADDR'],
-    "site" => "http://localhost/phoxy",
+    "site" => "http://localhost/phoxy/",
     "ejs_dir" => "ejs",
     "js_dir" => "js",
     "api_dir" => "api",
