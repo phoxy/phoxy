@@ -1,8 +1,7 @@
 <?php
 
-error_reporting(E_ALL); ini_set('display_errors', '1');
-
-include_once('connect.php');
+if (strnatcmp(phpversion(),'5.4') < 0)
+  exit("PHP 5.4 or newer is required");
 
 if (!count($_GET))
 {
