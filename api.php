@@ -5,6 +5,13 @@ class api
   public function __call( $name, $arguments )
   {
     $ret = $this->Call($name, $arguments);
+    $conf = phoxy_conf();
+    if (!is_null($conf['js_prefix']) && isset($ret['script']) && count($ret['script']))
+      foreach ($ret['script'] as $key => $val)
+        $this->AddPrefix($ret['script'][$key], $conf['js_prefix']);
+    if (!is_null($conf['ejs_prefix']) && isset($ret['design']))
+      $this->AddPrefix($ret['design'], $conf['ejs_prefix']);
+
     return json_encode($ret);
   }
   private function Call( $name, $arguments )
@@ -23,5 +30,9 @@ class api
       return;
     $a = $ret['headers'];
     unset($ret['headers']);
+  }
+  private function AddPrefix( &$where, $what )
+  {
+    $where = "{$what}{$where}";
   }
 };
