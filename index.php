@@ -9,22 +9,30 @@ if (!count($_GET))
   include_once('index.html');
   exit();
 }
+
+if (!function_exists("phoxy_conf"))
+  include_once("config.php");
   
-function conf()
+function phoxy_default_conf()
 {
   return array(
     "ip" => $_SERVER['REMOTE_ADDR'],
-    "site" => "http://localhost/phoxy/"
+    "site" => "http://localhost/phoxy",
+    "ejs_dir" => "ejs",
+    "js_dir" => "js",
+    "api_dir" => "api",
+    "get_api_param" => "api",
     );
 }
 
-if (isset($_GET['api']))
+$get_param = phoxy_conf()["get_api_param"];
+if (isset($_GET[$get_param]))
 {
-  $file = $_GET['api'];
+  $file = $_GET[$get_param];
   if ($file == 'htaccess')
     exit('Rewrite engine work SUCCESS');
   if (strpos($file, "/") > -1)
-    list($file, $func) = explode("/", $_GET['api']);
+    list($file, $func) = explode("/", $file);
 
   if (!isset($func) || !$func)
     $func = 'Reserve';
@@ -32,7 +40,7 @@ if (isset($_GET['api']))
   session_start();
   
   include_once('include.php');
-  $a = IncludeModule('api', $file);
+  $a = IncludeModule(phoxy_conf()["api_dir"], $file);
   $f = $func;
   echo $a->$f();
 }
