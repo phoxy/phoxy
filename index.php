@@ -21,6 +21,8 @@ function conf()
 if (isset($_GET['api']))
 {
   $file = $_GET['api'];
+  if ($file == 'htaccess')
+    exit('Rewrite engine work SUCCESS');
   if (strpos($file, "/") > -1)
     list($file, $func) = explode("/", $_GET['api']);
 
