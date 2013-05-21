@@ -3,12 +3,16 @@ require([
   "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
   "libs/ejs_production"
   ],
-  function(until)
-  {
-    require([
-    "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
-    "libs/jquery.form"]);
-  }
+    function(until)
+    {
+      require([
+      "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
+      "libs/jquery.form"]);
+      $('script[phoxy]').each(function()
+      {
+        require([$(this).attr("phoxy")]);
+      });
+    }
   );
 
 var phoxy =
