@@ -9,7 +9,7 @@ require([
     "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
     "libs/jquery.form"]);
     
-    SimpleApiRequest("api/main");
+    //SimpleApiRequest("api/main");
   }
   );
 
