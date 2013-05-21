@@ -10,7 +10,7 @@ require([
       "libs/jquery.form"]);
       $('script[phoxy]').each(function()
       {
-        require([$(this).attr("phoxy")]);
+        phoxy.SimpleApiRequest($(this).attr("phoxy"));
       });
     }
   );
@@ -53,7 +53,7 @@ var phoxy =
     {
       $(function()
       {
-        $.getJSON(url, function(data) { ApiAnswer(data); });
+        $.getJSON(url, function(data) { phoxy.ApiAnswer(data); });
       });
     }
 }
