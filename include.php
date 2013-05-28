@@ -11,3 +11,9 @@ function IncludeModule( $dir, $module )
   include_once($file);
   return new $module;
 }
+
+function LoadModule( $dir, $module )
+{
+  $module = IncludeModule($dir, $module);
+  return new phoxy_sys_api($module);
+}

@@ -1,5 +1,37 @@
 <?php
 
+class phoxy_sys_api
+{
+  private $obj;
+  public function phoxy_sys_api( $obj )
+  {
+    $this->obj = $obj;
+  }
+  
+  public function __call( $name, $arguments )
+  {
+    $ret = Call($name, $arguments);
+    assert(isset($ret['data']));
+    $d = $ret['data'];
+    if (!is_array($d))
+      return $d;
+    if (count($d) == 1)
+      foreach ($d as $val)
+        return $val;
+    return $d;
+  }
+  private function Call( $name, $arguments )
+  {
+    if (!method_exists($this, $name))
+      return array("error" => "Unexpected RPC call");
+    $reflection = new ReflectionMethod($this, $name);
+    if (!$reflection->isProtected())
+      return array("error" => "Security violation");
+    $ret = call_user_func_array(array($this->obj, $name), $arguments);    
+    return $ret;
+  }
+}
+
 class api
 {
   protected $addons;
@@ -8,6 +40,7 @@ class api
     $this->addons = array();
     $ret = $this->Call($name, $arguments);
     $ret = array_merge($this->addons, $ret);
+    debug_print_backtrace();
     $conf = phoxy_conf();
     if (!is_null($conf['js_prefix']) && isset($ret['script']) && count($ret['script']))
       foreach ($ret['script'] as $key => $val)
