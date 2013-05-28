@@ -11,10 +11,15 @@ class phoxy_sys_api
   public function __call( $name, $arguments )
   {
     $ret = $this->Call($name, $arguments);
-    $ret = json_decode($ret, true);
-    //exit($name);
-    //exit(var_dump($ret));
-    assert(isset($ret['data']));
+    if (!is_array($ret))
+      return $ret;
+
+    if (!isset($ret['data']))
+    {
+      //var_dump($ret);
+      //debug_print_backtrace();
+      assert(isset($ret['data']));
+    }
     $d = $ret['data'];
     if (!is_array($d))
       return $d;
@@ -25,6 +30,7 @@ class phoxy_sys_api
   }
   private function Call( $name, $arguments )
   {
+    $this->obj->json = false;
     return call_user_func_array(array($this->obj, $name), $arguments);
   }
 }
@@ -32,6 +38,14 @@ class phoxy_sys_api
 class api
 {
   protected $addons;
+  public $json;
+
+  public function api()
+  {
+    $this->json = true;
+  }
+  
+
   public function __call( $name, $arguments )
   {
     $this->addons = array();
@@ -47,6 +61,8 @@ class api
     if (!is_null($conf['ejs_prefix']) && isset($ret['design']))
       $this->AddPrefix($ret['design'], $conf['ejs_prefix']);
 
+    if (!$this->json)
+      return $ret;
     return json_encode($ret);
   }
   private function Call( $name, $arguments )
