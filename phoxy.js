@@ -40,6 +40,9 @@ var phoxy =
       }
       var source = "ejs/" + answer.design;
 
+      if (answer.data === undefined)
+        answer.data = new Array();
+
       if (answer.result)
         new EJS({url: source}).update(answer.result, answer.data);
       else
