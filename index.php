@@ -46,9 +46,8 @@ if (isset($_GET[$get_param]))
   if (is_null($a))
     exit('Undefined api handler required');
 
-  $query = parse_url($_GET[$get_param], PHP_URL_QUERY);
-  parse_str($query, $get);
-
+  $get = $_GET;
+  unset($get[$get_param]);
   echo call_user_func_array(array($a, $func), $get);
 }
 

@@ -13,7 +13,8 @@ class phoxy_sys_api
     $ret = $this->Call($name, $arguments);
     if (!is_array($ret))
       return $ret;
-
+    if ($this->ShouldRawReturn($name))
+      return $ret;
     if (!isset($ret['data']))
     {
       //var_dump($ret);
@@ -32,6 +33,11 @@ class phoxy_sys_api
   {
     $this->obj->json = false;
     return call_user_func_array(array($this->obj, $name), $arguments);
+  }
+  private function ShouldRawReturn( $name )
+  {
+    $reflection = new ReflectionMethod($this->obj, $name);
+    return $reflection->isPublic();
   }
 }
 
