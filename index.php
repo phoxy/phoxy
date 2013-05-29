@@ -45,7 +45,10 @@ if (isset($_GET[$get_param]))
   $a = IncludeModule(phoxy_conf()["api_dir"], $file);
   if (is_null($a))
     exit('Undefined api handler required');
-  $f = $func;
-  echo $a->$f();
+
+  $query = parse_url($_GET[$get_param], PHP_URL_QUERY);
+  parse_str($query, $get);
+
+  echo call_user_func_array(array($a, $func), $get);
 }
 

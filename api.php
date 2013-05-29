@@ -48,6 +48,8 @@ class api
 
   public function __call( $name, $arguments )
   {
+    assert($this->json !== null && "API constuctor could be called");
+
     $this->addons = array();
     $ret = $this->Call($name, $arguments);
     if (!is_array($ret))
