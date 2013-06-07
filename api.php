@@ -1,5 +1,14 @@
 <?php
 
+class phoxy_protected_call_error extends Exception
+{
+  public $result;
+  public function __construct( $result )
+  {
+    $this->result = $result;
+  }
+}
+
 class phoxy_sys_api
 {
   private $obj;
@@ -19,6 +28,8 @@ class phoxy_sys_api
       return $ret;
     if (!isset($ret['data']))
     {
+      if (isset($ret['error']))
+        throw new phoxy_protected_call_error($ret);
       //var_dump($ret);
       //debug_print_backtrace();
       assert(isset($ret['data']));

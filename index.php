@@ -48,6 +48,13 @@ if (isset($_GET[$get_param]))
 
   $get = $_GET;
   unset($get[$get_param]);
-  echo call_user_func_array(array($a, $func), $get);
+  try
+  {
+    echo call_user_func_array(array($a, $func), $get);
+  } catch (phoxy_protected_call_error $e)
+  {
+    echo json_encode($e->result);
+  }
+  
 }
 
