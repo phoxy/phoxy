@@ -12,8 +12,8 @@ function IncludeModule( $dir, $module )
   return new $module;
 }
 
-function LoadModule( $dir, $module )
+function LoadModule( $dir, $module, $force_raw = false )
 {
   $module = IncludeModule($dir, $module);
-  return new phoxy_sys_api($module);
+  return new phoxy_sys_api($module, $force_raw);
 }

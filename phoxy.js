@@ -23,6 +23,19 @@ require([
 
 var phoxy =
 {
+  Render : function (design, result, data)
+    {
+      var source = design;
+
+      if (data === undefined)
+        data = new Array();
+
+      if (result)
+        new EJS({url: source}).update(result, data);
+      else
+        $('body').append(new EJS({url: source}).render(data));
+    }
+  ,
   ApiAnswer : function( answer, callback )
     {
       if (answer.hash !== undefined)
@@ -38,30 +51,25 @@ var phoxy =
         alert(answer.error);
         return;
       }
-      var source = "ejs/" + answer.design;
-
-      if (answer.data === undefined)
-        answer.data = new Array();
-
-      if (answer.result)
-        new EJS({url: source}).update(answer.result, answer.data);
-      else
-        $('body').append(new EJS({url: source}).render(answer.data));
       if (answer.script)
       {
         require(answer.script,
           function()
           {
-          if (answer.routeline)
-            window[answer.routeline](answer.data);
-          if (callback)
-            callback(answer.data);
+            phoxy.Render("ejs/" + answer.design, answer.result, answer.data);
+            if (answer.routeline)
+              window[answer.routeline](answer.data);
+            if (callback)
+              callback(answer.data);
           }
         );  
       }
       else
+      {
+        phoxy.Render("ejs/" + answer.design, answer.result, answer.data);
         if (callback)
           callback(answer);
+      }
     }
   ,
   SimpleApiRequest : function( url )

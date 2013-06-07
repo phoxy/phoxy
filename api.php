@@ -3,9 +3,11 @@
 class phoxy_sys_api
 {
   private $obj;
-  public function phoxy_sys_api( $obj )
+  private $f;
+  public function phoxy_sys_api( $obj, $force_raw = false )
   {
     $this->obj = $obj;
+    $this->f = $force_raw;
   }
   
   public function __call( $name, $arguments )
@@ -37,7 +39,7 @@ class phoxy_sys_api
   private function ShouldRawReturn( $name )
   {
     $reflection = new ReflectionMethod($this->obj, $name);
-    return $reflection->isPublic();
+    return $reflection->isPublic() || $this->f;
   }
 }
 
