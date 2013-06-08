@@ -50,7 +50,7 @@ if (isset($_GET[$get_param]))
   unset($get[$get_param]);
   try
   {
-    echo call_user_func_array(array($a, $func), $get);
+    echo $a->APICall($func, $get);
   } catch (phoxy_protected_call_error $e)
   {
     echo json_encode($e->result);

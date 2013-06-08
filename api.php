@@ -64,6 +64,10 @@ class api
     $this->json = true;
   }
   
+  public function APICall( $name, $arguments )
+  {
+    return $this->__call($name, $arguments);
+  }
 
   public function __call( $name, $arguments )
   {
