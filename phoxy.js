@@ -44,13 +44,15 @@ var phoxy =
           answer.hash = "";
         location.hash = answer.hash;
       }      
-      if (answer.reset !== undefined)
-        location.reload(answer.reset);
       if (answer.error)
       {
         alert(answer.error);
+        if (answer.reset !== undefined)
+          location.reload(answer.reset);
         return;
       }
+      if (answer.reset !== undefined)
+        location.reload(answer.reset);      
       if (answer.script)
       {
         require(answer.script,
