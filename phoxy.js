@@ -18,32 +18,39 @@ require([
 var phoxy =
 {
   loaded : false,
+  hash : false,
   Load : function( )
-  {
-	  this.loaded = true;
-	  var hash = location.hash.substring(1);
+    {
+      this.loaded = true;
+      var hash = location.hash.substring(1);
       if (hash.length)
-          phoxy.SimpleApiRequest(hash);
-  }
+        phoxy.SimpleApiRequest(hash);
+    }
   ,
   DeferRender : function (design, result, data)
     {
-		setTimeout(function() {
-			phoxy.Render(design, result, data);
-		}, 10);
+      setTimeout(function() {
+        phoxy.Render(design, result, data);
+      }, 10);
+    }
+  ,
+  ChangeHash : function (hash)
+    {
+      phoxy.hash = hash;
+      location.hash = hash;
     }
   ,
   Reset : function (url)
-  {
-	if (url == true || url == "true")
-	  location.reload();
-	var parts = url.split('#');
-	if (parts[1] == undefined)
-	  window.location.hash = '';
-	else
-	  window.location.hash = "#" + parts[1];
-	location.reload(parts[0]);
-  }
+    {
+      if (url == true || url == "true")
+        location.reload();
+      var parts = url.split('#');
+      if (parts[1] == undefined)
+        this.ChangeHash('');
+      else
+        this.ChangeHash("#" + parts[1]);
+      location.reload(parts[0]);
+    }
   ,
   Render : function (design, result, data)
     {
@@ -109,12 +116,14 @@ var phoxy =
     }
   ,
   MenuCall : function( url )
-  {
-      $(function()
-      {
-        $.getJSON(url, function(data) {
-			window.location.hash = url;
-			phoxy.ApiAnswer(data); });
-      });	  
-  }
+    {
+        $(function()
+        {
+          $.getJSON(url, function(data)
+          {
+            this.ChangeHash(url);
+            phoxy.ApiAnswer(data);
+          });
+        });	  
+    }
 }
