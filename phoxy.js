@@ -14,6 +14,17 @@ require([
       });      
     }
   );
+  
+function PhoxyHashChangeCallback()
+{
+  var t = location.hash;
+  if (t !== phoxy.hash)
+  {
+    t = t.split('#')[1];
+    phoxy.ChangeHash(t);
+    phoxy.SimpleApiRequest(t);
+  }
+}
 
 var phoxy =
 {
@@ -25,6 +36,7 @@ var phoxy =
       var hash = location.hash.substring(1);
       if (hash.length)
         phoxy.SimpleApiRequest(hash);
+      $(window).bind('hashchange', PhoxyHashChangeCallback);
     }
   ,
   DeferRender : function (design, result, data)
@@ -71,7 +83,7 @@ var phoxy =
       {
         if (answer.hash === null)
           answer.hash = "";
-        location.hash = answer.hash;
+        this.ChangeHash(answer.hash);
       }      
       if (answer.error)
       {
@@ -121,7 +133,7 @@ var phoxy =
         {
           $.getJSON(url, function(data)
           {
-            this.ChangeHash(url);
+            this.ChangeHash(url)  ;
             phoxy.ApiAnswer(data);
           });
         });	  
