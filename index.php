@@ -44,7 +44,7 @@ if (isset($_GET[$get_param]))
   include_once('include.php');
   $a = IncludeModule(phoxy_conf()["api_dir"], $file);
   if (is_null($a))
-    exit('Undefined api handler required');
+    exit(json_encode(array("error" => 'Undefined api handler required')));
 
   $get = $_GET;
   unset($get[$get_param]);
