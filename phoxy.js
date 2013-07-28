@@ -17,13 +17,8 @@ require([
   
 function PhoxyHashChangeCallback()
 {
-  var t = location.hash;
-  if (t !== phoxy.hash)
-  {
-    t = t.split('#')[1];
-    phoxy.ChangeHash(t);
-    phoxy.SimpleApiRequest(t);
-  }
+  if (phoxy.ChangeHash(location.hash))
+    phoxy.SimpleApiRequest(phoxy.hash);
 }
 
 var phoxy =
@@ -48,8 +43,13 @@ var phoxy =
   ,
   ChangeHash : function (hash)
     {
+      hash = hash.split('#')[1];
+      if (hash === undefined)
+        hash = "";
+      var ret = phoxy.hash != hash;
       phoxy.hash = hash;
       location.hash = hash;
+      return ret;
     }
   ,
   Reset : function (url)
