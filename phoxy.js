@@ -85,6 +85,8 @@ var phoxy =
               window[answer.routeline](answer.data);
             if (callback)
               callback(answer.data);
+            if (!phoxy.loaded)
+              phoxy.Load();
           }
         );  
       }
@@ -93,9 +95,9 @@ var phoxy =
         phoxy.Render("ejs/" + answer.design, answer.result, answer.data);
         if (callback)
           callback(answer);
+        if (!phoxy.loaded)
+          phoxy.Load();
       }
-      if (!this.loaded)
-		  this.Load();
     }
   ,
   SimpleApiRequest : function( url )
