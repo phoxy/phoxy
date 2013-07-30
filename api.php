@@ -1,5 +1,13 @@
 <?php
 
+assert_options(ASSERT_BAIL,     true);
+assert_options(ASSERT_CALLBACK, 'phoxy_assert_debug');
+
+function phoxy_assert_debug()
+{
+  debug_print_backtrace();
+}
+
 class phoxy_protected_call_error extends Exception
 {
   public $result;
