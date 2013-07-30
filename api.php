@@ -38,9 +38,7 @@ class phoxy_sys_api
     {
       if (isset($ret['error']))
         throw new phoxy_protected_call_error($ret);
-      //var_dump($ret);
-      //debug_print_backtrace();
-      assert(isset($ret['data']));
+      return;
     }
     $d = $ret['data'];
     if (!is_array($d))
