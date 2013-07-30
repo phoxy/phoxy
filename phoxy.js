@@ -43,6 +43,10 @@ var phoxy =
   ,
   ChangeHash : function (hash)
     {
+      var t;
+      t = hash.split(location.origin)[1];
+      if (t !== undefined)
+        hash = t;
       var t = hash.split('#')[1];
       if (t !== undefined)
         hash = t;

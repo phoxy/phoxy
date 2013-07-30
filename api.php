@@ -86,6 +86,12 @@ class api
     $ret = array_merge($this->addons, $ret);
 
     $conf = phoxy_conf();
+    if (isset($ret['script']))
+      if (!is_array(isset($ret['script']))
+      {
+        assert(is_string(isset($ret['script'])));
+        $ret['script'] = array($ret['script']);
+      }
     if (!is_null($conf['js_prefix']) && isset($ret['script']) && count($ret['script']))
       foreach ($ret['script'] as $key => $val)
         $this->AddPrefix($ret['script'][$key], $conf['js_prefix']);
