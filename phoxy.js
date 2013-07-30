@@ -58,9 +58,9 @@ var phoxy =
         location.reload();
       var parts = url.split('#');
       if (parts[1] == undefined)
-        this.ChangeHash('');
+        phoxy.ChangeHash('');
       else
-        this.ChangeHash("#" + parts[1]);
+        phoxy.ChangeHash("#" + parts[1]);
       location.reload(parts[0]);
     }
   ,
@@ -133,7 +133,7 @@ var phoxy =
         {
           $.getJSON(url, function(data)
           {
-            this.ChangeHash(url)  ;
+            phoxy.ChangeHash(url)  ;
             phoxy.ApiAnswer(data);
           });
         });	  
