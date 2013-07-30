@@ -99,24 +99,24 @@ var phoxy =
         require(answer.script,
           function()
           {
-            phoxy.Render("ejs/" + answer.design, answer.result, answer.data);
-            if (answer.routeline)
-              window[answer.routeline](answer.data);
-            if (callback)
-              callback(answer.data);
-            if (!phoxy.loaded)
-              phoxy.Load();
+            phoxy.ScriptsLoaded(answer, callback);
           }
         );  
       }
       else
-      {
+        phoxy.ScriptsLoaded(answer, callback);
+    }
+  ,
+  ScriptsLoaded : function( answer, callback )
+    {
+      if (answer.design !== undefined)
         phoxy.Render("ejs/" + answer.design, answer.result, answer.data);
-        if (callback)
-          callback(answer);
-        if (!phoxy.loaded)
-          phoxy.Load();
-      }
+      if (answer.routeline !== undefined)
+        window[answer.routeline](answer.data);
+      if (callback)
+        callback(answer.data);
+      if (!phoxy.loaded)
+        phoxy.Load();
     }
   ,
   SimpleApiRequest : function( url )
