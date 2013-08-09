@@ -5,6 +5,10 @@ if (strnatcmp(phpversion(),'5.4') < 0)
 
 if (!count($_GET))
 {
+  $expires = 60*60;
+  header("Pragma: public");
+  header("Cache-Control: maxage=".$expires);
+  header('Expires: ' . gmdate('D, d M Y H:i:s', time()+$expires) . ' GMT');
   include_once('index.html');
   exit();
 }
