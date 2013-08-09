@@ -116,8 +116,10 @@ class api
   {
     if (!isset($ret['headers']))
       return;
-    $a = $ret['headers'];
+    $h = $ret['headers'];
     unset($ret['headers']);
+    if (isset($h['cache']))
+      header('Expires: ' . gmdate('D, d M Y H:i:s', time()+$h['cache']) . ' GMT');
   }
   private function AddPrefix( &$where, $what )
   {
