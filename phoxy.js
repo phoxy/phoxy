@@ -65,7 +65,11 @@ var phoxy =
         phoxy.ChangeHash('');
       else
         phoxy.ChangeHash("#" + parts[1]);
-      location.reload(parts[0]);
+      var host = parts[0];
+      if (strlen(host))
+        location = host;
+      else
+        location.reload(parts[0]);
     }
   ,
   Render : function (design, result, data)
