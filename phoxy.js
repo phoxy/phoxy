@@ -6,8 +6,7 @@ require([
     function(until)
     {
       require([
-      "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
-      "libs/jquery.form"]);
+      "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"]);
       $('script[phoxy]').each(function()
       {
         phoxy.SimpleApiRequest($(this).attr("phoxy"));
