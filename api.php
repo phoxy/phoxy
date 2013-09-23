@@ -17,6 +17,13 @@ class phoxy_protected_call_error extends Exception
   }
 }
 
+function phoxy_protected_assert( $cond, $message, $debug_message = null )
+{
+  if ($cond)
+    return true;
+  throw new phoxy_protected_call_error($message);
+}
+
 class phoxy_sys_api
 {
   private $obj;
