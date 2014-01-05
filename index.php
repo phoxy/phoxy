@@ -46,7 +46,12 @@ if (isset($_GET[$get_param]))
   session_start();
   
   include_once('include.php');
-  $a = IncludeModule(phoxy_conf()["api_dir"], $file);
+  
+  if ($file == 'phoxy') // reserved module name
+    $target_dir = realpath(dirname(__FILE__));
+  else
+    $target_dir = phoxy_conf()["api_dir"];
+  $a = IncludeModule($target_dir, $file);
   if (is_null($a))
     exit(json_encode(array("error" => 'Undefined api handler required')));
 
