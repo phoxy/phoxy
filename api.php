@@ -70,19 +70,26 @@ class phoxy_sys_api
 class phoxy_return_worker
 {
   private $obj;
+  private $prepared;
   
   public function __construct( $obj )
   {
     $this->obj = $obj;
+    $this->prepared = $this->Prepare();
   }
   
-  public function __toString()
+  private function Prepare()
   {
-    $func_list = array("ScriptToArray", "JSPrefix", "EJSPrefix");
+    $func_list = array("ScriptToArray", "JSPrefix", "EJSPrefix", "Cache");
     
     foreach ($func_list as $func_name)
       $this->$func_name();
     return json_encode($this->obj);
+  }
+  
+  public function __toString()
+  {
+    return $this->prepared;
   }
   
   private function ScriptToArray()
@@ -114,6 +121,24 @@ class phoxy_return_worker
   private function EJSPrefix()
   {
     $this->Prefix('design', 'ejs_prefix');
+  }
+  
+  private function Cache()
+  {
+    if (!isset($this->obj['cache']))
+      return;
+    $cache = $this->obj['cache'];
+    if (isset($cache['global']))
+    {
+      header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $this->ParseCache($cache['global'])) . ' GMT');
+    }
+    // session, local, global
+  }
+  
+  private function ParseCache( $str )
+  {
+    //dhms
+    return 0;
   }
 }
 

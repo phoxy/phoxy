@@ -4,6 +4,9 @@ class phoxy extends api
 {
   protected function Reserve()
   {
-    return phoxy_conf();
+    $ret = phoxy_conf();
+    $ret['cache']['global'] = "1d";
+    $ret['cache']['local'] = "1h";
+    return $ret;
   }
 }
