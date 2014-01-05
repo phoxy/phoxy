@@ -78,11 +78,42 @@ class phoxy_return_worker
   
   public function __toString()
   {
-    $func_list = array();
+    $func_list = array("ScriptToArray", "JSPrefix", "EJSPrefix");
     
     foreach ($func_list as $func_name)
       $this->$func_name();
     return json_encode($this->obj);
+  }
+  
+  private function ScriptToArray()
+  {
+    if (!isset($this->obj['script']))
+      return;
+    if (is_array($this->obj['script']))
+      return;
+    assert(is_string($this->obj['script']));
+    $this->obj['script'] = array($this->obj['script']);
+  }
+  
+  private function Prefix($a, $b) // sorry
+  {
+    if (!isset($this->obj[$a]) || !count($this->obj[$a]))
+      return;
+    $conf = phoxy_conf();
+    if (is_null($conf[$b]))
+      return;
+    foreach ($this->obj[$a] as $key => $val)
+      $this->AddPrefix($this->obj[$a][$key], $conf[$b]);
+  }
+  
+  private function JSPrefix()
+  {
+    $this->Prefix('script', 'js_prefix');
+  }
+  
+  private function EJSPrefix()
+  {
+    $this->Prefix('design', 'ejs_prefix');
   }
 }
 
@@ -112,23 +143,10 @@ class api
     $ret = array_merge($this->addons, $ret);
 
     $conf = phoxy_conf();
-    if (isset($ret['script']))
-      if (!is_array($ret['script']))
-      {
-        assert(is_string($ret['script']));
-        $ret['script'] = array($ret['script']);
-      }
-    if (!is_null($conf['js_prefix']) && isset($ret['script']) && count($ret['script']))
-      foreach ($ret['script'] as $key => $val)
-        $this->AddPrefix($ret['script'][$key], $conf['js_prefix']);
-    if (!is_null($conf['ejs_prefix']) && isset($ret['design']))
-      $this->AddPrefix($ret['design'], $conf['ejs_prefix']);
 
-    //if (!$this->json)
-    //  return $ret;
     return new phoxy_return_worker($ret);
-    //json_encode($ret);
   }
+  
   private function Call( $name, $arguments )
   {
     if (!method_exists($this, $name))
