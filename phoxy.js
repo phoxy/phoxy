@@ -16,7 +16,7 @@ require([
 
         $('script[phoxy]').each(function()
         {
-          phoxy.SimpleApiRequest($(this).attr("phoxy"));
+          phoxy.ApiRequest($(this).attr("phoxy"));
         });      
       });
     }
@@ -25,7 +25,7 @@ require([
 function PhoxyHashChangeCallback()
 {
   if (phoxy.ChangeHash(location.hash))
-    phoxy.SimpleApiRequest(phoxy.hash);
+    phoxy.ApiRequest(phoxy.hash);
 }
 
 var phoxy =
@@ -37,7 +37,7 @@ var phoxy =
       this.loaded = true;
       var hash = location.hash.substring(1);
       if (hash.length)
-        phoxy.SimpleApiRequest(hash);
+        phoxy.ApiRequest(hash);
       $(window).bind('hashchange', PhoxyHashChangeCallback);
     }
   ,
