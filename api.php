@@ -137,8 +137,36 @@ class phoxy_return_worker
   
   private function ParseCache( $str )
   {
-    //dhms
-    return 0;
+    $str = trim($str);
+    $arr = preg_split('/([0-9]+)([dhms]?)/', $str, -1, PREG_SPLIT_DELIM_CAPTURE);
+    phoxy_protected_assert(count($arr) > 1, "Cache string parse error");
+    
+    $base = 0;
+    $ret = 0;
+    while (true)
+    {
+      $amount = $arr[$base + 1];
+      $modifyer = $arr[$base + 2];
+      if ($modifyer == '')
+        $modifyer = 's';
+      $mult = 1;
+      switch ($modifyer)
+      {
+      case 'd':
+        $mult *= 24;       
+      case 'h':
+        $mult *= 60;
+      case 'm':
+        $mult *= 60;
+      case 's':
+        $mult *= 1;
+      }
+      $ret += (int)$amount * $mult;
+      $base += 3;
+      if ($base + 2 >= count($arr))
+        break;
+    }
+    return $ret;
   }
 }
 
