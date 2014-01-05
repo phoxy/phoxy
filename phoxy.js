@@ -134,22 +134,22 @@ var phoxy =
         phoxy.Load();
     }
   ,
-  SimpleApiRequest : function( url )
+  ApiRequest : function( url, callback )
     {
       $(function()
       {
-        $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data) { phoxy.ApiAnswer(data); });
+        $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data) { phoxy.ApiAnswer(data, callback); });
       });
     }
   ,
-  MenuCall : function( url )
+  MenuCall : function( url, callback )
     {
         $(function()
         {
           $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data)
           {
-            phoxy.ChangeHash(url)  ;
-            phoxy.ApiAnswer(data);
+            phoxy.ChangeHash(url);
+            phoxy.ApiAnswer(data, callback);
           });
         });	  
     }
