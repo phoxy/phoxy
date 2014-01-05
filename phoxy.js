@@ -8,10 +8,16 @@ require([
       require([
       "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
       "libs/jquery.form"]);
-      $('script[phoxy]').each(function()
+
+      $.getJSON("api/phoxy", function(data)
       {
-        phoxy.SimpleApiRequest($(this).attr("phoxy"));
-      });      
+        phoxy.config = data;
+
+        $('script[phoxy]').each(function()
+        {
+          phoxy.SimpleApiRequest($(this).attr("phoxy"));
+        });      
+      });
     }
   );
   
@@ -145,5 +151,10 @@ var phoxy =
             phoxy.ApiAnswer(data);
           });
         });	  
+    }
+  ,
+  Config : function()
+    {
+      return this.config;
     }
 }
