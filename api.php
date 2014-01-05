@@ -80,7 +80,7 @@ class phoxy_return_worker
   
   private function Prepare()
   {
-    $func_list = array("ScriptToArray", "JSPrefix", "EJSPrefix", "Cache");
+    $func_list = array("ScriptToArray", "JSPrefix", "EJSPrefix", "DefaultCacheTiming", "NoCache", "Cache");
     
     foreach ($func_list as $func_name)
       $this->$func_name();
@@ -121,6 +121,33 @@ class phoxy_return_worker
   private function EJSPrefix()
   {
     $this->Prefix('design', 'ejs_prefix');
+  }
+  
+  private function DefaultCacheTiming()
+  {
+    $conf = phoxy_conf();
+    if (!isset($this->obj['cache']))
+      $this->obj['cache'] = array();
+
+    $dictionary = array("global", "session", "local");
+    foreach ($dictionary as $t)
+      if (!isset($this->obj['cache'][$t]) && !is_null($conf["cache_{$t}"]))
+        $this->obj['cache'][$t] = $conf["cache_{$t}"];
+  }
+  
+  private function NoCache()
+  {
+    if (!isset($this->obj['cache']['no']))
+      return;
+    $arr = explode(',', $this->obj['cache']['no']);
+    foreach ($arr as $module)
+      if ($module == 'all')
+      {
+        unset($this->obj['cache']);
+        break;
+      }
+      else
+        unset($this->obj['cache'][$module]);
   }
   
   private function Cache()
