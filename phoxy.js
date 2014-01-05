@@ -12,6 +12,7 @@ require([
       $.getJSON("api/phoxy", function(data)
       {
         phoxy.config = data;
+        requirejs.config({baseUrl: phoxy.Config()['js_dir']});
 
         $('script[phoxy]').each(function()
         {
@@ -124,7 +125,7 @@ var phoxy =
   ScriptsLoaded : function( answer, callback )
     {
       if (answer.design !== undefined)
-        phoxy.Render("ejs/" + answer.design, answer.result, answer.data);
+        phoxy.Render(phoxy.Config()['ejs_dir'] + "/" + answer.design, answer.result, answer.data);
       if (answer.routeline !== undefined)
         window[answer.routeline](answer.data);
       if (callback)
@@ -137,7 +138,7 @@ var phoxy =
     {
       $(function()
       {
-        $.getJSON(url, function(data) { phoxy.ApiAnswer(data); });
+        $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data) { phoxy.ApiAnswer(data); });
       });
     }
   ,
@@ -145,7 +146,7 @@ var phoxy =
     {
         $(function()
         {
-          $.getJSON(url, function(data)
+          $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data)
           {
             phoxy.ChangeHash(url)  ;
             phoxy.ApiAnswer(data);
