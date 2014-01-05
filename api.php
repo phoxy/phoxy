@@ -67,6 +67,25 @@ class phoxy_sys_api
   }
 }
 
+class phoxy_return_worker
+{
+  private $obj;
+  
+  public function __construct( $obj )
+  {
+    $this->obj = $obj;
+  }
+  
+  public function __toString()
+  {
+    $func_list = array();
+    
+    foreach ($func_list as $func_name)
+      $this->$func_name();
+    return json_encode($this->obj);
+  }
+}
+
 class api
 {
   protected $addons;
@@ -105,9 +124,10 @@ class api
     if (!is_null($conf['ejs_prefix']) && isset($ret['design']))
       $this->AddPrefix($ret['design'], $conf['ejs_prefix']);
 
-    if (!$this->json)
-      return $ret;
-    return json_encode($ret);
+    //if (!$this->json)
+    //  return $ret;
+    return new phoxy_return_worker($ret);
+    //json_encode($ret);
   }
   private function Call( $name, $arguments )
   {
