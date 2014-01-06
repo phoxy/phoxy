@@ -67,6 +67,136 @@ class phoxy_sys_api
   }
 }
 
+class phoxy_return_worker
+{
+  private $obj;
+  private $prepared;
+  
+  public function __construct( $obj )
+  {
+    $this->obj = $obj;
+    $this->prepared = $this->Prepare();
+  }
+  
+  private function Prepare()
+  {
+    $func_list = array("ScriptToArray", "JSPrefix", "EJSPrefix", "DefaultCacheTiming", "NoCache", "Cache");
+    
+    foreach ($func_list as $func_name)
+      $this->$func_name();
+    return json_encode($this->obj);
+  }
+  
+  public function __toString()
+  {
+    return $this->prepared;
+  }
+  
+  private function ScriptToArray()
+  {
+    if (!isset($this->obj['script']))
+      return;
+    if (is_array($this->obj['script']))
+      return;
+    assert(is_string($this->obj['script']));
+    $this->obj['script'] = array($this->obj['script']);
+  }
+  
+  private function Prefix($a, $b) // sorry
+  {
+    if (!isset($this->obj[$a]) || !count($this->obj[$a]))
+      return;
+    $conf = phoxy_conf();
+    if (is_null($conf[$b]))
+      return;
+    foreach ($this->obj[$a] as $key => $val)
+      $this->AddPrefix($this->obj[$a][$key], $conf[$b]);
+  }
+  
+  private function JSPrefix()
+  {
+    $this->Prefix('script', 'js_prefix');
+  }
+  
+  private function EJSPrefix()
+  {
+    $this->Prefix('design', 'ejs_prefix');
+  }
+  
+  private function DefaultCacheTiming()
+  {
+    $conf = phoxy_conf();
+    if (!isset($this->obj['cache']))
+      $this->obj['cache'] = array();
+
+    $dictionary = array("global", "session", "local");
+    foreach ($dictionary as $t)
+      if (!isset($this->obj['cache'][$t]) && !is_null($conf["cache_{$t}"]))
+        $this->obj['cache'][$t] = $conf["cache_{$t}"];
+  }
+  
+  private function NoCache()
+  {
+    if (!isset($this->obj['cache']['no']))
+      return;
+    $arr = explode(',', $this->obj['cache']['no']);
+    foreach ($arr as $module)
+      if ($module == 'all')
+      {
+        unset($this->obj['cache']);
+        break;
+      }
+      else
+        unset($this->obj['cache'][$module]);
+  }
+  
+  private function Cache()
+  {
+    if (!isset($this->obj['cache']))
+      return;
+    $cache = $this->obj['cache'];
+    if (isset($cache['global']))
+    {
+      header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $this->ParseCache($cache['global'])) . ' GMT');
+    }
+    // session, local, global
+  }
+  
+  private function ParseCache( $str )
+  {
+    $str = trim($str);
+    $arr = preg_split('/([0-9]+)([dhms]?)/', $str, -1, PREG_SPLIT_DELIM_CAPTURE);
+    phoxy_protected_assert(count($arr) > 1, "Cache string parse error");
+    
+    $base = 0;
+    $ret = 0;
+    while (true)
+    {
+      $amount = $arr[$base + 1];
+      $modifyer = $arr[$base + 2];
+      if ($modifyer == '')
+        $modifyer = 's';
+      $mult = 1;
+      switch ($modifyer)
+      {
+      case 'd':
+        $mult *= 24;       
+      case 'h':
+        $mult *= 60;
+      case 'm':
+        $mult *= 60;
+      case 's':
+        $mult *= 1;
+      }
+      $ret += (int)$amount * $mult;
+      $base += 3;
+      if ($base + 2 >= count($arr))
+        break;
+    }
+    return $ret;
+  }
+}
+
 class api
 {
   protected $addons;
@@ -93,22 +223,10 @@ class api
     $ret = array_merge($this->addons, $ret);
 
     $conf = phoxy_conf();
-    if (isset($ret['script']))
-      if (!is_array($ret['script']))
-      {
-        assert(is_string($ret['script']));
-        $ret['script'] = array($ret['script']);
-      }
-    if (!is_null($conf['js_prefix']) && isset($ret['script']) && count($ret['script']))
-      foreach ($ret['script'] as $key => $val)
-        $this->AddPrefix($ret['script'][$key], $conf['js_prefix']);
-    if (!is_null($conf['ejs_prefix']) && isset($ret['design']))
-      $this->AddPrefix($ret['design'], $conf['ejs_prefix']);
 
-    if (!$this->json)
-      return $ret;
-    return json_encode($ret);
+    return new phoxy_return_worker($ret);
   }
+  
   private function Call( $name, $arguments )
   {
     if (!method_exists($this, $name))

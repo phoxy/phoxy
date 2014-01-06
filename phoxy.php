@@ -4,6 +4,7 @@ class phoxy extends api
 {
   protected function Reserve()
   {
-    return phoxy_conf();
+    $ret = phoxy_conf();
+    return $ret;
   }
 }

@@ -28,6 +28,9 @@ function phoxy_default_conf()
     "js_prefix" => null,
     "ejs_prefix" => null,
     "api_prefix" => null,
+    "cache_global" => "1d",
+    "cache_session" => null,
+    "cache_local" => null,
     );
 }
 
