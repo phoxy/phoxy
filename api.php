@@ -157,7 +157,7 @@ class phoxy_return_worker
     $cache = $this->obj['cache'];
     if (isset($cache['global']))
     {
-      header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $this->ParseCache($cache['global'])) . ' GMT');
+      header('Cache-Control: public, max-age='.$this->ParseCache($cache['global']));
     }
     // session, local, global
   }
