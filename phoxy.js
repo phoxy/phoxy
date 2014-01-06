@@ -41,6 +41,11 @@ var phoxy =
       $(window).bind('hashchange', PhoxyHashChangeCallback);
     }
   ,
+  Defer : function(callback)
+  {
+    setTimeout(callback, 0);
+  }
+  ,
   DeferRender : function (design, result, data)
     {
       function GenerateIniqueID()
@@ -94,8 +99,8 @@ var phoxy =
           phoxy.ApiAnswer({design : ejs, "data" : data, result : id}, replace_callback);
         };
       }
-      
-      setTimeout(func, 0);
+
+      this.Defer(func);
       return div;
     }
   ,
