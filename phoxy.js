@@ -46,7 +46,7 @@ var phoxy =
     setTimeout(callback, 0);
   }
   ,
-  DeferRender : function (design, result, data)
+  DeferRender : function (ejs, data)
     {
       function GenerateIniqueID()
       {
