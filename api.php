@@ -36,7 +36,7 @@ class phoxy_sys_api
   
   public function __call( $name, $arguments )
   {
-    $ret = $this->Call($name, $arguments);
+    $ret = $this->Call($name, $arguments)->obj;
     if (!is_array($ret))
       return $ret;
     if ($this->ShouldRawReturn($name))
@@ -69,13 +69,13 @@ class phoxy_sys_api
 
 class phoxy_return_worker
 {
-  private $obj;
+  public $obj;
   private $prepared;
   
   public function __construct( $obj )
   {
     $this->obj = $obj;
-    $this->prepared = $this->Prepare();
+    $this->Prepare();
   }
   
   private function Prepare()
@@ -84,8 +84,8 @@ class phoxy_return_worker
     
     foreach ($func_list as $func_name)
       $this->$func_name();
-    return json_encode($this->obj);
-  }
+    return $this->prepared = json_encode($this->obj);
+  }  
   
   public function __toString()
   {
