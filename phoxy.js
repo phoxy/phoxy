@@ -88,7 +88,11 @@ var phoxy =
         { // called as phoxy rpc
           func = function()
           {
-            phoxy.ApiRequest(ejs, replace_callback);
+            phoxy.AJAX(ejs, function(data, callback)
+            {
+              data.result = id;
+              phoxy.ApiAnswer(data, callback);
+            }, [replace_callback]);
           };
         }
       }
