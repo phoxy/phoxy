@@ -28,10 +28,12 @@ class phoxy_sys_api
 {
   private $obj;
   private $f;
-  public function phoxy_sys_api( $obj, $force_raw = false )
+  private $expect_simple_result;
+  public function phoxy_sys_api( $obj, $force_raw = false, $expect_simple_result = false )
   {
     $this->obj = $obj;
     $this->f = $force_raw;
+    $this->expect_simple_result = $expect_simple_result;
   }
   
   public function __call( $name, $arguments )
@@ -48,9 +50,11 @@ class phoxy_sys_api
       return;
     }
     $d = $ret['data'];
+
     if (!is_array($d))
       return $d;
-    if (count($d) == 1)
+
+    if (count($d) == 1 && $this->expect_simple_result)
       foreach ($d as $val)
         return $val;
     return $d;
