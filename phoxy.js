@@ -190,12 +190,25 @@ var phoxy =
         phoxy.Load();
     }
   ,
-  ApiRequest : function( url, callback )
+  AJAX : function( url, callback, params )
     {
       $(function()
       {
-        $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data) { phoxy.ApiAnswer(data, callback); });
+        $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data)
+          {         
+            if (params == undefined)
+              params = [];
+            params.unshift(data);
+            callback.apply(this, params);
+          });
       });
+    }  ,
+  ApiRequest : function( url, callback )
+    {
+      if (callback == undefined)
+        phoxy.AJAX(url, phoxy.ApiAnswer);
+      else
+        phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
     }
   ,
   MenuCall : function( url, callback )
