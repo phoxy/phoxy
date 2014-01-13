@@ -41,9 +41,11 @@ var phoxy =
       $(window).bind('hashchange', PhoxyHashChangeCallback);
     }
   ,
-  Defer : function(callback)
+  Defer : function(callback, time)
   {
-    setTimeout(callback, 0);
+    if (time == undefined)
+      time = 0;
+    setTimeout(callback, time);
   }
   ,
   DeferRender : function (ejs, data)
@@ -88,7 +90,7 @@ var phoxy =
         { // called as phoxy rpc
           func = function()
           {
-            phoxy.AJAX(ejs, function(data, callback)
+            phoxy.AJAX(ejs, function( ata, callback)
             {
               data.result = id;
               phoxy.ApiAnswer(data, callback);
@@ -104,7 +106,26 @@ var phoxy =
         };
       }
 
-      this.Defer(func);
+      function WaitForDivCreated()
+      {
+        function IsDivCreated()
+        {
+          return $('#' + id)[0] != undefined;
+        }
+        function WaitAndCallCountDown( i )
+        {
+          if (i <= 0)
+            func();
+          phoxy.Defer(function()
+          {
+            if (IsDivCreated())
+              i = 0;
+            WaitAndCallCountDown(i - 1);
+          }, 100); // timeout before check
+        }
+        WaitAndCallCountDown(600); // 1 minute for render to complete
+      };
+      WaitForDivCreated();
       return div;
     }
   ,
