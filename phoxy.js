@@ -118,7 +118,11 @@ var phoxy =
         function WaitAndCallCountDown( i )
         {
           if (i <= 0)
+          {
             func();
+            return;
+          }
+
           phoxy.Defer(function()
           {
             if (IsDivCreated())
