@@ -108,6 +108,9 @@ var phoxy =
 
       function WaitForDivCreated()
       {
+        var
+          check_timeout = 60, // 1 minute for render to complete
+          check_delay = 500; // check every 500ms
         function IsDivCreated()
         {
           return $('#' + id)[0] != undefined;
@@ -121,9 +124,9 @@ var phoxy =
             if (IsDivCreated())
               i = 0;
             WaitAndCallCountDown(i - 1);
-          }, 100); // timeout before check
+          }, check_delay);
         }
-        WaitAndCallCountDown(600); // 1 minute for render to complete
+        WaitAndCallCountDown(check_timeout * 1000 / check_delay);
       };
       WaitForDivCreated();
       return div;
