@@ -205,32 +205,15 @@ var phoxy =
   ,
   Render : function (design, result, data)
     {
-      var source = design;
-
       if (data === undefined)
         data = {};
       
-      var id = phoxy.GenerateUniqueID();
-      var element = 
-        $('<div \>')
-        .attr('id', id)
-        .attr('data-debug_comment', "Staged for render. Will be anigilated soon.");
-      
-      if (result)
-        $('#' + result).html(element);
-      else
-        $('body').append(element);
-      
       $.get(design + '.ejs', function(ejs)
       {
-        $('#' + id)
-          .replaceWith
-          (
-            new EJS({'text' : ejs})
-              .render(data)
-          );
+        var html = new EJS({'text' : ejs}).render(data);
+        $("#" + result).before(html);
+        $("#" + result).hide();
       });
-      return id;
     }
   ,
   ApiAnswer : function( answer, callback )
@@ -273,12 +256,29 @@ var phoxy =
           callback(answer.data);
         if (!phoxy.loaded)
           phoxy.Load();
-      }
+      }   
       if (answer.design === undefined)
         return ScriptsFiresUp();
-      var id = phoxy.Render(
+
+      var id = phoxy.GenerateUniqueID();
+      var render_id = id;
+
+      var element = 
+        $('<div \>')
+        .attr('id', id)
+        .attr('data-debug_comment', "Staged for render. Will be anigilated soon.");
+
+      if (answer.replace === undefined)
+        if (answer.result === undefined)
+          $('body').append(element);
+        else
+          $('#' + answer.result).html(element);
+      else
+        render_id = answer.replace;
+      
+      phoxy.Render(
         phoxy.Config()['ejs_dir'] + "/" + answer.design,
-        answer.result,
+        render_id,
         answer.data);
         
       phoxy.Disappeared('#' + id, ScriptsFiresUp);
