@@ -221,13 +221,15 @@ var phoxy =
       else
         $('body').append(element);
       
-      $('#' + id)
-        .replaceWith
-        (
-          new EJS({'url' : design})
-            .render(data)
-        );
-
+      $.get(design + '.ejs', function(ejs)
+      {
+        $('#' + id)
+          .replaceWith
+          (
+            new EJS({'text' : ejs})
+              .render(data)
+          );
+      });
       return id;
     }
   ,
