@@ -48,6 +48,44 @@ var phoxy =
     setTimeout(callback, time);
   }
   ,
+  Appeared : function(jquery_selector, callback, delay, timeout)
+    {
+      var
+        check_timeout = 60, // 1 minute for render to complete
+        check_delay = 500; // check every 500ms
+      
+      if (timeout != undefined)
+        check_timeout = timeout;
+      jquery_selector = phoxy.OptimiseSelector(jquery_selector);
+      
+      var func = function()
+      {
+        if (!IsDivCreated())
+          return;
+        phoxy.Defer(callback, delay);
+      }
+     
+      function IsDivCreated()
+      {
+        return $(jquery_selector)[0] != undefined;
+      }
+
+      function WaitAndCallCountDown( i )
+      {
+        if (i <= 0)
+          return func();
+
+        phoxy.Defer(function()
+        {
+          if (IsDivCreated())
+            i = 0;
+          WaitAndCallCountDown(i - 1);
+        }, check_delay);
+      }
+
+      WaitAndCallCountDown(check_timeout * 1000 / check_delay);
+    }
+  ,
   DeferRender : function (ejs, data)
     {
       function GenerateIniqueID()
@@ -106,33 +144,7 @@ var phoxy =
         };
       }
 
-      function WaitForDivCreated()
-      {
-        var
-          check_timeout = 60, // 1 minute for render to complete
-          check_delay = 500; // check every 500ms
-        function IsDivCreated()
-        {
-          return $('#' + id)[0] != undefined;
-        }
-        function WaitAndCallCountDown( i )
-        {
-          if (i <= 0)
-          {
-            func();
-            return;
-          }
-
-          phoxy.Defer(function()
-          {
-            if (IsDivCreated())
-              i = 0;
-            WaitAndCallCountDown(i - 1);
-          }, check_delay);
-        }
-        WaitAndCallCountDown(check_timeout * 1000 / check_delay);
-      };
-      WaitForDivCreated();
+      phoxy.Appeared('#' + id, func);
       return div;
     }
   ,
@@ -259,4 +271,21 @@ var phoxy =
     {
       return this.config;
     }
+  ,
+  OptimiseSelector : function( str )
+    { // http://learn.jquery.com/performance/optimize-selectors/
+      if (typeof(str) != 'string')
+        return str;
+
+      var last_id_tag = str.lastIndexOf('#');
+      if (last_id_tag > 0)
+        str = str.substr(last_id_tag);
+      var elements = str.split(" ");
+      var ret = $(elements[0]);
+      var i = 0;
+      while (++i < elements.length)
+        if (elements[i].length != 0)
+          ret = ret.find(elements[i]);
+      return ret;
+    }    
 }
