@@ -90,14 +90,18 @@ var phoxy =
   ,
   Appeared : function(jquery_selector, callback, timeout, call_delay)
     {
+      function Div()
+      {
+        return $(phoxy.OptimiseSelector(jquery_selector));
+      }
       function IsDivAppeared()
       {
-        return $(phoxy.OptimiseSelector(jquery_selector))[0] != undefined;
+        return Div()[0] != undefined;
       }    
     
       phoxy.WaitFor(IsDivAppeared, function()
       {
-        phoxy.Defer(callback, call_delay);
+        phoxy.Defer.call(Div(), callback, call_delay);
       }, timeout);
     }
   ,
