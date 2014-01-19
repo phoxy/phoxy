@@ -48,7 +48,7 @@ var phoxy =
     setTimeout(callback, time);
   }
   ,
-  Appeared : function(jquery_selector, callback, delay, timeout)
+  WaitFor : function(callback_condition, callback, timeout, check_every)
     {
       var
         check_timeout = 60, // 1 minute for render to complete
@@ -56,18 +56,14 @@ var phoxy =
       
       if (timeout != undefined)
         check_timeout = timeout;
-      jquery_selector = phoxy.OptimiseSelector(jquery_selector);
+      if (check_every != undefined)
+        check_delay = check_every;
       
       var func = function()
       {
-        if (!IsDivCreated())
+        if (!callback_condition())
           return;
         phoxy.Defer(callback, delay);
-      }
-     
-      function IsDivCreated()
-      {
-        return $(jquery_selector)[0] != undefined;
       }
 
       function WaitAndCallCountDown( i )
@@ -77,13 +73,41 @@ var phoxy =
 
         phoxy.Defer(function()
         {
-          if (IsDivCreated())
+          if (callback_condition())
             i = 0;
           WaitAndCallCountDown(i - 1);
         }, check_delay);
       }
 
       WaitAndCallCountDown(check_timeout * 1000 / check_delay);
+    }
+  ,
+  Appeared : function(jquery_selector, callback, timeout, call_delay)
+    {
+      jquery_selector = phoxy.OptimiseSelector(jquery_selector);
+      function IsDivAppeared()
+      {
+        return $(jquery_selector)[0] != undefined;
+      }    
+    
+      phoxy.WaitFor(IsDivAppeared, function()
+      {
+        phoxy.Defer(callback, call_delay);
+      }, timeout);
+    }
+  ,
+  Disappeared : function(jquery_selector, callback, timeout, call_delay)
+    {
+      jquery_selector = phoxy.OptimiseSelector(jquery_selector);
+      function IsDivDisappeared()
+      {
+        return $(jquery_selector)[0] == undefined;
+      }    
+    
+      phoxy.WaitFor(IsDivDisappeared, function()
+      {
+        phoxy.Defer(callback, call_delay);
+      }, timeout);
     }
   ,
   DeferRender : function (ejs, data)
