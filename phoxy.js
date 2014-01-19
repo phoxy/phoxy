@@ -63,8 +63,10 @@ var phoxy =
       {
         if (!callback_condition())
           return;
-        phoxy.Defer(callback, delay);
+        callback();
       }
+      if (callback_condition())
+        return func();
 
       function WaitAndCallCountDown( i )
       {
@@ -84,10 +86,9 @@ var phoxy =
   ,
   Appeared : function(jquery_selector, callback, timeout, call_delay)
     {
-      jquery_selector = phoxy.OptimiseSelector(jquery_selector);
       function IsDivAppeared()
       {
-        return $(jquery_selector)[0] != undefined;
+        return $(phoxy.OptimiseSelector(jquery_selector))[0] != undefined;
       }    
     
       phoxy.WaitFor(IsDivAppeared, function()
@@ -98,10 +99,9 @@ var phoxy =
   ,
   Disappeared : function(jquery_selector, callback, timeout, call_delay)
     {
-      jquery_selector = phoxy.OptimiseSelector(jquery_selector);
       function IsDivDisappeared()
       {
-        return $(jquery_selector)[0] == undefined;
+        return $(phoxy.OptimiseSelector(jquery_selector))[0] == undefined;
       }    
     
       phoxy.WaitFor(IsDivDisappeared, function()
@@ -110,25 +110,25 @@ var phoxy =
       }, timeout);
     }
   ,
+  GenerateUniqueID : function()
+    {
+      var ret = "";
+      var dictonary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+      for (var i = 0; i < 10; i++)
+        ret += dictonary.charAt(Math.floor(Math.random() * dictonary.length));
+
+      return ret;
+    }
+  ,
   DeferRender : function (ejs, data)
     {
-      function GenerateIniqueID()
-      {
-        var ret = "";
-        var dictonary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-        for (var i = 0; i < 10; i++)
-          ret += dictonary.charAt(Math.floor(Math.random() * dictonary.length));
-
-        return ret;
-      }
-
       function GetElementCode( el )
       {
         return $(el).wrapAll('<div></div>').parent().html();
       }
 
-      var id = GenerateIniqueID();
+      var id = phoxy.GenerateUniqueID();
       var div = GetElementCode($('<div/>').attr('id', id).attr("data-debug_comment", "Staged for defer loading. Will be anigilated soon."));
 
       var replace_callback = function()
@@ -208,12 +208,27 @@ var phoxy =
       var source = design;
 
       if (data === undefined)
-        data = new Array();
-
+        data = {};
+      
+      var id = phoxy.GenerateUniqueID();
+      var element = 
+        $('<div \>')
+        .attr('id', id)
+        .attr('data-debug_comment', "Staged for render. Will be anigilated soon.");
+      
       if (result)
-        new EJS({url: source}).update(result, data);
+        $('#' + result).html(element);
       else
-        $('body').append(new EJS({url: source}).render(data));
+        $('body').append(element);
+      
+      $('#' + id)
+        .replaceWith
+        (
+          new EJS({'url' : design})
+            .render(data)
+        );
+
+      return id;
     }
   ,
   ApiAnswer : function( answer, callback )
@@ -248,14 +263,23 @@ var phoxy =
   ,
   ScriptsLoaded : function( answer, callback )
     {
-      if (answer.design !== undefined)
-        phoxy.Render(phoxy.Config()['ejs_dir'] + "/" + answer.design, answer.result, answer.data);
-      if (answer.routeline !== undefined)
-        window[answer.routeline](answer.data);
-      if (callback)
-        callback(answer.data);
-      if (!phoxy.loaded)
-        phoxy.Load();
+      function ScriptsFiresUp()
+      {
+        if (answer.routeline !== undefined)
+          window[answer.routeline](answer.data);
+        if (callback)
+          callback(answer.data);
+        if (!phoxy.loaded)
+          phoxy.Load();
+      }
+      if (answer.design === undefined)
+        return ScriptsFiresUp();
+      var id = phoxy.Render(
+        phoxy.Config()['ejs_dir'] + "/" + answer.design,
+        answer.result,
+        answer.data);
+        
+      phoxy.Disappeared('#' + id, ScriptsFiresUp);
     }
   ,
   AJAX : function( url, callback, params )
