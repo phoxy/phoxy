@@ -45,7 +45,11 @@ var phoxy =
   {
     if (time == undefined)
       time = 0;
-    setTimeout(callback, time);
+    var th = this;
+    setTimeout(function()
+    {
+      callback.call(th);
+    }, time);
   }
   ,
   WaitFor : function(callback_condition, callback, timeout, check_every)
