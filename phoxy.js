@@ -133,7 +133,7 @@ var phoxy =
 
       var replace_callback = function()
       {
-        $("#" + id).replaceWith($("#" + id).html());
+        //$("#" + id).replaceWith($("#" + id).html());
       };
 
       var func;
@@ -164,7 +164,7 @@ var phoxy =
       { // called as design submodule (only ejs string and that data)
         func = function()
         {
-          phoxy.ApiAnswer({design : ejs, "data" : data, result : id}, replace_callback);
+          phoxy.ApiAnswer({design : ejs, "data" : data, replace : id}, replace_callback);
         };
       }
 
