@@ -98,11 +98,14 @@ var phoxy =
       {
         return Div()[0] != undefined;
       }    
-    
-      phoxy.WaitFor(IsDivAppeared, function()
+      
+      phoxy.Defer(function()
       {
-        phoxy.Defer.call(Div(), callback, call_delay);
-      }, timeout);
+        phoxy.WaitFor(IsDivAppeared, function()
+        {
+          phoxy.Defer.call(Div(), callback, call_delay);
+        }, timeout)
+      });
     }
   ,
   Disappeared : function(jquery_selector, callback, timeout, call_delay)
@@ -112,10 +115,13 @@ var phoxy =
         return $(phoxy.OptimiseSelector(jquery_selector))[0] == undefined;
       }    
     
-      phoxy.WaitFor(IsDivDisappeared, function()
+      phoxy.Defer(function()
       {
-        phoxy.Defer(callback, call_delay);
-      }, timeout);
+        phoxy.WaitFor(IsDivDisappeared, function()
+        {
+          phoxy.Defer(callback, call_delay);
+        }, timeout);
+      });
     }
   ,
   GenerateUniqueID : function()
