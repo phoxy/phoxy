@@ -121,7 +121,7 @@ var phoxy =
       return ret;
     }
   ,
-  DeferRender : function (ejs, data)
+  DeferRender : function (ejs, data, rendered_callback)
     {
       function GetElementCode( el )
       {
@@ -130,11 +130,6 @@ var phoxy =
 
       var id = phoxy.GenerateUniqueID();
       var div = GetElementCode($('<div/>').attr('id', id).attr("data-debug_comment", "Staged for defer loading. Will be anigilated soon."));
-
-      var replace_callback = function()
-      {
-        //$("#" + id).replaceWith($("#" + id).html());
-      };
 
       var func;
       
@@ -145,7 +140,7 @@ var phoxy =
           func = function()
           {
             ejs.result = id;
-            phoxy.ApiAnswer(ejs, replace_callback);
+            phoxy.ApiAnswer(ejs, rendered_callback);
           };
         }
         else
@@ -156,7 +151,7 @@ var phoxy =
             {
               data.result = id;
               phoxy.ApiAnswer(data, callback);
-            }, [replace_callback]);
+            }, [rendered_callback]);
           };
         }
       }
@@ -164,7 +159,7 @@ var phoxy =
       { // called as design submodule (only ejs string and that data)
         func = function()
         {
-          phoxy.ApiAnswer({design : ejs, "data" : data, replace : id}, replace_callback);
+          phoxy.ApiAnswer({design : ejs, "data" : data, replace : id}, rendered_callback);
         };
       }
 
@@ -208,12 +203,8 @@ var phoxy =
       if (data === undefined)
         data = {};
       
-      $.get(design + '.ejs', function(ejs)
-      {
-        var html = new EJS({'text' : ejs}).render(data);
-        $("#" + result).before(html);
-        $("#" + result).hide();
-      });
+      var html = new EJS({'text' : ejs}).render(data);
+      $("#" + result).replaceWith(html);
     }
   ,
   ApiAnswer : function( answer, callback )
@@ -267,22 +258,31 @@ var phoxy =
         $('<div \>')
         .attr('id', id)
         .attr('data-debug_comment', "Staged for render. Will be anigilated soon.");
-
-      if (answer.replace === undefined)
-        if (answer.result === undefined)
-          $('body').append(element);
-        else
-          $('#' + answer.result).html(element);
-      else
-        render_id = answer.replace;
       
-      phoxy.Render(
-        phoxy.Config()['ejs_dir'] + "/" + answer.design,
-        render_id,
-        answer.data);
-        
-      phoxy.Disappeared('#' + id, ScriptsFiresUp);
+      var url = phoxy.Config()['ejs_dir'] + "/" + answer.design;
+      phoxy.ForwardDownload(url + ".ejs", function()
+      {
+        if (answer.replace === undefined)
+          if (answer.result === undefined)
+            $('body').append(element);
+          else
+            $('#' + answer.result).html(element);
+        else
+          render_id = answer.replace;      
+
+        phoxy.Render(
+          url,
+          render_id,
+          answer.data);
+
+        phoxy.Disappeared('#' + id, ScriptsFiresUp);          
+      });
     }
+  ,
+  ForwardDownload : function( url, callback )
+  {
+    $.get(url, callback);
+  }
   ,
   AJAX : function( url, callback, params )
     {
@@ -296,7 +296,8 @@ var phoxy =
             callback.apply(this, params);
           });
       });
-    }  ,
+    }
+  ,
   ApiRequest : function( url, callback )
     {
       if (callback == undefined)
