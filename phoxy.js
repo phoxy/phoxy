@@ -203,8 +203,10 @@ var phoxy =
       if (data === undefined)
         data = {};
       
-      var html = new EJS({'text' : ejs}).render(data);
-      $("#" + result).replaceWith(html);
+      var html = new EJS({'url' : design}).render(data);
+      if (result != undefined && result != '')
+        $("#" + result).replaceWith(html);
+      return html;
     }
   ,
   ApiAnswer : function( answer, callback )
