@@ -37,6 +37,7 @@ var phoxy =
       this.loaded = true;
       var hash = location.hash.substring(1);
       phoxy.ApiRequest(hash);
+      this.hash = hash;
       $(window).bind('hashchange', PhoxyHashChangeCallback);
     }
   ,
