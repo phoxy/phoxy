@@ -153,7 +153,7 @@ var phoxy =
         { // called as constructed object
           func = function()
           {
-            ejs.result = id;
+            ejs.replace = id;
             phoxy.ApiAnswer(ejs, rendered_callback);
           };
         }
@@ -161,9 +161,9 @@ var phoxy =
         { // called as phoxy rpc
           func = function()
           {
-            phoxy.AJAX(ejs, function( ata, callback)
+            phoxy.AJAX(ejs, function( data, callback)
             {
-              data.result = id;
+              data.replace = id;
               phoxy.ApiAnswer(data, callback);
             }, [rendered_callback]);
           };
