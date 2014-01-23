@@ -239,18 +239,26 @@ var phoxy =
         return;
       }
       if (answer.reset !== undefined)
-        phoxy.Reset(answer.reset);      
-      if (answer.script)
+        phoxy.Reset(answer.reset);
+
+      function Before()
       {
-        require(answer.script,
-          function()
-          {
-            phoxy.ScriptsLoaded(answer, callback);
-          }
-        );  
+        function AfterBefore(_answer)
+        {
+          if (_answer !== undefined)
+            answer = _answer;
+          phoxy.ScriptsLoaded(answer, callback);
+        }
+        if (answer.before !== undefined)
+          window[answer.before](answer, AfterBefore);
+        else
+          AfterBefore();
       }
+        
+      if (answer.script)
+        require(answer.script, Before);
       else
-        phoxy.ScriptsLoaded(answer, callback);
+        Before();
     }
   ,
   ScriptsLoaded : function( answer, callback )
@@ -258,7 +266,7 @@ var phoxy =
       function ScriptsFiresUp()
       {
         if (answer.routeline !== undefined)
-          window[answer.routeline](answer.data);
+          window[answer.routeline](answer);
         if (callback)
           callback(answer.data);
         if (!phoxy.loaded)
