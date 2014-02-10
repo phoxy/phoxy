@@ -3,6 +3,9 @@
 function IncludeModule( $dir, $module )
 {
   $file = $dir."/".$module.".php";
+  var_dump($module);
+  var_dump($dir);
+  var_dump($file);
 
   if (!file_exists($file))
     return null;

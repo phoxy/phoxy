@@ -40,9 +40,23 @@ if (isset($_GET[$get_param]))
   $file = $_GET[$get_param];
   if ($file == 'htaccess')
     exit('Rewrite engine work SUCCESS');
-  if (strpos($file, "/") > -1)
-    list($file, $func) = explode("/", $file);
 
+function ExportLast( $str )
+{
+  $method_delimeter_pos = strrpos($str, "/");
+  
+  if ($method_delimeter_pos > -1)
+  {
+    $func = substr($str, $method_delimeter_pos + 1);
+    $file = substr($str, 0, $method_delimeter_pos);
+  }
+  else
+    return array($str);
+  return array($file, $func);
+}
+  list($file, $func) = ExportLast($file);
+
+  
   if (!isset($func) || !$func)
     $func = 'Reserve';
     
@@ -54,7 +68,11 @@ if (isset($_GET[$get_param]))
     $target_dir = realpath(dirname(__FILE__));
   else
     $target_dir = phoxy_conf()["api_dir"];
-  $a = IncludeModule($target_dir, $file);
+    
+  list($subdir, $class) = ExportLast($file);
+  if (!isset($class))
+    list($subdir,$class) = array('',$subdir);
+  $a = IncludeModule($target_dir.'/'.$subdir, $class);
   if (is_null($a))
     exit(json_encode(array("error" => 'Undefined api handler required')));
 
