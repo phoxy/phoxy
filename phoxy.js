@@ -216,8 +216,14 @@ var phoxy =
     {
       if (data === undefined)
         data = {};
-      
-      var html = new EJS({'url' : design}).render(data);
+
+      var html;
+      if (design.search(".ejs") == -1)
+        design += ".ejs";
+      if (!phoxy.ForwardDownload(design))
+        html = new EJS({'url' : design}).render(data);
+      else
+        html = new EJS({'text' : phoxy.ForwardDownload(design, true)}).render(data);
       if (result != undefined && result != '')
         $("#" + result).replaceWith(html);
       return html;
@@ -303,9 +309,30 @@ var phoxy =
       });
     }
   ,
-  ForwardDownload : function( url, callback )
+  ForwardDownload : function( url, callback_or_true_for_return )
   {
-    $.get(url, callback);
+    if (typeof(storage) === "undefined")
+      storage = {};
+      
+    if (callback_or_true_for_return === true)
+      return storage[url];      
+
+    function AddToLocalStorage(data)
+    {
+      storage[url] = data;
+      if (typeof(callback_or_true_for_return) == 'function')
+        callback_or_true_for_return(data);
+    }
+
+    if (storage[url] != undefined)
+    {
+      if (typeof(callback_or_true_for_return) == 'function')
+        callback_or_true_for_return(storage[url]);
+      return true;
+    }
+
+    $.get(url, AddToLocalStorage);
+    return false;
   }
   ,
   AJAX : function( url, callback, params )
