@@ -142,8 +142,8 @@ var phoxy =
         return $(el).wrapAll('<div></div>').parent().html();
       }
 
-      var id = phoxy.GenerateUniqueID();
-      var div = GetElementCode($('<div/>').attr('id', id).attr("data-debug_comment", "Staged for defer loading. Will be anigilated soon."));
+      var id = "phoxy_defer_render_" + phoxy.GenerateUniqueID();
+      var div = GetElementCode($('<div/>').attr('id', id));
 
       var func;
       
