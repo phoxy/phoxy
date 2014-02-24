@@ -215,7 +215,10 @@ var phoxy =
            */
           func = function()
           {
-            phoxy.AJAX(data, DataLoadedCallback);
+            phoxy.AJAX(data, function(json)
+            {
+              DataLoadedCallback(json.data);
+            });
           }
         }
         else
