@@ -142,15 +142,17 @@ var phoxy =
         return $(el).wrapAll('<div></div>').parent().html();
       }
 
-      var id = phoxy.GenerateUniqueID();
-      var div = GetElementCode($('<div/>').attr('id', id).attr("data-debug_comment", "Staged for defer loading. Will be anigilated soon."));
+      var id = "phoxy_defer_render_" + phoxy.GenerateUniqueID();
+      var div = GetElementCode($('<div/>').attr('id', id));
 
       var func;
       
       if (typeof(data) == 'undefined')
       { // single param call
         if (typeof(ejs) == 'object')
-        { // called as constructed object
+        { /* Called as constructed object
+             Render RPC answer in this div.
+           */
           func = function()
           {
             ejs.replace = id;
@@ -158,7 +160,14 @@ var phoxy =
           };
         }
         else
-        { // called as phoxy rpc
+        { /* Called as RPC
+            PARAMS:
+              ejs - string with RPC command
+              data - undefined
+            NOTE:
+              target other simular commands ignored.
+              result will be rendered in this div.
+           */
           func = function()
           {
             phoxy.AJAX(ejs, function( data, callback)
@@ -170,11 +179,57 @@ var phoxy =
         }
       }
       else
-      { // called as design submodule (only ejs string and that data)
-        func = function()
+      { /*
+          Called as design submodule
+          PARAMS:
+            ejs  - URL to .ejs file
+            data - additional
+          NOTE:
+            all next comments include this params description
+         */
+        function DataLoadedCallback(data)
         {
           phoxy.ApiAnswer({design : ejs, "data" : data, replace : id}, rendered_callback);
-        };
+        }
+
+        if (typeof(data) == 'function')
+        { /*
+            data(callback) - function, with one parameter:
+            PURPOSE:
+              Data currently unavailable and will be generated.
+            PARAMS:
+              callback(ret_data) - callback method, should be called when data loaded
+          */
+          func = function()
+          {
+            data(DataLoadedCallback);
+          }
+        }
+        else if (typeof(data) == 'string')
+        { /*
+            data - string with RPC command
+            PURPOSE:
+              Data stored on the server, and should be requested
+            NOTE:
+              Only `data` will be extracted from server answer
+           */
+          func = function()
+          {
+            phoxy.AJAX(data, function(json)
+            {
+              DataLoadedCallback(json.data);
+            });
+          }
+        }
+        else
+        { /* FALLBACK
+            data - object
+           */
+          func = function()
+          {
+            phoxy.ApiAnswer({design : ejs, "data" : data, replace : id}, rendered_callback);
+          };
+        }
       }
 
       phoxy.Appeared('#' + id, func);
