@@ -203,12 +203,16 @@ class phoxy_return_worker
 
 class api
 {
+  private $default_addons;
   protected $addons;
   public $json;
 
   public function api()
   {
     $this->json = true;
+    if (!is_array($this->addons))
+      $this->addons = array();
+    $this->default_addons = $this->addons;
   }
   
   public function APICall( $name, $arguments )
@@ -220,7 +224,7 @@ class api
   {
     assert($this->json !== null, "API constuctor should be called");
 
-    $this->addons = array();
+    $this->addons = $this->default_addons;
     $ret = $this->Call($name, $arguments);
     if (!is_array($ret))
       $ret = array("data" => $ret);
@@ -241,15 +245,7 @@ class api
     $ret = call_user_func_array(array($this, $name), $arguments);    
     return $ret;
   }
-  private function Headers( &$ret )
-  {
-    if (!isset($ret['headers']))
-      return;
-    $h = $ret['headers'];
-    unset($ret['headers']);
-    if (isset($h['cache']))
-      header('Expires: ' . gmdate('D, d M Y H:i:s', time()+$h['cache']) . ' GMT');
-  }
+
   private function AddPrefix( &$where, $what )
   {
     $where = "{$what}{$where}";
