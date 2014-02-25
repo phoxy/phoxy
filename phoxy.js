@@ -1,3 +1,7 @@
+requirejs.config({
+    waitSeconds: 60
+});
+
 require([
   "libs/text", // part of require js
   "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
@@ -135,16 +139,28 @@ var phoxy =
       return ret;
     }
   ,
-  DeferRender : function (ejs, data, rendered_callback)
+  PrepareCanvas : function(tag)
     {
+      if (tag == undefined)
+        tag = '<div>';
       function GetElementCode( el )
       {
         return $(el).wrapAll('<div></div>').parent().html();
       }
 
       var id = "phoxy_defer_render_" + phoxy.GenerateUniqueID();
-      var div = GetElementCode($('<div/>').attr('id', id));
-
+      var obj = $(tag).attr('id', id);
+      var div = GetElementCode(obj);
+      
+      return { id: id, obj: obj, html: div };
+    }
+  ,
+  DeferRender : function (ejs, data, rendered_callback, tag)
+    {
+      if (tag == undefined)
+        tag = '<defer_render>';
+      var canvas = phoxy.PrepareCanvas(tag);
+      var id = canvas.id;
       var func;
       
       if (typeof(data) == 'undefined')
@@ -233,7 +249,7 @@ var phoxy =
       }
 
       phoxy.Appeared('#' + id, func);
-      return div;
+      return canvas.html;
     }
   ,
   ChangeHash : function (hash)
@@ -336,13 +352,11 @@ var phoxy =
       if (answer.design === undefined)
         return ScriptsFiresUp();
 
-      var id = phoxy.GenerateUniqueID();
+      var canvas = phoxy.PrepareCanvas('<render>');
+      var id = canvas.id;
       var render_id = id;
 
-      var element = 
-        $('<div \>')
-        .attr('id', id)
-        .attr('data-debug_comment', "Staged for render. Will be anigilated soon.");
+      var element = canvas.obj;
       
       var url = phoxy.Config()['ejs_dir'] + "/" + answer.design;
       phoxy.ForwardDownload(url + ".ejs", function()
