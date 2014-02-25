@@ -148,7 +148,7 @@ var phoxy =
         return $(el).wrapAll('<div></div>').parent().html();
       }
 
-      var id = "phoxy_defer_render_" + phoxy.GenerateUniqueID();
+      var id =  phoxy.GenerateUniqueID();
       var obj = $(tag).attr('id', id);
       var div = GetElementCode(obj);
       
@@ -157,6 +157,7 @@ var phoxy =
   ,
   DeferRender : function (ejs, data, rendered_callback, tag)
     {
+      console.log("phoxy.DeferRender", arguments);
       if (tag == undefined)
         tag = '<defer_render>';
       var canvas = phoxy.PrepareCanvas(tag);
@@ -288,6 +289,7 @@ var phoxy =
       if (data === undefined)
         data = {};
 
+      console.log("phoxy.Render", arguments);
       var html;
       if (design.search(".ejs") == -1)
         design += ".ejs";
@@ -406,6 +408,7 @@ var phoxy =
   ,
   AJAX : function( url, callback, params )
     {
+      console.log("phoxy.AJAX", arguments);
       $(function()
       {
         $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data)
