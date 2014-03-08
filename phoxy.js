@@ -270,7 +270,7 @@ var phoxy =
   ,
   Reset : function (url)
     {
-      if (url == true || url == "true")
+      if (url == true)
         location.reload();
       var parts = url.split('#');
       if (parts[1] == undefined)
