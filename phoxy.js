@@ -167,8 +167,9 @@ var phoxy =
       {
         phoxy.Fancy(ejs, data, function(html)
         {
-          $(this).replaceWith(html);
-          rendered_callback(ejs, data);
+          $('#' + id).replaceWith(html);
+          if (typeof(rendered_callback) != 'undefined')
+            rendered_callback(ejs, data);
         });
       });
       
@@ -188,7 +189,7 @@ var phoxy =
       if (typeof(data) == 'undefined')
       { // single param call
         if (typeof(design) == 'undefined')
-          return callback(undefined, undefined);
+          return callback(undefined, undefined, undefined);
         if (typeof(design) == 'object')
         { 
           var obj = arguments[0];
@@ -248,7 +249,7 @@ var phoxy =
         var html;
         if (design != undefined)
           html = phoxy.Render(phoxy.Config()['ejs_dir'] + "/" + design, undefined, data);
-        callback(html, data);
+        callback(html, design, data);
       }
     }
   ,
