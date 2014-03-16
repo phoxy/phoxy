@@ -162,10 +162,10 @@ var phoxy =
         tag = '<defer_render>';
       var canvas = phoxy.PrepareCanvas(tag);
       var id = canvas.id;
-      
-      phoxy.Fancy(ejs, data, function(html)
+
+      phoxy.Appeared('#' + id, function()
       {
-        phoxy.Appeared('#' + id, function()
+        phoxy.Fancy(ejs, data, function(html)
         {
           $(this).replaceWith(html);
           rendered_callback(ejs, data);
