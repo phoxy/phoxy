@@ -168,6 +168,7 @@ var phoxy =
         phoxy.Appeared('#' + id, function()
         {
           $(this).replaceWith(html);
+          rendered_callback(ejs, data);
         });
       });
       
@@ -187,7 +188,7 @@ var phoxy =
       if (typeof(data) == 'undefined')
       { // single param call
         if (typeof(design) == 'undefined')
-          return callback(undefined);
+          return callback(undefined, undefined);
         if (typeof(design) == 'object')
         { 
           var obj = arguments[0];
