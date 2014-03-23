@@ -162,95 +162,95 @@ var phoxy =
         tag = '<defer_render>';
       var canvas = phoxy.PrepareCanvas(tag);
       var id = canvas.id;
+
+      phoxy.Appeared('#' + id, function()
+      {
+        phoxy.Fancy(ejs, data, function(html)
+        {
+          $('#' + id).replaceWith(html);
+          if (typeof(rendered_callback) != 'undefined')
+            rendered_callback(ejs, data);
+        });
+      });
+      
+      return canvas.html;
+    }
+  ,
+  Fancy : function(design, data, callback)
+    {
+      console.log("phoxy.Fancy", arguments);
+
       var func;
+      var callback = arguments[2];
+      if (typeof(callback) == 'undefined')
+        callback = function (){};
+      var design = arguments[0];
       
       if (typeof(data) == 'undefined')
       { // single param call
-        if (typeof(ejs) == 'object')
-        { /* Called as constructed object
-             Render RPC answer in this div.
-           */
-          func = function()
+        if (typeof(design) == 'undefined')
+          return callback(undefined, undefined, undefined);
+        if (typeof(design) == 'object')
+        { 
+          var obj = arguments[0];
+          // Maybe its wrong. Maybe i should ignore other params
+          var design = obj.design;
+          var data = obj.data;
+          if (typeof(data) == 'undefined')
+            data = {};
+          delete obj.design;
+          delete obj.data;
+          delete obj.result;
+          delete obj.replace;
+          
+          phoxy.ApiAnswer(obj, function()
           {
-            ejs.replace = id;
-            phoxy.ApiAnswer(ejs, rendered_callback);
-          };
+            phoxy.Fancy(design, data, callback);
+          });
         }
         else
         { /* Called as RPC
             PARAMS:
-              ejs - string with RPC command
-              data - undefined
+              [0] - string with RPC command
             NOTE:
-              target other simular commands ignored.
+              target commands ignored.
               result will be rendered in this div.
            */
-          func = function()
+          var rpc = arguments[0];
+          phoxy.AJAX(rpc, function(data, callback)
           {
-            phoxy.AJAX(ejs, function( data, callback)
-            {
-              data.replace = id;
-              phoxy.ApiAnswer(data, callback);
-            }, [rendered_callback]);
-          };
+            phoxy.Fancy(data, undefined, callback);
+          }, [callback]);
         }
+        return;
+      }
+      
+      var data = arguments[1];
+      function DataLoadedCallback(data)
+      {
+        if (typeof(data) == 'undefined')
+          data = {};
+        phoxy.Fancy(design, data, callback);
+      }
+      
+      if (typeof(data) == 'function')
+      { /* Get data as function callback */
+        data(DataLoadedCallback);
+      }
+      else if (typeof(data) == 'string')
+      { /* Download data with RPC */
+        phoxy.AJAX(data, function(json)
+        {
+          DataLoadedCallback(json.data);
+        });
       }
       else
-      { /*
-          Called as design submodule
-          PARAMS:
-            ejs  - URL to .ejs file
-            data - additional
-          NOTE:
-            all next comments include this params description
-         */
-        function DataLoadedCallback(data)
-        {
-          phoxy.ApiAnswer({design : ejs, "data" : data, replace : id}, rendered_callback);
-        }
-
-        if (typeof(data) == 'function')
-        { /*
-            data(callback) - function, with one parameter:
-            PURPOSE:
-              Data currently unavailable and will be generated.
-            PARAMS:
-              callback(ret_data) - callback method, should be called when data loaded
-          */
-          func = function()
-          {
-            data(DataLoadedCallback);
-          }
-        }
-        else if (typeof(data) == 'string')
-        { /*
-            data - string with RPC command
-            PURPOSE:
-              Data stored on the server, and should be requested
-            NOTE:
-              Only `data` will be extracted from server answer
-           */
-          func = function()
-          {
-            phoxy.AJAX(data, function(json)
-            {
-              DataLoadedCallback(json.data);
-            });
-          }
-        }
-        else
-        { /* FALLBACK
-            data - object
-           */
-          func = function()
-          {
-            phoxy.ApiAnswer({design : ejs, "data" : data, replace : id}, rendered_callback);
-          };
-        }
+      { /* Data loaded */
+        var html;
+        if (design != undefined)
+          html = phoxy.Render(phoxy.Config()['ejs_dir'] + "/" + design, undefined, data);
+        callback(html, design, data);
       }
-
-      phoxy.Appeared('#' + id, func);
-      return canvas.html;
     }
   ,
   ChangeHash : function (hash)

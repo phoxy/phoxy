@@ -38,7 +38,10 @@ class phoxy_sys_api
   
   public function __call( $name, $arguments )
   {
-    $ret = $this->Call($name, $arguments)->obj;
+    $ret = $this->Call($name, $arguments);
+    if (is_a($ret, 'phoxy_return_worker'))
+      $ret = $ret->obj;
+      
     if (!is_array($ret))
       return $ret;
     if ($this->ShouldRawReturn($name))
@@ -66,8 +69,11 @@ class phoxy_sys_api
   }
   private function ShouldRawReturn( $name )
   {
+    if ($this->f)
+      return true;
+
     $reflection = new ReflectionMethod($this->obj, $name);
-    return $reflection->isPublic() || $this->f;
+    return $reflection->isPublic();
   }
 }
 
