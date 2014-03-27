@@ -85,7 +85,6 @@ class phoxy_return_worker
   public function __construct( $obj )
   {
     $this->obj = $obj;
-    $this->Prepare();
   }
   
   private function Prepare()
@@ -99,6 +98,8 @@ class phoxy_return_worker
   
   public function __toString()
   {
+    if (!isset($this->prepared))
+      $this->Prepare();
     return $this->prepared;
   }
   
@@ -168,6 +169,10 @@ class phoxy_return_worker
     if (isset($cache['global']))
     {
       header('Cache-Control: public, max-age='.$this->ParseCache($cache['global']));
+    }
+    else if (isset($cache['no']['global']))
+    {
+	  header('Cache-Control: no-cache');
     }
     // session, local, global
   }
