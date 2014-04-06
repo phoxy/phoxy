@@ -465,3 +465,8 @@ var phoxy =
       return ret;
     }    
 }
+
+function Defer()
+{
+  phoxy.Defer.Apply(this, arguments);
+}
