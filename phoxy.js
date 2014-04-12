@@ -5,7 +5,8 @@ requirejs.config({
 require([
   "libs/text", // part of require js
   "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
-  "libs/ejs_production"
+  "libs/EJS/ejs.js",
+  "libs/EJS/view.js"
   ],
     function(until)
     {
