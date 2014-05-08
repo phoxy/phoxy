@@ -50,11 +50,13 @@ var phoxy =
   {
     if (time == undefined)
       time = 0;
-    var th = this;
-    setTimeout(function()
-    {
-      callback.call(th);
-    }, time);
+    var func = $.proxy(
+      function()
+      {
+        callback.call(this);
+      },
+      this);
+    setTimeout(func, time);
   }
   ,
   WaitFor : function(callback_condition, callback, timeout, check_every)
@@ -463,4 +465,9 @@ var phoxy =
           ret = ret.find(elements[i]);
       return ret;
     }    
+}
+
+function Defer()
+{
+  phoxy.Defer.Apply(this, arguments);
 }
