@@ -299,7 +299,7 @@ var phoxy =
       if (!phoxy.ForwardDownload(design))
         html = new EJS({'url' : design}).render(data);
       else
-        html = new EJS({'text' : phoxy.ForwardDownload(design, true)}).render(data);
+        html = new EJS({'text' : phoxy.ForwardDownload(design, true), 'name' : 'design'}).render(data);
       if (result != undefined && result != '')
         $("#" + result).replaceWith(html);
       return html;
