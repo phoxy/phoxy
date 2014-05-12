@@ -252,7 +252,16 @@ var phoxy =
         if (typeof(design) != 'undefined')
         {
           if (typeof(design) == 'function')
-            design = design(data); // Determine which design should be rendered, depending on data
+          {
+            function DetermineAsync(design)
+            {
+              phoxy.Fancy(design, data, callback);
+            }
+
+            design = design(data, DetermineAsync); // Determine which design should be fancied, depending on data
+            if (!design)
+              return; // Will be fancied later
+          }
           html = phoxy.Render(phoxy.Config()['ejs_dir'] + "/" + design, undefined, data);
         }
         callback(html, design, data);
