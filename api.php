@@ -238,7 +238,11 @@ class api
     $this->addons = $this->default_addons;
     $ret = $this->Call($name, $arguments);
     if (!is_array($ret))
+    {
+      $ret = [$name => $ret];
       $ret = array("data" => $ret);
+    }
+
     $ret = array_merge($this->addons, $ret);
 
     $conf = phoxy_conf();
