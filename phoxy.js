@@ -186,7 +186,7 @@ var phoxy =
     {
       phoxy.Appeared(target, function()
       {
-        phoxy.Fancy(ejs, data, function(html)
+        phoxy.Fancy(ejs, data, function(html, ejs, data)
         {
           $(target).html(html);
           if (typeof(rendered_callback) != 'undefined')
@@ -199,7 +199,7 @@ var phoxy =
     {
       phoxy.Appeared(target, function()
       {
-        phoxy.Fancy(ejs, data, function(html)
+        phoxy.Fancy(ejs, data, function(html, ejs, data)
         {
           $(target).replaceWith(html);
           if (typeof(rendered_callback) != 'undefined')
