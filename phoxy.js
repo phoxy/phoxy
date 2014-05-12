@@ -55,7 +55,19 @@ var phoxy =
         callback.call(this);
       },
       this);
-    setTimeout(func, time);
+
+    if (time == -1)
+      func();
+    else
+      setTimeout(func, time);
+  }
+  ,
+  DDefer : function(callback, time)
+  {
+    phoxy.Defer.call(this, function()
+    {
+      phoxy.Defer.call(this, callback);
+    }, time);
   }
   ,
   WaitFor : function(callback_condition, callback, timeout, check_every)
@@ -109,7 +121,7 @@ var phoxy =
       {
         phoxy.WaitFor(IsDivAppeared, function()
         {
-          phoxy.Defer.call(Div(), callback, call_delay);
+          phoxy.DDefer.call(Div(), callback, call_delay);
         }, timeout)
       });
     }
@@ -125,7 +137,7 @@ var phoxy =
       {
         phoxy.WaitFor(IsDivDisappeared, function()
         {
-          phoxy.Defer(callback, call_delay);
+          phoxy.DDefer(callback, call_delay);
         }, timeout);
       });
     }
@@ -164,19 +176,37 @@ var phoxy =
         tag = '<defer_render>';
       var canvas = phoxy.PrepareCanvas(tag);
       var id = canvas.id;
+      
+      phoxy.RenderReplace('#' + id, ejs, data, rendered_callback);
 
-      phoxy.Appeared('#' + id, function()
+      return canvas.html;
+    }
+  ,
+  RenderInto : function (target, ejs, data, rendered_callback)
+    {
+      phoxy.Appeared(target, function()
       {
         phoxy.Fancy(ejs, data, function(html)
         {
-          $('#' + id).replaceWith(html);
+          $(target).html(html);
           if (typeof(rendered_callback) != 'undefined')
             rendered_callback(ejs, data);
         });
-      });
-      
-      return canvas.html;
+      }, undefined, -1);
     }
+  ,
+  RenderReplace : function (target, ejs, data, rendered_callback)
+    {
+      phoxy.Appeared(target, function()
+      {
+        phoxy.Fancy(ejs, data, function(html)
+        {
+          $(target).replaceWith(html);
+          if (typeof(rendered_callback) != 'undefined')
+            rendered_callback(ejs, data);
+        });
+      }, undefined, -1);
+    }  
   ,
   Fancy : function(design, data, callback)
     {
