@@ -98,7 +98,7 @@ var phoxy =
     {
       function Div()
       {
-        return $(phoxy.OptimiseSelector(jquery_selector));
+        return $(jquery_selector);
       }
       function IsDivAppeared()
       {
@@ -118,7 +118,7 @@ var phoxy =
     {
       function IsDivDisappeared()
       {
-        return $(phoxy.OptimiseSelector(jquery_selector))[0] == undefined;
+        return $(jquery_selector)[0] == undefined;
       }    
     
       phoxy.Defer(function()
@@ -460,23 +460,6 @@ var phoxy =
     {
       return this.config;
     }
-  ,
-  OptimiseSelector : function( str )
-    { // http://learn.jquery.com/performance/optimize-selectors/
-      if (typeof(str) != 'string')
-        return str;
-
-      var last_id_tag = str.lastIndexOf('#');
-      if (last_id_tag > 0)
-        str = str.substr(last_id_tag);
-      var elements = str.split(" ");
-      var ret = $(elements[0]);
-      var i = 0;
-      while (++i < elements.length)
-        if (elements[i].length != 0)
-          ret = ret.find(elements[i]);
-      return ret;
-    }    
 }
 
 function Defer()
