@@ -249,8 +249,12 @@ var phoxy =
       else
       { /* Data loaded */
         var html;
-        if (design != undefined)
+        if (typeof(design) != 'undefined')
+        {
+          if (typeof(design) == 'function')
+            design = design(data); // Determine which design should be rendered, depending on data
           html = phoxy.Render(phoxy.Config()['ejs_dir'] + "/" + design, undefined, data);
+        }
         callback(html, design, data);
       }
     }
