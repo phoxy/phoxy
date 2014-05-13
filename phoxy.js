@@ -212,90 +212,146 @@ var phoxy =
     {
       console.log("phoxy.Fancy", arguments);
 
-      var func;
-      var callback = arguments[2];
+      var args = arguments;
+
+      var callback = args[2];
       if (typeof(callback) == 'undefined')
         callback = function (){};
-      var design = arguments[0];
-      
-      if (typeof(data) == 'undefined')
-      { // single param call
-        if (typeof(design) == 'undefined')
+
+      /* 
+       * [a0] phoxy.Fancy(string, undefined, anytype)
+       * * Then it full RPC call, with fixed render place
+       * * (result/replace keywords ignoring)
+       * 
+       * [a1] phoxy.Fancy(object, undefined, anytype)
+       * * Then params already constructed with object
+       * * NOTICE: All keywoards ARE interprenting
+       */
+      if (typeof(args[1]) == 'undefined')
+      {
+        if (typeof(args[0]) == 'undefined')
           return callback(undefined, undefined, undefined);
-        if (typeof(design) == 'object')
-        { 
-          var obj = arguments[0];
-          // Maybe its wrong. Maybe i should ignore other params
-          var design = obj.design;
-          var data = obj.data;
-          if (typeof(data) == 'undefined')
-            data = {};
-          delete obj.design;
-          delete obj.data;
-          delete obj.result;
-          delete obj.replace;
-          
-          phoxy.ApiAnswer(obj, function()
+        
+        if (typeof(args[0]) == 'string')
+        {
+// [a0] ////////
+          var rpc = args[0];
+          phoxy.AJAX(rpc, function(obj)
           {
-            phoxy.Fancy(design, data, callback);
+            phoxy.Fancy(obj, args[1], args[2]);
           });
+          return;
         }
-        else
-        { /* Called as RPC
-            PARAMS:
-              [0] - string with RPC command
-            NOTE:
-              target commands ignored.
-              result will be rendered in this div.
-           */
-          var rpc = arguments[0];
-          phoxy.AJAX(rpc, function(data, callback)
-          {
-            phoxy.Fancy(data, undefined, callback);
-          }, [callback]);
-        }
+
+        if (typeof(args[0]) != 'object')
+          throw "Failed phoxy.Fancy object recognize";
+
+// [a1] ////////
+        var obj = args[0];
+        // Maybe its wrong. Maybe i should ignore other params
+        var design = obj.design;
+        var data = obj.data;
+        if (typeof(data) == 'undefined')
+          data = {};
+
+        // Those removed because we dont need to render anything
+        delete obj.design;
+        // Those ignored since it phoxy.DeferRender. Place to render already choosed
+        delete obj.result;
+        delete obj.replace;
+          
+        phoxy.ApiAnswer(obj, function()
+        {
+          phoxy.Fancy(design, data, callback);
+        });
         return;
       }
-      
-      var data = arguments[1];
+
+      /* Data preparing
+       * [b0] phoxy.Fancy(anytype, function, anytype)
+       * * Generating data through function
+       * * Data could be returned directly (object only)
+       * *  or could be returned asynchronously with callback, as soon as it will be ready.
+       * 
+       * [b1] phoxy.Fancy(anytype, string, anytype)
+       * * Requesting data with RPC
+       * * NOTICE: Every keywoards except data ARE ignored.
+       * 
+       * [b2] phoxy.Fancy(anytype, object, anytype)
+       * * Serving with constructed object. Ready to render!
+       */
+
       function DataLoadedCallback(data)
       {
         if (typeof(data) == 'undefined')
           data = {};
-        phoxy.Fancy(design, data, callback);
+        phoxy.Fancy(args[0], data, args[2]);
       }
       
-      if (typeof(data) == 'function')
-      { /* Get data as function callback */
-        data(DataLoadedCallback);
+      if (typeof(args[1]) == 'function')
+      {
+// [b0] ////////
+        var data_load_functor = args[1];
+        data = data_load_functor(DataLoadedCallback);
+        if (typeof(data) != 'object')
+          return; // data will be returned async
       }
-      else if (typeof(data) == 'string')
-      { /* Download data with RPC */
-        phoxy.AJAX(data, function(json)
+      else if (typeof(args[1]) == 'string')
+      {
+// [b1] ////////
+        var rpc_url = args[1];
+        phoxy.AJAX(rpc_url, function(json)
         {
+          if (typeof(json.error) != 'undefined')
+            phoxy.ApiAnswer(json);
           DataLoadedCallback(json.data);
         });
+        return;
       }
+      else if (typeof(args[1]) != 'object')
+        throw "Failed phoxy.Fancy data receive";
       else
-      { /* Data loaded */
-        var html;
-        if (typeof(design) != 'undefined')
-        {
-          if (typeof(design) == 'function')
-          {
-            function DetermineAsync(design)
-            {
-              phoxy.Fancy(design, data, callback);
-            }
+// [b2] ////////
+        data = args[1];
 
-            design = design(data, DetermineAsync); // Determine which design should be fancied, depending on data
-            if (!design)
-              return; // Will be fancied later
+      var html;
+
+      /* Rendering
+       * [c0] phoxy.Fancy(undefined, NOT undefined, anytype)
+       * * Only invoking callback with prepared data
+       * * Used when design determining dynamically
+       * 
+       * [c1] phoxy.Fancy(string, NOT undefined, anytype)
+       * * First parameter is EJS string, same as in 'design' keyword
+       * 
+       * [c2] phoxy.Fancy(function, NOT undefined, anytype)
+       * * First paremeter if method which determine design in runtime
+       * * Just same as [b0] for data preparing do.
+       */
+
+      if (typeof(args[0]) != 'undefined')
+      {
+        if (typeof(args[0]) == 'string')
+// [c1] ////////
+          design = args[0];
+        else if (typeof(args[0]) == 'function')
+        {
+// [c2] ////////
+          function DetermineAsync(design)
+          {
+            phoxy.Fancy(design, data, args[2]);
           }
-          html = phoxy.Render(phoxy.Config()['ejs_dir'] + "/" + design, undefined, data);
+
+          design = design(data, DetermineAsync);
+          if (typeof(design) != 'string')
+            return; // Will be rendered later (async design determine)
         }
-        callback(html, design, data);
+
+        var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
+        html = phoxy.Render(ejs_location, undefined, data);
       }
+
+      callback(html, design, data);
     }
   ,
   ChangeHash : function (hash)
