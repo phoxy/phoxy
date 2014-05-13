@@ -21,8 +21,16 @@ require([
         $('script[phoxy]').each(function()
         {
           phoxy.ApiRequest($(this).attr("phoxy"));
-        });      
+        });
       });
+      
+      EJS.prototype._EJS_HOOK_first = function(result)
+      {
+        result = $(result);
+        if (result.not('defer_render,render,.phoxy_ignore').size())
+          return result;
+        return result.nextAll().not('defer_render,render,.phoxy_ignore').first();
+      };
     }
   );
   
