@@ -24,7 +24,7 @@ require([
         });
       });
       
-      EJS.prototype._EJS_HOOK_first = function(result)
+      EJS.Canvas.prototype.hook_first = function(result)
       {
         result = $(result);
         if (result.not('defer_render,render,.phoxy_ignore').size())
