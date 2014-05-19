@@ -23,6 +23,29 @@ require([
           phoxy.ApiRequest($(this).attr("phoxy"));
         });
       });
+
+      var origin_RenderCompleted = EJS.Canvas.prototype.RenderCompleted;
+      EJS.Canvas.prototype.RenderCompleted = function()
+      {
+        origin_RenderCompleted();
+
+        if (this.recursive)
+          return;
+        // no one DeferRender was invoked
+        // but Canvas.on_completed not prepared
+        // So render plan is plain, and we attach CheckIsCompleted in this.Defer queue
+        this.recursive++;
+        phoxy.RenderCalls++;
+        this.across.Defer(this.CheckIsCompleted);
+      }
+      
+      EJS.Canvas.prototype.CheckIsCompleted = function()
+      {
+        var escape = this.escape();
+        phoxy.RenderCalls--;
+        if (--escape.recursive == 0 && typeof(escape.on_complete) == 'function')
+          escape.on_complete();
+      }
       
       EJS.Canvas.prototype.hook_first = function(result)
       {
@@ -31,6 +54,24 @@ require([
           return result;
         return result.nextAll().not('defer_render,render,.phoxy_ignore').first();
       };
+
+      EJS.Canvas.prototype.recursive = 0;
+      phoxy.RenderCalls = 0;
+
+      EJS.Canvas.across.prototype.DeferRender = function(ejs, data, callback, tag)
+      {
+        this.escape().recursive++;
+        phoxy.RenderCalls++;
+
+        var that = this;
+        function CBHook()
+        {
+          callback.call(that);
+          that.CheckIsCompleted.call(that);
+        }
+
+        return phoxy.DeferRender(ejs, data, CBHook, tag);
+      }
     }
   );
   
@@ -190,30 +231,41 @@ var phoxy =
       return canvas.html;
     }
   ,
-  RenderInto : function (target, ejs, data, rendered_callback)
+  __REFACTOR_RenderPrototype : function (target, ejs, data, rendered_callback, difference)
     {
       phoxy.Appeared(target, function()
       {
-        phoxy.Fancy(ejs, data, function(html, ejs, data)
+        phoxy.Fancy(ejs, data, function(obj, ejs, data)
         {
-          $(target).html(html);
-          if (typeof(rendered_callback) != 'undefined')
-            rendered_callback(ejs, data);
+          difference.call(phoxy, target, obj.html, arguments);
+
+          obj.on_complete = function()
+          {
+            if (typeof(rendered_callback) != 'undefined')
+              rendered_callback.call(obj.across, ejs, data, obj.html);
+          };
         });
       }, undefined, -1);
     }
   ,
+  RenderInto : function (target, ejs, data, rendered_callback)
+    { 
+      var args = Array.prototype.slice.call(arguments);
+      args.push(function(target, html)
+      {
+        $(target).html(html);
+      });
+      phoxy.__REFACTOR_RenderPrototype.apply(this, args);
+    }
+  ,
   RenderReplace : function (target, ejs, data, rendered_callback)
     {
-      phoxy.Appeared(target, function()
+      var args = Array.prototype.slice.call(arguments);
+      args.push(function(target, html)
       {
-        phoxy.Fancy(ejs, data, function(html, ejs, data)
-        {
-          $(target).replaceWith(html);
-          if (typeof(rendered_callback) != 'undefined')
-            rendered_callback(ejs, data);
-        });
-      }, undefined, -1);
+        $(target).replaceWith(html);
+      });
+      phoxy.__REFACTOR_RenderPrototype.apply(this, args);
     }  
   ,
   Fancy : function(design, data, callback)
@@ -337,27 +389,28 @@ var phoxy =
        * * Just same as [b0] for data preparing do.
        */
 
-      if (typeof(args[0]) != 'undefined')
-      {
-        if (typeof(args[0]) == 'string')
-// [c1] ////////
-          design = args[0];
-        else if (typeof(args[0]) == 'function')
-        {
-// [c2] ////////
-          function DetermineAsync(design)
-          {
-            phoxy.Fancy(design, data, args[2]);
-          }
+      if (typeof(args[0]) == 'undefined')
+// [c0] ////////
+        return callback(html, design, data);
 
-          design = design(data, DetermineAsync);
-          if (typeof(design) != 'string')
-            return; // Will be rendered later (async design determine)
+      if (typeof(args[0]) == 'string')
+// [c1] ////////
+        design = args[0];
+      else if (typeof(args[0]) == 'function')
+      {
+// [c2] ////////
+        function DetermineAsync(design)
+        {
+          phoxy.Fancy(design, data, args[2]);
         }
 
-        var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
-        html = phoxy.Render(ejs_location, undefined, data);
+        design = design(data, DetermineAsync);
+        if (typeof(design) != 'string')
+          return; // Will be rendered later (async design determine)
       }
+
+      var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
+      html = phoxy.Render(ejs_location, undefined, data, true);
 
       callback(html, design, data);
     }
@@ -393,7 +446,7 @@ var phoxy =
         location.reload(parts[0]);
     }
   ,
-  Render : function (design, result, data)
+  Render : function (design, result, data, is_phoxy_internal_call)
     {
       if (data === undefined)
         data = {};
@@ -402,13 +455,19 @@ var phoxy =
       var html;
       if (design.search(".ejs") == -1)
         design += ".ejs";
-      if (!phoxy.ForwardDownload(design))
-        html = new EJS({'url' : design}).render(data);
-      else
-        html = new EJS({'text' : phoxy.ForwardDownload(design, true), 'name' : 'design'}).render(data);
+      var ejs;
+      //if (!phoxy.ForwardDownload(design))
+        ejs = new EJS({'url' : design});
+      //else
+//        ejs = new EJS({'text' : phoxy.ForwardDownload(design), 'name' : design});
+
+      var html = obj = ejs.render(data, is_phoxy_internal_call);
+      if (is_phoxy_internal_call)
+        html = obj.html;
+
       if (result != undefined && result != '')
         $("#" + result).replaceWith(html);
-      return html;
+      return obj;
     }
   ,
   ApiAnswer : function( answer, callback )
