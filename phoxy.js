@@ -67,7 +67,7 @@ require([
         function CBHook()
         {
           if (typeof callback == 'function')
-            callback.call(that);
+            callback.call(this);
           that.CheckIsCompleted.call(that.across);
         }
 
