@@ -60,14 +60,15 @@ require([
 
       EJS.Canvas.across.prototype.DeferRender = function(ejs, data, callback, tag)
       {
-        this.escape().recursive++;
+        var that = this.escape();
+        that.recursive++;
         phoxy.RenderCalls++;
 
-        var that = this;
         function CBHook()
         {
-          callback.call(that);
-          that.CheckIsCompleted.call(that);
+          if (typeof callback == 'function')
+            callback.call(that);
+          that.CheckIsCompleted.call(that.across);
         }
 
         return phoxy.DeferRender(ejs, data, CBHook, tag);
