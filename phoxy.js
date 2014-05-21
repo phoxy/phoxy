@@ -245,7 +245,7 @@ var phoxy =
             if (typeof(rendered_callback) != 'undefined')
               rendered_callback.call(obj.across, ejs, data, obj.html);
           };
-        });
+        }, true);
       }, undefined, -1);
     }
   ,
@@ -269,7 +269,7 @@ var phoxy =
       phoxy.__REFACTOR_RenderPrototype.apply(this, args);
     }  
   ,
-  Fancy : function(design, data, callback)
+  Fancy : function(design, data, callback, raw_output)
     {
       console.log("phoxy.Fancy", arguments);
 
@@ -413,6 +413,8 @@ var phoxy =
       var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
       html = phoxy.Render(ejs_location, undefined, data, true);
 
+      if (!raw_output)
+        html = html.html;
       callback(html, design, data);
     }
   ,
