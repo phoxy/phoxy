@@ -299,7 +299,7 @@ var phoxy =
           var rpc = args[0];
           phoxy.AJAX(rpc, function(obj)
           {
-            phoxy.Fancy(obj, args[1], args[2]);
+            phoxy.Fancy(obj, args[1], args[2], args[3]);
           });
           return;
         }
@@ -323,7 +323,7 @@ var phoxy =
           
         phoxy.ApiAnswer(obj, function()
         {
-          phoxy.Fancy(design, data, callback);
+          phoxy.Fancy(design, data, callback, args[3]);
         });
         return;
       }
@@ -346,7 +346,7 @@ var phoxy =
       {
         if (typeof(data) == 'undefined')
           data = {};
-        phoxy.Fancy(args[0], data, args[2]);
+        phoxy.Fancy(args[0], data, args[2], args[3]);
       }
       
       if (typeof(args[1]) == 'function')
@@ -402,7 +402,7 @@ var phoxy =
 // [c2] ////////
         function DetermineAsync(design)
         {
-          phoxy.Fancy(design, data, args[2]);
+          phoxy.Fancy(design, data, args[2], args[3]);
         }
 
         design = design(data, DetermineAsync);
