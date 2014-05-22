@@ -245,7 +245,7 @@ var phoxy =
             if (typeof(rendered_callback) != 'undefined')
               rendered_callback.call(obj.across, ejs, data, obj.html);
           };
-        });
+        }, true);
       }, undefined, -1);
     }
   ,
@@ -269,7 +269,7 @@ var phoxy =
       phoxy.__REFACTOR_RenderPrototype.apply(this, args);
     }  
   ,
-  Fancy : function(design, data, callback)
+  Fancy : function(design, data, callback, raw_output)
     {
       console.log("phoxy.Fancy", arguments);
 
@@ -299,7 +299,7 @@ var phoxy =
           var rpc = args[0];
           phoxy.AJAX(rpc, function(obj)
           {
-            phoxy.Fancy(obj, args[1], args[2]);
+            phoxy.Fancy(obj, args[1], args[2], args[3]);
           });
           return;
         }
@@ -323,7 +323,7 @@ var phoxy =
           
         phoxy.ApiAnswer(obj, function()
         {
-          phoxy.Fancy(design, data, callback);
+          phoxy.Fancy(design, data, callback, args[3]);
         });
         return;
       }
@@ -346,7 +346,7 @@ var phoxy =
       {
         if (typeof(data) == 'undefined')
           data = {};
-        phoxy.Fancy(args[0], data, args[2]);
+        phoxy.Fancy(args[0], data, args[2], args[3]);
       }
       
       if (typeof(args[1]) == 'function')
@@ -402,7 +402,7 @@ var phoxy =
 // [c2] ////////
         function DetermineAsync(design)
         {
-          phoxy.Fancy(design, data, args[2]);
+          phoxy.Fancy(design, data, args[2], args[3]);
         }
 
         design = design(data, DetermineAsync);
@@ -413,6 +413,8 @@ var phoxy =
       var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
       html = phoxy.Render(ejs_location, undefined, data, true);
 
+      if (!raw_output)
+        html = html.html;
       callback(html, design, data);
     }
   ,
