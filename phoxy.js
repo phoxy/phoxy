@@ -42,7 +42,6 @@ require([
       EJS.Canvas.prototype.CheckIsCompleted = function()
       {
         var escape = this.escape();
-        phoxy.RenderCalls--;
         if (--escape.recursive == 0 && typeof(escape.on_complete) == 'function')
           escape.on_complete();
       }
@@ -68,10 +67,28 @@ require([
         {
           if (typeof callback == 'function')
             callback.call(this);
+          phoxy.RenderCalls--;
+
           that.CheckIsCompleted.call(that.across);
         }
 
         return phoxy.DeferRender(ejs, data, CBHook, tag);
+      }
+
+      var OriginDefer = EJS.Canvas.across.prototype.Defer;
+      EJS.Canvas.across.prototype.Defer = function(callback, time)
+      {
+        var that = this.escape();
+        that.recursive++;
+
+        function CBHook()
+        {
+          if (typeof callback == 'function')
+            callback.call(this);
+          that.CheckIsCompleted.call(that.across);
+        }
+
+        return OriginDefer.call(this, CBHook, time);
       }
     }
   );
