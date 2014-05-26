@@ -90,6 +90,24 @@ require([
 
         return OriginDefer.call(this, CBHook, time);
       }
+
+      EJS.Canvas.across.prototype.DeferCascade = function(callback)
+      {
+        var that = this.escape();
+        if (typeof that.cascade == 'undefined')
+        {
+          that.cascade = [];
+          if (typeof that.on_complete == 'function')
+            that.cascade.push(that.on_complete);
+          that.on_complete = function()
+          {
+            for (var k in this.cascade)
+              this.cascade.apply(this.accross);
+          };
+        }
+
+        that.cascade.push(callback);
+      }
     }
   );
   
