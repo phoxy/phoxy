@@ -38,12 +38,18 @@ require([
         phoxy.RenderCalls++;
         this.across.Defer(this.CheckIsCompleted);
       }
-      
+
       EJS.Canvas.prototype.CheckIsCompleted = function()
       {
         var escape = this.escape();
-        if (--escape.recursive == 0 && typeof(escape.on_complete) == 'function')
-          escape.on_complete();
+        if (--escape.recursive == 0)
+        {
+          for (var k in escape.cascade)
+            if (typeof (escape.cascade[k]) == 'function')
+              escape.cascade[k].apply(this);
+          if (typeof(escape.on_complete) == 'function')
+            escape.on_complete();
+        }
       }
       
       EJS.Canvas.prototype.hook_first = function(result)
@@ -55,6 +61,7 @@ require([
       };
 
       EJS.Canvas.prototype.recursive = 0;
+      EJS.Canvas.prototype.cascade = [];
       phoxy.RenderCalls = 0;
 
       EJS.Canvas.across.prototype.DeferRender = function(ejs, data, callback, tag)
@@ -97,13 +104,6 @@ require([
         if (typeof that.cascade == 'undefined')
         {
           that.cascade = [];
-          if (typeof that.on_complete == 'function')
-            that.cascade.push(that.on_complete);
-          that.on_complete = function()
-          {
-            for (var k in this.cascade)
-              this.cascade.apply(this.accross);
-          };
         }
 
         that.cascade.push(callback);
