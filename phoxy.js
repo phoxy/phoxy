@@ -72,7 +72,7 @@ require([
         function CBHook()
         {
           if (typeof callback == 'function')
-            callback.call(that.across);
+            callback.call(this); // Local fancy context
           phoxy.RenderCalls--;
 
           that.CheckIsCompleted.call(that.across);
