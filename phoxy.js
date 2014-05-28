@@ -61,7 +61,6 @@ require([
       };
 
       EJS.Canvas.prototype.recursive = 0;
-      EJS.Canvas.prototype.cascade = [];
       phoxy.RenderCalls = 0;
 
       EJS.Canvas.across.prototype.DeferRender = function(ejs, data, callback, tag)
@@ -73,7 +72,7 @@ require([
         function CBHook()
         {
           if (typeof callback == 'function')
-            callback.call(this);
+            callback.call(that.across);
           phoxy.RenderCalls--;
 
           that.CheckIsCompleted.call(that.across);
@@ -91,7 +90,7 @@ require([
         function CBHook()
         {
           if (typeof callback == 'function')
-            callback.call(this);
+            callback.call(that.across);
           that.CheckIsCompleted.call(that.across);
         }
 
@@ -102,9 +101,7 @@ require([
       {
         var that = this.escape();
         if (typeof that.cascade == 'undefined')
-        {
           that.cascade = [];
-        }
 
         that.cascade.push(callback);
       }
