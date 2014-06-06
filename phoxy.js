@@ -659,12 +659,37 @@ var phoxy =
       });
     }
   ,
-  ApiRequest : function( url, callback )
+  ApiRequest : function( url, obj_optional, callback )
     {
-      if (callback == undefined)
-        phoxy.AJAX(url, phoxy.ApiAnswer);
-      else
-        phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
+      if (arguments.length == 1)
+        return phoxy.ApiRequest(url, undefined);
+      if (arguments.length == 2 && typeof arguments[1] == 'function')
+        return phoxy.ApiRequest(url, undefined, arguments[1]);
+
+      if (obj_optional != undefined)
+      {
+        var serialize = function(obj, prefix)
+        {
+          var str = [];
+          for(var p in obj)
+          {
+            var 
+              k = prefix ? prefix + "[" + p + "]" : p,
+              v = obj[p];
+            str.push
+            (
+              typeof v == "object"
+                ? serialize(v, k)
+                : encodeURIComponent(k) + "=" + encodeURIComponent(v)
+            );
+          }
+          return str.join("&");
+        }
+
+        url += '?' + serialize(obj_optional);
+      }
+
+      phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
     }
   ,
   MenuCall : function( url, callback )
