@@ -590,7 +590,6 @@ requirejs.config({
 require
 (
   [
-    "libs/text", // part of require js
     "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
     "libs/EJS/ejs.js"
   ],
@@ -603,7 +602,12 @@ require
 phoxy.DependenciesLoaded = function()
 {
   delete phoxy.DependenciesLoaded; // allow single time execution
-  require(["//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"]);
+  require
+  ([
+    "libs/text", // part of require js
+    "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
+    "libs/jquery.form"
+  ]);
 
   $.getJSON("api/phoxy", function(data)
   {
