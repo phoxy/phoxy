@@ -709,8 +709,3 @@ var phoxy =
       return this.config;
     }
 }
-
-function Defer()
-{
-  phoxy.Defer.Apply(this, arguments);
-}
