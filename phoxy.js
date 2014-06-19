@@ -1,51 +1,12 @@
-requirejs.config({
-    waitSeconds: 60
-});
-
-require([
-  "libs/text", // part of require js
-  "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
-  "libs/EJS/ejs.js",
-  "libs/EJS/view.js"
-  ],
-    function(until)
-    {
-      require([
-      "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
-      "libs/jquery.form"]);
-
-      $.getJSON("api/phoxy", function(data)
-      {
-        phoxy.config = data;
-        requirejs.config({baseUrl: phoxy.Config()['js_dir']});
-
-        $('script[phoxy]').each(function()
-        {
-          phoxy.ApiRequest($(this).attr("phoxy"));
-        });      
-      });
-    }
-  );
-  
-function PhoxyHashChangeCallback()
-{
-  if (phoxy.ChangeHash(location.hash))
-    phoxy.ApiRequest(phoxy.hash);
-}
-
 var phoxy =
 {
   loaded : false,
   hash : false,
-  Load : function( )
-    {
-      this.loaded = true;
-      var hash = location.hash.substring(1);
-      phoxy.ApiRequest(hash);
-      this.hash = hash;
-      $(window).bind('hashchange', PhoxyHashChangeCallback);
-    }
-  ,
+  config : false,
+};
+
+phoxy._TimeSubsystem =
+{
   Defer : function(callback, time)
   {
     if (time == undefined)
@@ -56,7 +17,19 @@ var phoxy =
         callback.call(this);
       },
       this);
-    setTimeout(func, time);
+
+    if (time == -1)
+      func();
+    else
+      setTimeout(func, time);
+  }
+  ,
+  DDefer : function(callback, time)
+  {
+    phoxy.Defer.call(this, function()
+    {
+      phoxy.Defer.call(this, callback);
+    }, time);
   }
   ,
   WaitFor : function(callback_condition, callback, timeout, check_every)
@@ -99,7 +72,7 @@ var phoxy =
     {
       function Div()
       {
-        return $(phoxy.OptimiseSelector(jquery_selector));
+        return $(jquery_selector);
       }
       function IsDivAppeared()
       {
@@ -110,7 +83,7 @@ var phoxy =
       {
         phoxy.WaitFor(IsDivAppeared, function()
         {
-          phoxy.Defer.call(Div(), callback, call_delay);
+          phoxy.DDefer.call(Div(), callback, call_delay);
         }, timeout)
       });
     }
@@ -119,29 +92,21 @@ var phoxy =
     {
       function IsDivDisappeared()
       {
-        return $(phoxy.OptimiseSelector(jquery_selector))[0] == undefined;
+        return $(jquery_selector)[0] == undefined;
       }    
     
       phoxy.Defer(function()
       {
         phoxy.WaitFor(IsDivDisappeared, function()
         {
-          phoxy.Defer(callback, call_delay);
+          phoxy.DDefer(callback, call_delay);
         }, timeout);
       });
     }
-  ,
-  GenerateUniqueID : function()
-    {
-      var ret = "";
-      var dictonary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+};
 
-      for (var i = 0; i < 10; i++)
-        ret += dictonary.charAt(Math.floor(Math.random() * dictonary.length));
-
-      return ret;
-    }
-  ,
+phoxy._RenderSubsystem = 
+{
   PrepareCanvas : function(tag)
     {
       if (tag == undefined)
@@ -165,129 +130,50 @@ var phoxy =
         tag = '<defer_render>';
       var canvas = phoxy.PrepareCanvas(tag);
       var id = canvas.id;
-
-      phoxy.Appeared('#' + id, function()
-      {
-        phoxy.Fancy(ejs, data, function(html)
-        {
-          $('#' + id).replaceWith(html);
-          if (typeof(rendered_callback) != 'undefined')
-            rendered_callback(ejs, data);
-        });
-      });
       
+      phoxy.RenderReplace('#' + id, ejs, data, rendered_callback);
+
       return canvas.html;
     }
   ,
-  Fancy : function(design, data, callback)
+  __REFACTOR_RenderPrototype : function (target, ejs, data, rendered_callback, difference)
     {
-      console.log("phoxy.Fancy", arguments);
-
-      var func;
-      var callback = arguments[2];
-      if (typeof(callback) == 'undefined')
-        callback = function (){};
-      var design = arguments[0];
-      
-      if (typeof(data) == 'undefined')
-      { // single param call
-        if (typeof(design) == 'undefined')
-          return callback(undefined, undefined, undefined);
-        if (typeof(design) == 'object')
-        { 
-          var obj = arguments[0];
-          // Maybe its wrong. Maybe i should ignore other params
-          var design = obj.design;
-          var data = obj.data;
-          if (typeof(data) == 'undefined')
-            data = {};
-          delete obj.design;
-          delete obj.data;
-          delete obj.result;
-          delete obj.replace;
-          
-          phoxy.ApiAnswer(obj, function()
-          {
-            phoxy.Fancy(design, data, callback);
-          });
-        }
-        else
-        { /* Called as RPC
-            PARAMS:
-              [0] - string with RPC command
-            NOTE:
-              target commands ignored.
-              result will be rendered in this div.
-           */
-          var rpc = arguments[0];
-          phoxy.AJAX(rpc, function(data, callback)
-          {
-            phoxy.Fancy(data, undefined, callback);
-          }, [callback]);
-        }
-        return;
-      }
-      
-      var data = arguments[1];
-      function DataLoadedCallback(data)
+      phoxy.Appeared(target, function()
       {
-        if (typeof(data) == 'undefined')
-          data = {};
-        phoxy.Fancy(design, data, callback);
-      }
-      
-      if (typeof(data) == 'function')
-      { /* Get data as function callback */
-        data(DataLoadedCallback);
-      }
-      else if (typeof(data) == 'string')
-      { /* Download data with RPC */
-        phoxy.AJAX(data, function(json)
+        phoxy.Fancy(ejs, data, function(obj, ejs, data)
         {
-          DataLoadedCallback(json.data);
-        });
-      }
-      else
-      { /* Data loaded */
-        var html;
-        if (design != undefined)
-          html = phoxy.Render(phoxy.Config()['ejs_dir'] + "/" + design, undefined, data);
-        callback(html, design, data);
-      }
+          difference.call(phoxy, target, obj.html, arguments);
+
+          obj.on_complete = function()
+          {
+            if (typeof(rendered_callback) != 'undefined')
+              rendered_callback.call(obj.across, ejs, data, obj.html);
+          };
+        }, true);
+      }, undefined, -1);
     }
   ,
-  ChangeHash : function (hash)
+  RenderInto : function (target, ejs, data, rendered_callback)
+    { 
+      var args = Array.prototype.slice.call(arguments);
+      args.push(function(target, html)
+      {
+        $(target).html(html);
+      });
+      phoxy.__REFACTOR_RenderPrototype.apply(this, args);
+    }
+  ,
+  RenderReplace : function (target, ejs, data, rendered_callback)
     {
-      var t;
-      t = hash.split(location.origin)[1];
-      if (t !== undefined)
-        hash = t;
-      var t = hash.split('#')[1];
-      if (t !== undefined)
-        hash = t;
-      var ret = phoxy.hash != hash;
-      phoxy.hash = hash;
-      location.hash = hash;
-      return ret;
-    }
+      var args = Array.prototype.slice.call(arguments);
+      args.push(function(target, html)
+      {
+        $(target).replaceWith(html);
+      });
+      phoxy.__REFACTOR_RenderPrototype.apply(this, args);
+    }  
   ,
-  Reset : function (url)
-    {
-      if (url == true)
-        location.reload();
-      var parts = url.split('#');
-      if (parts[1] == undefined)
-        phoxy.ChangeHash('');
-      else
-        phoxy.ChangeHash("#" + parts[1]);
-      var host = parts[0];
-      if (host.length)
-        location = host;
-      else
-        location.reload(parts[0]);
-    }
-  ,
-  Render : function (design, result, data)
+  Render : function (design, result, data, is_phoxy_internal_call)
     {
       if (data === undefined)
         data = {};
@@ -296,15 +182,173 @@ var phoxy =
       var html;
       if (design.search(".ejs") == -1)
         design += ".ejs";
-      if (!phoxy.ForwardDownload(design))
-        html = new EJS({'url' : design}).render(data);
-      else
-        html = new EJS({'text' : phoxy.ForwardDownload(design, true)}).render(data);
+      var ejs;
+      //if (!phoxy.ForwardDownload(design))
+        ejs = new EJS({'url' : design});
+      //else
+//        ejs = new EJS({'text' : phoxy.ForwardDownload(design), 'name' : design});
+
+      var html = obj = ejs.render(data, is_phoxy_internal_call);
+      if (is_phoxy_internal_call)
+        html = obj.html;
+
       if (result != undefined && result != '')
         $("#" + result).replaceWith(html);
-      return html;
+      return obj;
     }
   ,
+  Fancy : function(design, data, callback, raw_output)
+    {
+      console.log("phoxy.Fancy", arguments);
+
+      var args = arguments;
+
+      var callback = args[2];
+      if (typeof(callback) == 'undefined')
+        callback = function (){};
+
+      /* 
+       * [a0] phoxy.Fancy(string, undefined, anytype)
+       * * Then it full RPC call, with fixed render place
+       * * (result/replace keywords ignoring)
+       * 
+       * [a1] phoxy.Fancy(object, undefined, anytype)
+       * * Then params already constructed with object
+       * * NOTICE: All keywoards ARE interprenting
+       */
+      if (typeof(args[1]) == 'undefined')
+      {
+        if (typeof(args[0]) == 'undefined')
+          return callback(undefined, undefined, undefined);
+        
+        if (typeof(args[0]) == 'string')
+        {
+// [a0] ////////
+          var rpc = args[0];
+          phoxy.AJAX(rpc, function(obj)
+          {
+            phoxy.Fancy(obj, args[1], args[2], args[3]);
+          });
+          return;
+        }
+
+        if (typeof(args[0]) != 'object')
+          throw "Failed phoxy.Fancy object recognize";
+
+// [a1] ////////
+        var obj = args[0];
+        // Maybe its wrong. Maybe i should ignore other params
+        var design = obj.design;
+        var data = obj.data;
+        if (typeof(data) == 'undefined')
+          data = {};
+
+        // Those removed because we dont need to render anything
+        delete obj.design;
+        // Those ignored since it phoxy.DeferRender. Place to render already choosed
+        delete obj.result;
+        delete obj.replace;
+          
+        phoxy.ApiAnswer(obj, function()
+        {
+          phoxy.Fancy(design, data, callback, args[3]);
+        });
+        return;
+      }
+
+      /* Data preparing
+       * [b0] phoxy.Fancy(anytype, function, anytype)
+       * * Generating data through function
+       * * Data could be returned directly (object only)
+       * *  or could be returned asynchronously with callback, as soon as it will be ready.
+       * 
+       * [b1] phoxy.Fancy(anytype, string, anytype)
+       * * Requesting data with RPC
+       * * NOTICE: Every keywoards except data ARE ignored.
+       * 
+       * [b2] phoxy.Fancy(anytype, object, anytype)
+       * * Serving with constructed object. Ready to render!
+       */
+
+      function DataLoadedCallback(data)
+      {
+        if (typeof(data) == 'undefined')
+          data = {};
+        phoxy.Fancy(args[0], data, args[2], args[3]);
+      }
+      
+      if (typeof(args[1]) == 'function')
+      {
+// [b0] ////////
+        var data_load_functor = args[1];
+        data = data_load_functor(DataLoadedCallback);
+        if (typeof(data) != 'object')
+          return; // data will be returned async
+      }
+      else if (typeof(args[1]) == 'string')
+      {
+// [b1] ////////
+        var rpc_url = args[1];
+        phoxy.AJAX(rpc_url, function(json)
+        {
+          if (typeof(json.error) != 'undefined')
+            phoxy.ApiAnswer(json);
+          DataLoadedCallback(json.data);
+        });
+        return;
+      }
+      else if (typeof(args[1]) != 'object')
+        throw "Failed phoxy.Fancy data receive";
+      else
+// [b2] ////////
+        data = args[1];
+
+      var html;
+
+      /* Rendering
+       * [c0] phoxy.Fancy(undefined, NOT undefined, anytype)
+       * * Only invoking callback with prepared data
+       * * Used when design determining dynamically
+       * 
+       * [c1] phoxy.Fancy(string, NOT undefined, anytype)
+       * * First parameter is EJS string, same as in 'design' keyword
+       * 
+       * [c2] phoxy.Fancy(function, NOT undefined, anytype)
+       * * First paremeter if method which determine design in runtime
+       * * Just same as [b0] for data preparing do.
+       */
+
+      if (typeof(args[0]) == 'undefined')
+// [c0] ////////
+        return callback(html, design, data);
+
+      if (typeof(args[0]) == 'string')
+// [c1] ////////
+        design = args[0];
+      else if (typeof(args[0]) == 'function')
+      {
+// [c2] ////////
+        function DetermineAsync(design)
+        {
+          phoxy.Fancy(design, data, args[2], args[3]);
+        }
+
+        design = design(data, DetermineAsync);
+        if (typeof(design) != 'string')
+          return; // Will be rendered later (async design determine)
+      }
+
+      var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
+      html = phoxy.Render(ejs_location, undefined, data, true);
+
+      if (!raw_output)
+        html = html.html;
+      callback(html, design, data);
+    }
+};
+
+phoxy._ApiSubsystem =
+{
   ApiAnswer : function( answer, callback )
     {
       if (answer.hash !== undefined)
@@ -384,30 +428,30 @@ var phoxy =
     }
   ,
   ForwardDownload : function( url, callback_or_true_for_return )
-  {
-    if (typeof(storage) === "undefined")
-      storage = {};
-      
-    if (callback_or_true_for_return === true)
-      return storage[url];      
-
-    function AddToLocalStorage(data)
     {
-      storage[url] = data;
-      if (typeof(callback_or_true_for_return) == 'function')
-        callback_or_true_for_return(data);
-    }
+      if (typeof(storage) === "undefined")
+        storage = {};
+        
+      if (callback_or_true_for_return === true)
+        return storage[url];      
 
-    if (storage[url] != undefined)
-    {
-      if (typeof(callback_or_true_for_return) == 'function')
-        callback_or_true_for_return(storage[url]);
-      return true;
-    }
+      function AddToLocalStorage(data)
+      {
+        storage[url] = data;
+        if (typeof(callback_or_true_for_return) == 'function')
+          callback_or_true_for_return(data);
+      }
 
-    $.get(url, AddToLocalStorage);
-    return false;
-  }
+      if (storage[url] != undefined)
+      {
+        if (typeof(callback_or_true_for_return) == 'function')
+          callback_or_true_for_return(storage[url]);
+        return true;
+      }
+
+      $.get(url, AddToLocalStorage);
+      return false;
+    }
   ,
   AJAX : function( url, callback, params )
     {
@@ -424,50 +468,302 @@ var phoxy =
       });
     }
   ,
-  ApiRequest : function( url, callback )
+  ApiRequest : function( url, obj_optional, callback )
     {
-      if (callback == undefined)
-        phoxy.AJAX(url, phoxy.ApiAnswer);
-      else
-        phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
+      if (arguments.length == 1)
+        return phoxy.ApiRequest(url, undefined);
+      if (arguments.length == 2 && typeof arguments[1] == 'function')
+        return phoxy.ApiRequest(url, undefined, arguments[1]);
+
+      if (obj_optional != undefined)
+      {
+        var serialize = function(obj, prefix)
+        {
+          var str = [];
+          for(var p in obj)
+          {
+            var 
+              k = prefix ? prefix + "[" + p + "]" : p,
+              v = obj[p];
+            str.push
+            (
+              typeof v == "object"
+                ? serialize(v, k)
+                : encodeURIComponent(k) + "=" + encodeURIComponent(v)
+            );
+          }
+          return str.join("&");
+        }
+
+        url += '?' + serialize(obj_optional);
+      }
+
+      phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
     }
   ,
   MenuCall : function( url, callback )
     {
-        $(function()
-        {
-          $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data)
-          {
-            phoxy.ChangeHash(url);
-            phoxy.ApiAnswer(data, callback);
-          });
-        });	  
+      phoxy.ApiRequest(url, function(data)
+      {
+        phoxy.ChangeHash(url);
+        if (typeof callback == 'function')
+          callback(data);
+      });
+    }
+}
+
+phoxy._InternalCode =
+{
+  Load : function( )
+    {
+      delete phoxy.Load; // Cause this is only one time execution
+      this.loaded = true;
+      var hash = location.hash.substring(1);
+      phoxy.ApiRequest(hash);
+      this.hash = hash;
+
+      function PhoxyHashChangeCallback()
+      {
+        if (phoxy.ChangeHash(location.hash))
+          phoxy.ApiRequest(phoxy.hash);
+      }
+
+      $(window).bind('hashchange', PhoxyHashChangeCallback);
     }
   ,
-  Config : function()
+  ChangeHash : function (hash)
+    {
+      var t;
+      t = hash.split(location.origin)[1];
+      if (t !== undefined)
+        hash = t;
+      var t = hash.split('#')[1];
+      if (t !== undefined)
+        hash = t;
+      var ret = phoxy.hash != hash;
+      phoxy.hash = hash;
+      location.hash = hash;
+      return ret;
+    }
+  ,
+  GenerateUniqueID : function() // Deprecated, use $.uniqueId();
+    {
+      var ret = "";
+      var dictonary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+      for (var i = 0; i < 10; i++)
+        ret += dictonary.charAt(Math.floor(Math.random() * dictonary.length));
+
+      return ret;
+    }
+  ,
+    Reset : function (url)
+    {
+      if (url == true)
+        location.reload();
+      var parts = url.split('#');
+      if (parts[1] == undefined)
+        phoxy.ChangeHash('');
+      else
+        phoxy.ChangeHash("#" + parts[1]);
+      var host = parts[0];
+      if (host.length)
+        location = host;
+      else
+        location.reload(parts[0]);
+    }
+  ,
+    Config : function()
     {
       return this.config;
     }
-  ,
-  OptimiseSelector : function( str )
-    { // http://learn.jquery.com/performance/optimize-selectors/
-      if (typeof(str) != 'string')
-        return str;
+};
 
-      var last_id_tag = str.lastIndexOf('#');
-      if (last_id_tag > 0)
-        str = str.substr(last_id_tag);
-      var elements = str.split(" ");
-      var ret = $(elements[0]);
-      var i = 0;
-      while (++i < elements.length)
-        if (elements[i].length != 0)
-          ret = ret.find(elements[i]);
-      return ret;
-    }    
+requirejs.config({
+    waitSeconds: 60
+});
+
+/***
+ * Load dependencies
+ ***/
+
+require
+(
+  [
+    "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
+    "libs/EJS/ejs.js"
+  ],
+  function()
+  {
+    phoxy.DependenciesLoaded();
+  }
+);
+
+phoxy.DependenciesLoaded = function()
+{
+  delete phoxy.DependenciesLoaded; // allow single time execution
+  require
+  ([
+    "libs/text", // part of require js
+    "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
+    "libs/jquery.form"
+  ]);
+
+  $.getJSON("api/phoxy", function(data)
+  {
+    phoxy.config = data;
+    requirejs.config({baseUrl: phoxy.Config()['js_dir']});
+
+    // Invoke client code
+    $('script[phoxy]').each(function()
+    {
+      phoxy.ApiRequest($(this).attr("phoxy"));
+    });
+  });
+
+  phoxy.Compile();
+  phoxy.OverloadEJSCanvas();
 }
 
-function Defer()
+phoxy.Compile = function()
 {
-  phoxy.Defer.Apply(this, arguments);
+  delete phoxy.Compile; // Only one-time execution
+  var systems = ['_TimeSubsystem', '_RenderSubsystem', '_ApiSubsystem', '_InternalCode'];
+
+  for (var k in systems)
+  {
+    var system_name = systems[k];
+    for (var func in phoxy[system_name])
+      if (typeof phoxy[func] != 'undefined')
+        throw "Phoxy method mapping failed on '" + func + '. Already exsists.';
+      else
+        phoxy[func] = phoxy[system_name][func];
+    delete phoxy[system_name];
+  }
+}
+
+/***
+ * Overloading EJS method: this.DeferCascade, this.DeferRender etc.
+ ***/
+
+
+phoxy.OverloadEJSCanvas = function()
+{
+  delete phoxy.OverloadEJSCanvas; // Only one-time execution is allowed
+  var origin_RenderCompleted = EJS.Canvas.prototype.RenderCompleted;
+  EJS.Canvas.prototype.RenderCompleted = function()
+  {
+    origin_RenderCompleted.apply(this);
+
+    // In case of recursive rendering, forbid later using
+    // If you losed context from this, and access it with __context
+    // Then probably its too late to use this methods:
+    delete this.across.Defer;
+    delete this.across.DeferRender;
+    delete this.across.DeferCascade;
+
+    if (this.recursive)
+      return;
+    // no one DeferRender was invoked
+    // but Canvas.on_completed not prepared
+    // So render plan is plain, and we attach CheckIsCompleted in this.Defer queue
+    this.recursive++;
+    phoxy.RenderCalls++;
+    this.across.Defer(this.CheckIsCompleted);
+  }
+
+  EJS.Canvas.prototype.CheckIsCompleted = function()
+  {
+    var escape = this.escape();
+    if (--escape.recursive == 0)
+    {
+      console.log("phoxy.FireUp", [escape.name, escape]);
+      escape.fired_up = true;
+      for (var k in escape.cascade)
+        if (typeof (escape.cascade[k]) == 'function')
+            escape.cascade[k].apply(this);
+      if (typeof(escape.on_complete) == 'function')
+        escape.on_complete();
+    }
+  }
+
+  EJS.Canvas.prototype.hook_first = function(result)
+  {
+    result = $(result);
+    if (result.not('defer_render,render,.phoxy_ignore').size())
+      return result;
+    return result.nextAll().not('defer_render,render,.phoxy_ignore').first();
+  };
+
+  EJS.Canvas.prototype.recursive = 0;
+  phoxy.RenderCalls = 0;
+
+  EJS.Canvas.across.prototype.DeferRender = function(ejs, data, callback, tag)
+  {
+    var that = this.escape();
+    if (that.fired_up)
+    {
+      console.log("You can't invoke this.Defer... methods after rendering finished.\
+Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
+Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
+In that case use phoxy.Defer methods directly. They context-dependence free.");
+      debugger; // already finished
+    }
+    that.recursive++;
+    phoxy.RenderCalls++;
+
+    function CBHook()
+    {
+      if (typeof callback == 'function')
+        callback.call(this); // Local fancy context
+      phoxy.RenderCalls--;
+
+      that.CheckIsCompleted.call(that.across);
+    }
+
+    return phoxy.DeferRender(ejs, data, CBHook, tag);
+  }
+
+  var OriginDefer = EJS.Canvas.across.prototype.Defer;
+  EJS.Canvas.across.prototype.Defer = function(callback, time)
+  {
+    var that = this.escape();
+    that.recursive++;
+    if (that.fired_up)
+    {
+      console.log("You can't invoke this.Defer... methods after rendering finished.\
+Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
+Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
+In that case use phoxy.Defer methods directly. They context-dependence free.");
+      debugger; // already finished
+    }
+
+
+    function CBHook()
+    {
+      if (typeof callback == 'function')
+        callback.call(that.across);
+      that.CheckIsCompleted.call(that.across);
+    }
+
+    return OriginDefer.call(this, CBHook, time);
+  }
+
+  EJS.Canvas.across.prototype.DeferCascade = function(callback)
+  {
+    var that = this.escape();
+    if (that.fired_up)
+    {
+      console.log("You can't invoke this.Defer... methods after rendering finished.\
+Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
+Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
+In that case use phoxy.Defer methods directly. They context-dependence free.");
+      debugger; // already finished
+    }
+
+    if (typeof that.cascade == 'undefined')
+      that.cascade = [];
+
+    that.cascade.push(callback);
+  }
 }
