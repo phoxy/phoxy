@@ -1,167 +1,12 @@
-requirejs.config({
-    waitSeconds: 60
-});
-
-require([
-  "libs/text", // part of require js
-  "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
-  "libs/EJS/ejs.js"
-  ],
-    function(until)
-    {
-      require([
-      "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
-      "libs/jquery.form"]);
-
-      $.getJSON("api/phoxy", function(data)
-      {
-        phoxy.config = data;
-        requirejs.config({baseUrl: phoxy.Config()['js_dir']});
-
-        $('script[phoxy]').each(function()
-        {
-          phoxy.ApiRequest($(this).attr("phoxy"));
-        });
-      });
-
-      var origin_RenderCompleted = EJS.Canvas.prototype.RenderCompleted;
-      EJS.Canvas.prototype.RenderCompleted = function()
-      {
-        origin_RenderCompleted.apply(this);
-
-        // In case of recursive rendering, forbid later using
-        // If you losed context from this, and access it with __context
-        // Then probably its too late to use this methods:
-        delete this.across.Defer;
-        delete this.across.DeferRender;
-        delete this.across.DeferCascade;
-
-        if (this.recursive)
-          return;
-        // no one DeferRender was invoked
-        // but Canvas.on_completed not prepared
-        // So render plan is plain, and we attach CheckIsCompleted in this.Defer queue
-        this.recursive++;
-        phoxy.RenderCalls++;
-        this.across.Defer(this.CheckIsCompleted);
-      }
-
-      EJS.Canvas.prototype.CheckIsCompleted = function()
-      {
-        var escape = this.escape();
-        if (--escape.recursive == 0)
-        {
-          console.log("phoxy.FireUp", [escape.name, escape]);
-          escape.fired_up = true;
-          for (var k in escape.cascade)
-            if (typeof (escape.cascade[k]) == 'function')
-                escape.cascade[k].apply(this);
-          if (typeof(escape.on_complete) == 'function')
-            escape.on_complete();
-        }
-      }
-      
-      EJS.Canvas.prototype.hook_first = function(result)
-      {
-        result = $(result);
-        if (result.not('defer_render,render,.phoxy_ignore').size())
-          return result;
-        return result.nextAll().not('defer_render,render,.phoxy_ignore').first();
-      };
-
-      EJS.Canvas.prototype.recursive = 0;
-      phoxy.RenderCalls = 0;
-
-      EJS.Canvas.across.prototype.DeferRender = function(ejs, data, callback, tag)
-      {
-        var that = this.escape();
-        if (that.fired_up)
-        {
-          console.log("You can't invoke this.Defer... methods after rendering finished.\
-Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
-Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
-In that case use phoxy.Defer methods directly. They context-dependence free.");
-          debugger; // already finished
-        }
-        that.recursive++;
-        phoxy.RenderCalls++;
-
-        function CBHook()
-        {
-          if (typeof callback == 'function')
-            callback.call(this); // Local fancy context
-          phoxy.RenderCalls--;
-
-          that.CheckIsCompleted.call(that.across);
-        }
-
-        return phoxy.DeferRender(ejs, data, CBHook, tag);
-      }
-
-      var OriginDefer = EJS.Canvas.across.prototype.Defer;
-      EJS.Canvas.across.prototype.Defer = function(callback, time)
-      {
-        var that = this.escape();
-        that.recursive++;
-        if (that.fired_up)
-        {
-          console.log("You can't invoke this.Defer... methods after rendering finished.\
-Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
-Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
-In that case use phoxy.Defer methods directly. They context-dependence free.");
-          debugger; // already finished
-        }
-
-
-        function CBHook()
-        {
-          if (typeof callback == 'function')
-            callback.call(that.across);
-          that.CheckIsCompleted.call(that.across);
-        }
-
-        return OriginDefer.call(this, CBHook, time);
-      }
-
-      EJS.Canvas.across.prototype.DeferCascade = function(callback)
-      {
-        var that = this.escape();
-        if (that.fired_up)
-        {
-          console.log("You can't invoke this.Defer... methods after rendering finished.\
-Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
-Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
-In that case use phoxy.Defer methods directly. They context-dependence free.");
-          debugger; // already finished
-        }
-
-        if (typeof that.cascade == 'undefined')
-          that.cascade = [];
-
-        that.cascade.push(callback);
-      }
-    }
-  );
-  
-function PhoxyHashChangeCallback()
-{
-  if (phoxy.ChangeHash(location.hash))
-    phoxy.ApiRequest(phoxy.hash);
-}
-
 var phoxy =
 {
   loaded : false,
   hash : false,
-  Load : function( )
-    {
-      this.loaded = true;
-      var hash = location.hash.substring(1);
-      phoxy.ApiRequest(hash);
-      this.hash = hash;
-      $(window).bind('hashchange', PhoxyHashChangeCallback);
-    }
-  ,
+  config : false,
+};
+
+phoxy._TimeSubsystem =
+{
   Defer : function(callback, time)
   {
     if (time == undefined)
@@ -258,18 +103,10 @@ var phoxy =
         }, timeout);
       });
     }
-  ,
-  GenerateUniqueID : function()
-    {
-      var ret = "";
-      var dictonary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+};
 
-      for (var i = 0; i < 10; i++)
-        ret += dictonary.charAt(Math.floor(Math.random() * dictonary.length));
-
-      return ret;
-    }
-  ,
+phoxy._RenderSubsystem = 
+{
   PrepareCanvas : function(tag)
     {
       if (tag == undefined)
@@ -335,6 +172,30 @@ var phoxy =
       });
       phoxy.__REFACTOR_RenderPrototype.apply(this, args);
     }  
+  ,
+  Render : function (design, result, data, is_phoxy_internal_call)
+    {
+      if (data === undefined)
+        data = {};
+
+      console.log("phoxy.Render", arguments);
+      var html;
+      if (design.search(".ejs") == -1)
+        design += ".ejs";
+      var ejs;
+      //if (!phoxy.ForwardDownload(design))
+        ejs = new EJS({'url' : design});
+      //else
+//        ejs = new EJS({'text' : phoxy.ForwardDownload(design), 'name' : design});
+
+      var html = obj = ejs.render(data, is_phoxy_internal_call);
+      if (is_phoxy_internal_call)
+        html = obj.html;
+
+      if (result != undefined && result != '')
+        $("#" + result).replaceWith(html);
+      return obj;
+    }
   ,
   Fancy : function(design, data, callback, raw_output)
     {
@@ -484,62 +345,10 @@ var phoxy =
         html = html.html;
       callback(html, design, data);
     }
-  ,
-  ChangeHash : function (hash)
-    {
-      var t;
-      t = hash.split(location.origin)[1];
-      if (t !== undefined)
-        hash = t;
-      var t = hash.split('#')[1];
-      if (t !== undefined)
-        hash = t;
-      var ret = phoxy.hash != hash;
-      phoxy.hash = hash;
-      location.hash = hash;
-      return ret;
-    }
-  ,
-  Reset : function (url)
-    {
-      if (url == true)
-        location.reload();
-      var parts = url.split('#');
-      if (parts[1] == undefined)
-        phoxy.ChangeHash('');
-      else
-        phoxy.ChangeHash("#" + parts[1]);
-      var host = parts[0];
-      if (host.length)
-        location = host;
-      else
-        location.reload(parts[0]);
-    }
-  ,
-  Render : function (design, result, data, is_phoxy_internal_call)
-    {
-      if (data === undefined)
-        data = {};
+};
 
-      console.log("phoxy.Render", arguments);
-      var html;
-      if (design.search(".ejs") == -1)
-        design += ".ejs";
-      var ejs;
-      //if (!phoxy.ForwardDownload(design))
-        ejs = new EJS({'url' : design});
-      //else
-//        ejs = new EJS({'text' : phoxy.ForwardDownload(design), 'name' : design});
-
-      var html = obj = ejs.render(data, is_phoxy_internal_call);
-      if (is_phoxy_internal_call)
-        html = obj.html;
-
-      if (result != undefined && result != '')
-        $("#" + result).replaceWith(html);
-      return obj;
-    }
-  ,
+phoxy._ApiSubsystem =
+{
   ApiAnswer : function( answer, callback )
     {
       if (answer.hash !== undefined)
@@ -619,30 +428,30 @@ var phoxy =
     }
   ,
   ForwardDownload : function( url, callback_or_true_for_return )
-  {
-    if (typeof(storage) === "undefined")
-      storage = {};
-      
-    if (callback_or_true_for_return === true)
-      return storage[url];      
-
-    function AddToLocalStorage(data)
     {
-      storage[url] = data;
-      if (typeof(callback_or_true_for_return) == 'function')
-        callback_or_true_for_return(data);
-    }
+      if (typeof(storage) === "undefined")
+        storage = {};
+        
+      if (callback_or_true_for_return === true)
+        return storage[url];      
 
-    if (storage[url] != undefined)
-    {
-      if (typeof(callback_or_true_for_return) == 'function')
-        callback_or_true_for_return(storage[url]);
-      return true;
-    }
+      function AddToLocalStorage(data)
+      {
+        storage[url] = data;
+        if (typeof(callback_or_true_for_return) == 'function')
+          callback_or_true_for_return(data);
+      }
 
-    $.get(url, AddToLocalStorage);
-    return false;
-  }
+      if (storage[url] != undefined)
+      {
+        if (typeof(callback_or_true_for_return) == 'function')
+          callback_or_true_for_return(storage[url]);
+        return true;
+      }
+
+      $.get(url, AddToLocalStorage);
+      return false;
+    }
   ,
   AJAX : function( url, callback, params )
     {
@@ -694,18 +503,263 @@ var phoxy =
   ,
   MenuCall : function( url, callback )
     {
-        $(function()
-        {
-          $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data)
-          {
-            phoxy.ChangeHash(url);
-            phoxy.ApiAnswer(data, callback);
-          });
-        });	  
+      phoxy.ApiRequest(url, function(data)
+      {
+        phoxy.ChangeHash(url);
+        if (typeof callback == 'function')
+          callback(data);
+      });
+    }
+}
+
+phoxy._InternalCode =
+{
+  Load : function( )
+    {
+      delete phoxy.Load; // Cause this is only one time execution
+      this.loaded = true;
+      var hash = location.hash.substring(1);
+      phoxy.ApiRequest(hash);
+      this.hash = hash;
+
+      function PhoxyHashChangeCallback()
+      {
+        if (phoxy.ChangeHash(location.hash))
+          phoxy.ApiRequest(phoxy.hash);
+      }
+
+      $(window).bind('hashchange', PhoxyHashChangeCallback);
     }
   ,
-  Config : function()
+  ChangeHash : function (hash)
+    {
+      var t;
+      t = hash.split(location.origin)[1];
+      if (t !== undefined)
+        hash = t;
+      var t = hash.split('#')[1];
+      if (t !== undefined)
+        hash = t;
+      var ret = phoxy.hash != hash;
+      phoxy.hash = hash;
+      location.hash = hash;
+      return ret;
+    }
+  ,
+  GenerateUniqueID : function() // Deprecated, use $.uniqueId();
+    {
+      var ret = "";
+      var dictonary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+      for (var i = 0; i < 10; i++)
+        ret += dictonary.charAt(Math.floor(Math.random() * dictonary.length));
+
+      return ret;
+    }
+  ,
+    Reset : function (url)
+    {
+      if (url == true)
+        location.reload();
+      var parts = url.split('#');
+      if (parts[1] == undefined)
+        phoxy.ChangeHash('');
+      else
+        phoxy.ChangeHash("#" + parts[1]);
+      var host = parts[0];
+      if (host.length)
+        location = host;
+      else
+        location.reload(parts[0]);
+    }
+  ,
+    Config : function()
     {
       return this.config;
     }
+};
+
+requirejs.config({
+    waitSeconds: 60
+});
+
+/***
+ * Load dependencies
+ ***/
+
+require
+(
+  [
+    "libs/text", // part of require js
+    "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
+    "libs/EJS/ejs.js"
+  ],
+  function()
+  {
+    phoxy.DependenciesLoaded();
+  }
+);
+
+phoxy.DependenciesLoaded = function()
+{
+  delete phoxy.DependenciesLoaded; // allow single time execution
+  require(["//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"]);
+
+  $.getJSON("api/phoxy", function(data)
+  {
+    phoxy.config = data;
+    requirejs.config({baseUrl: phoxy.Config()['js_dir']});
+
+    // Invoke client code
+    $('script[phoxy]').each(function()
+    {
+      phoxy.ApiRequest($(this).attr("phoxy"));
+    });
+  });
+
+  phoxy.Compile();
+  phoxy.OverloadEJSCanvas();
+}
+
+phoxy.Compile = function()
+{
+  delete phoxy.Compile; // Only one-time execution
+  var systems = ['_TimeSubsystem', '_RenderSubsystem', '_ApiSubsystem', '_InternalCode'];
+
+  for (var k in systems)
+  {
+    var system_name = systems[k];
+    for (var func in phoxy[system_name])
+      if (typeof phoxy[func] != 'undefined')
+        throw "Phoxy method mapping failed on '" + func + '. Already exsists.';
+      else
+        phoxy[func] = phoxy[system_name][func];
+    delete phoxy[system_name];
+  }
+}
+
+/***
+ * Overloading EJS method: this.DeferCascade, this.DeferRender etc.
+ ***/
+
+
+phoxy.OverloadEJSCanvas = function()
+{
+  delete phoxy.OverloadEJSCanvas; // Only one-time execution is allowed
+  var origin_RenderCompleted = EJS.Canvas.prototype.RenderCompleted;
+  EJS.Canvas.prototype.RenderCompleted = function()
+  {
+    origin_RenderCompleted.apply(this);
+
+    // In case of recursive rendering, forbid later using
+    // If you losed context from this, and access it with __context
+    // Then probably its too late to use this methods:
+    delete this.across.Defer;
+    delete this.across.DeferRender;
+    delete this.across.DeferCascade;
+
+    if (this.recursive)
+      return;
+    // no one DeferRender was invoked
+    // but Canvas.on_completed not prepared
+    // So render plan is plain, and we attach CheckIsCompleted in this.Defer queue
+    this.recursive++;
+    phoxy.RenderCalls++;
+    this.across.Defer(this.CheckIsCompleted);
+  }
+
+  EJS.Canvas.prototype.CheckIsCompleted = function()
+  {
+    var escape = this.escape();
+    if (--escape.recursive == 0)
+    {
+      console.log("phoxy.FireUp", [escape.name, escape]);
+      escape.fired_up = true;
+      for (var k in escape.cascade)
+        if (typeof (escape.cascade[k]) == 'function')
+            escape.cascade[k].apply(this);
+      if (typeof(escape.on_complete) == 'function')
+        escape.on_complete();
+    }
+  }
+
+  EJS.Canvas.prototype.hook_first = function(result)
+  {
+    result = $(result);
+    if (result.not('defer_render,render,.phoxy_ignore').size())
+      return result;
+    return result.nextAll().not('defer_render,render,.phoxy_ignore').first();
+  };
+
+  EJS.Canvas.prototype.recursive = 0;
+  phoxy.RenderCalls = 0;
+
+  EJS.Canvas.across.prototype.DeferRender = function(ejs, data, callback, tag)
+  {
+    var that = this.escape();
+    if (that.fired_up)
+    {
+      console.log("You can't invoke this.Defer... methods after rendering finished.\
+Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
+Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
+In that case use phoxy.Defer methods directly. They context-dependence free.");
+      debugger; // already finished
+    }
+    that.recursive++;
+    phoxy.RenderCalls++;
+
+    function CBHook()
+    {
+      if (typeof callback == 'function')
+        callback.call(this); // Local fancy context
+      phoxy.RenderCalls--;
+
+      that.CheckIsCompleted.call(that.across);
+    }
+
+    return phoxy.DeferRender(ejs, data, CBHook, tag);
+  }
+
+  var OriginDefer = EJS.Canvas.across.prototype.Defer;
+  EJS.Canvas.across.prototype.Defer = function(callback, time)
+  {
+    var that = this.escape();
+    that.recursive++;
+    if (that.fired_up)
+    {
+      console.log("You can't invoke this.Defer... methods after rendering finished.\
+Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
+Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
+In that case use phoxy.Defer methods directly. They context-dependence free.");
+      debugger; // already finished
+    }
+
+
+    function CBHook()
+    {
+      if (typeof callback == 'function')
+        callback.call(that.across);
+      that.CheckIsCompleted.call(that.across);
+    }
+
+    return OriginDefer.call(this, CBHook, time);
+  }
+
+  EJS.Canvas.across.prototype.DeferCascade = function(callback)
+  {
+    var that = this.escape();
+    if (that.fired_up)
+    {
+      console.log("You can't invoke this.Defer... methods after rendering finished.\
+Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
+Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
+In that case use phoxy.Defer methods directly. They context-dependence free.");
+      debugger; // already finished
+    }
+
+    if (typeof that.cascade == 'undefined')
+      that.cascade = [];
+
+    that.cascade.push(callback);
+  }
 }
