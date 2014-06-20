@@ -123,8 +123,16 @@ class phoxy_return_worker
     $conf = phoxy_conf();
     if (is_null($conf[$b]))
       return;
-    foreach ($this->obj[$a] as $key => $val)
-      $this->AddPrefix($this->obj[$a][$key], $conf[$b]);
+    if (is_array($this->obj[$a]))
+      foreach ($this->obj[$a] as $key => $val)
+        $this->AddPrefix($this->obj[$a][$key], $conf[$b]);
+    else
+      $this->AddPrefix($this->obj[$a], $conf[$b]);
+  }
+
+  private function AddPrefix(&$a, $b)
+  {
+    $a = "{$b}{$a}";
   }
   
   private function JSPrefix()

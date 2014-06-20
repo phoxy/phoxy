@@ -180,7 +180,7 @@ phoxy._RenderSubsystem =
 
       console.log("phoxy.Render", arguments);
       var html;
-      if (design.search(".ejs") == -1)
+      if (design.indexOf(".ejs") == -1)
         design += ".ejs";
       var ejs;
       //if (!phoxy.ForwardDownload(design))
