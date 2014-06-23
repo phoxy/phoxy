@@ -207,6 +207,29 @@ phoxy._RenderSubsystem =
       if (typeof(callback) == 'undefined')
         callback = function (){};
 
+      function HandleServerAnswerAndInvokeCallback(answer, cb)
+      {
+        var obj = EJS.IsolateContext(answer);
+
+        // Those removed because we dont need to render anything
+        delete obj.design;
+        // Those ignored since it phoxy.Fancy.(low level rendering) Place to render already choosed
+        delete obj.result;
+        delete obj.replace;
+        phoxy.ApiAnswer(obj, function()
+        {
+          cb(answer);
+        });
+      }
+
+      function FancyServerRequest(url, cb)
+      {
+        phoxy.AJAX(url, function(obj)
+        {
+          HandleServerAnswerAndInvokeCallback(obj, cb);
+        });
+      }
+
       /* 
        * [a0] phoxy.Fancy(string, undefined, anytype)
        * * Then it full RPC call, with fixed render place
@@ -225,7 +248,7 @@ phoxy._RenderSubsystem =
         {
 // [a0] ////////
           var rpc = args[0];
-          phoxy.AJAX(rpc, function(obj)
+          FancyServerRequest(rpc, function(obj)
           {
             phoxy.Fancy(obj, args[1], args[2], args[3]);
           });
@@ -239,20 +262,13 @@ phoxy._RenderSubsystem =
         var obj = args[0];
         // Maybe its wrong. Maybe i should ignore other params
         var design = obj.design;
-        var data = obj.data;
-        if (typeof(data) == 'undefined')
-          data = {};
+        var data = obj.data || {};
 
-        // Those removed because we dont need to render anything
-        delete obj.design;
-        // Those ignored since it phoxy.DeferRender. Place to render already choosed
-        delete obj.result;
-        delete obj.replace;
-          
-        phoxy.ApiAnswer(obj, function()
+        HandleServerAnswerAndInvokeCallback(obj, function()
         {
           phoxy.Fancy(design, data, callback, args[3]);
-        });
+        })
+
         return;
       }
 
@@ -272,8 +288,7 @@ phoxy._RenderSubsystem =
 
       function DataLoadedCallback(data)
       {
-        if (typeof(data) == 'undefined')
-          data = {};
+        data = data || {};
         phoxy.Fancy(args[0], data, args[2], args[3]);
       }
       
@@ -289,10 +304,8 @@ phoxy._RenderSubsystem =
       {
 // [b1] ////////
         var rpc_url = args[1];
-        phoxy.AJAX(rpc_url, function(json)
+        FancyServerRequest(rpc_url, function(json)
         {
-          if (typeof(json.error) != 'undefined')
-            phoxy.ApiAnswer(json);
           DataLoadedCallback(json.data);
         });
         return;
