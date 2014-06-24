@@ -481,6 +481,24 @@ phoxy._ApiSubsystem =
       });
     }
   ,
+  Serialize : function(obj, prefix)
+    {
+      var str = [];
+      for(var p in obj)
+      {
+        var 
+          k = prefix ? prefix + "[" + p + "]" : p,
+          v = obj[p];
+        str.push
+        (
+          typeof v == "object"
+            ? serialize(v, k)
+            : encodeURIComponent(k) + "=" + encodeURIComponent(v)
+        );
+      }
+      return str.join("&");
+    }
+  ,
   ApiRequest : function( url, obj_optional, callback )
     {
       if (arguments.length == 1)
@@ -489,36 +507,16 @@ phoxy._ApiSubsystem =
         return phoxy.ApiRequest(url, undefined, arguments[1]);
 
       if (obj_optional != undefined)
-      {
-        var serialize = function(obj, prefix)
-        {
-          var str = [];
-          for(var p in obj)
-          {
-            var 
-              k = prefix ? prefix + "[" + p + "]" : p,
-              v = obj[p];
-            str.push
-            (
-              typeof v == "object"
-                ? serialize(v, k)
-                : encodeURIComponent(k) + "=" + encodeURIComponent(v)
-            );
-          }
-          return str.join("&");
-        }
-
-        url += '?' + serialize(obj_optional);
-      }
+        url += '?' + phoxy.Serialize(obj_optional);
 
       phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
     }
   ,
-  MenuCall : function( url, callback )
+  MenuCall : function( url, obj_optional, callback )
     {
-      phoxy.ApiRequest(url, function(data)
+      phoxy.ApiRequest(url, obj_optional, function(data)
       {
-        phoxy.ChangeHash(url);
+        phoxy.ChangeHash(url + '?' + phoxy.Serialize(obj_optional));
         if (typeof callback == 'function')
           callback(data);
       });
@@ -571,8 +569,8 @@ phoxy._InternalCode =
     }
   ,
     Reset : function (url)
-    {
-      if (url == true)
+    {      
+      if ((url || true) == true)
         location.reload();
       var parts = url.split('#');
       if (parts[1] == undefined)
@@ -705,7 +703,7 @@ phoxy.OverloadEJSCanvas = function()
     result = $(result);
     if (result.not('defer_render,render,.phoxy_ignore').size())
       return result;
-    return result.nextAll().not('defer_render,render,.phoxy_ignore').first();
+    return result.nextAll().not('defer_render,render,.phoxy_ignore,.ejs_ancor').first();
   };
 
   EJS.Canvas.prototype.recursive = 0;
