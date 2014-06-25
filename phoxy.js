@@ -142,6 +142,12 @@ phoxy._RenderSubsystem =
       {
         phoxy.Fancy(ejs, data, function(obj, ejs, data)
         {
+          if (typeof obj == 'undefined')
+          {
+            console.log('phoxy.Reality', 'Design render skiped. (No design was choosed?)', $(target)[0]);
+            return; // And break dependencies execution
+          }
+
           difference.call(phoxy, target, obj.html, arguments);
 
           obj.on_complete = function()
