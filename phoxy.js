@@ -374,7 +374,7 @@ phoxy._ApiSubsystem =
       {
         if (answer.hash === null)
           answer.hash = "";
-        this.ChangeHash(answer.hash);
+        phoxy.ChangeHash(answer.hash);
       }      
       if (answer.error)
       {
@@ -534,10 +534,10 @@ phoxy._InternalCode =
   Load : function( )
     {
       delete phoxy.Load; // Cause this is only one time execution
-      this.loaded = true;
+      phoxy.loaded = true;
       var hash = location.hash.substring(1);
       phoxy.ApiRequest(hash);
-      this.hash = hash;
+      phoxy.hash = hash;
 
       function PhoxyHashChangeCallback()
       {
@@ -592,7 +592,7 @@ phoxy._InternalCode =
   ,
     Config : function()
     {
-      return this.config;
+      return phoxy.config;
     }
 };
 
