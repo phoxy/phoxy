@@ -45,8 +45,9 @@ class phoxy_sys_api
       $ret = $ret->obj;
 
     if (is_array($ret) && isset($ret['data'])
-        && count($ret['data'] == 1) && isset($ret['data'][$name]))
+        && count($ret['data']) == 1 && isset($ret['data'][$name]))
       $ret = $ret['data'][$name];
+
     if (!is_array($ret))
       return $ret;
     if ($this->ShouldRawReturn($name))
