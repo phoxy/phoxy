@@ -14,7 +14,10 @@ phoxy._TimeSubsystem =
     var func = $.proxy(
       function()
       {
-        callback.call(this);
+        if (typeof callback == 'function')
+          callback.call(this);
+        else
+          debugger;
       },
       this);
 
