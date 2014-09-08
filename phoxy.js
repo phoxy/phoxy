@@ -655,10 +655,24 @@ phoxy._EarlyStage =
           phoxy.OverloadEJSCanvas();
           requirejs.config({baseUrl: phoxy.Config()['js_dir']});
 
+          var initial_client_code = 0;
           // Invoke client code
           $('script[phoxy]').each(function()
           {
-            phoxy.ApiRequest($(this).attr("phoxy"));
+            initial_client_code++;
+            phoxy.ApiRequest(
+                $(this).attr("phoxy"),
+                undefined,
+                function()
+              { 
+                phoxy.Defer(function()
+                { // Be sure that zero reached only once
+                  if (--initial_client_code)
+                    return;
+                  if (typeof phoxy.prestart.OnInitialClientCodeComplete == 'function')
+                    phoxy.prestart.OnInitialClientCodeComplete();
+                });                            
+              });
           });
         }
       );
