@@ -599,68 +599,76 @@ phoxy._InternalCode =
     }
 };
 
-requirejs.config({
-    waitSeconds: 60
-});
-
-/***
- * Load dependencies
- ***/
-
-require
-(
-  [
-    "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
-    "libs/EJS/ejs.js"
-  ],
-  function()
-  {
-    phoxy.DependenciesLoaded();
-  }
-);
-
-phoxy.DependenciesLoaded = function()
+phoxy._EarlyStage =
 {
-  delete phoxy.DependenciesLoaded; // allow single time execution
-  require
-  ([
-    "libs/text", // part of require js
-    "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
-    "libs/jquery.form"
-  ]);
-
-  $.getJSON("api/phoxy", function(data)
-  {
-    phoxy.config = data;
-    requirejs.config({baseUrl: phoxy.Config()['js_dir']});
-
-    // Invoke client code
-    $('script[phoxy]').each(function()
+  EntryPoint: function()
     {
-      phoxy.ApiRequest($(this).attr("phoxy"));
-    });
-  });
+      requirejs.config(
+      {
+        waitSeconds: 60
+      });
 
-  phoxy.Compile();
-  phoxy.OverloadEJSCanvas();
-}
+      phoxy._EarlyStage.CriticalRequire();
+    }
+  ,
+  CriticalRequire: function()
+    {
+      require
+      (
+        [
+          "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
+          "phoxy/libs/EJS/ejs.js"
+        ],
+        function()
+        {
+          phoxy._EarlyStage.DependenciesLoaded();
+        }
+      );
+    }
+  ,
+  DependenciesLoaded: function()
+    {
+      require
+      ([
+        "libs/text", // part of require js
+        "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
+        "libs/jquery.form"
+      ]);
 
-phoxy.Compile = function()
-{
-  delete phoxy.Compile; // Only one-time execution
-  var systems = ['_TimeSubsystem', '_RenderSubsystem', '_ApiSubsystem', '_InternalCode'];
+      $.getJSON("api/phoxy", function(data)
+      {
+        phoxy.config = data;
+        requirejs.config({baseUrl: phoxy.Config()['js_dir']});
 
-  for (var k in systems)
-  {
-    var system_name = systems[k];
-    for (var func in phoxy[system_name])
-      if (typeof phoxy[func] != 'undefined')
-        throw "Phoxy method mapping failed on '" + func + '. Already exsists.';
-      else
-        phoxy[func] = phoxy[system_name][func];
-    delete phoxy[system_name];
-  }
-}
+        // Invoke client code
+        $('script[phoxy]').each(function()
+        {
+          phoxy.ApiRequest($(this).attr("phoxy"));
+        });
+      });
+
+      phoxy._EarlyStage.Compile();
+      phoxy.OverloadEJSCanvas();
+    }
+  ,
+  Compile: function()
+    {
+      var systems = ['_TimeSubsystem', '_RenderSubsystem', '_ApiSubsystem', '_InternalCode'];
+
+      for (var k in systems)
+      {
+        var system_name = systems[k];
+        for (var func in phoxy[system_name])
+          if (typeof phoxy[func] != 'undefined')
+            throw "Phoxy method mapping failed on '" + func + '. Already exsists.';
+          else
+            phoxy[func] = phoxy[system_name][func];
+        delete phoxy[system_name];
+      }
+    }
+};
+
+phoxy._EarlyStage.EntryPoint();
 
 /***
  * Overloading EJS method: this.DeferCascade, this.DeferRender etc.
