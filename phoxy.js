@@ -1,8 +1,13 @@
+if (typeof phoxy == 'undefined')
+  phoxy = {};
+
+
 var phoxy =
 {
   loaded : false,
   hash : false,
   config : false,
+  prestart: phoxy,
 };
 
 phoxy._TimeSubsystem =
@@ -539,7 +544,8 @@ phoxy._InternalCode =
       delete phoxy.Load; // Cause this is only one time execution
       phoxy.loaded = true;
       var hash = location.hash.substring(1);
-      phoxy.ApiRequest(hash);
+      if (!phoxy.prestart.skip_initiation)
+        phoxy.ApiRequest(hash);
       phoxy.hash = hash;
 
       function PhoxyHashChangeCallback()
@@ -599,68 +605,92 @@ phoxy._InternalCode =
     }
 };
 
-requirejs.config({
-    waitSeconds: 60
-});
-
-/***
- * Load dependencies
- ***/
-
-require
-(
-  [
-    "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
-    "libs/EJS/ejs.js"
-  ],
-  function()
-  {
-    phoxy.DependenciesLoaded();
-  }
-);
-
-phoxy.DependenciesLoaded = function()
+phoxy._EarlyStage =
 {
-  delete phoxy.DependenciesLoaded; // allow single time execution
-  require
-  ([
-    "libs/text", // part of require js
-    "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
-    "libs/jquery.form"
-  ]);
-
-  $.getJSON("api/phoxy", function(data)
-  {
-    phoxy.config = data;
-    requirejs.config({baseUrl: phoxy.Config()['js_dir']});
-
-    // Invoke client code
-    $('script[phoxy]').each(function()
+  sync_require: 
+    [
+      "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
+    ]
+  ,
+  async_require:
+    [
+      "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
+      "libs/jquery.form.js",
+      "libs/EJS/ejs.js",
+    ]
+  ,
+  EntryPoint: function()
     {
-      phoxy.ApiRequest($(this).attr("phoxy"));
-    });
-  });
+      requirejs.config(
+      {
+        waitSeconds: 60
+      });
 
-  phoxy.Compile();
-  phoxy.OverloadEJSCanvas();
-}
+      phoxy._EarlyStage.CriticalRequire();
+    }
+  ,
+  CriticalRequire: function()
+    {
+      require
+      (
+        phoxy._EarlyStage.sync_require,
+        function()
+        {
+          phoxy._EarlyStage.DependenciesLoaded();
+        }
+      );
+    }
+  ,
+  DependenciesLoaded: function()
+    {
+      var conf_loaded = false;
+      require
+      (
+        phoxy._EarlyStage.async_require,
+        function()
+        {
+          if (!conf_loaded) // wait until phoxy configuration loaded
+            return setTimeout(arguments.callee, 100);
 
-phoxy.Compile = function()
-{
-  delete phoxy.Compile; // Only one-time execution
-  var systems = ['_TimeSubsystem', '_RenderSubsystem', '_ApiSubsystem', '_InternalCode'];
+          phoxy.OverloadEJSCanvas();
+          requirejs.config({baseUrl: phoxy.Config()['js_dir']});
 
-  for (var k in systems)
-  {
-    var system_name = systems[k];
-    for (var func in phoxy[system_name])
-      if (typeof phoxy[func] != 'undefined')
-        throw "Phoxy method mapping failed on '" + func + '. Already exsists.';
-      else
-        phoxy[func] = phoxy[system_name][func];
-    delete phoxy[system_name];
-  }
-}
+          // Invoke client code
+          $('script[phoxy]').each(function()
+          {
+            phoxy.ApiRequest($(this).attr("phoxy"));
+          });
+        }
+      );
+
+      $.getJSON(phoxy.prestart.config || "api/phoxy", function(data)
+      {
+        phoxy.config = data;
+        if (typeof phoxy.prestart.OnBeforeCompile == 'function')
+          phoxy.prestart.OnBeforeCompile();
+
+        phoxy._EarlyStage.Compile();
+
+        conf_loaded = true;
+      });
+    }
+  ,
+  Compile: function()
+    {
+      var systems = ['_TimeSubsystem', '_RenderSubsystem', '_ApiSubsystem', '_InternalCode'];
+
+      for (var k in systems)
+      {
+        var system_name = systems[k];
+        for (var func in phoxy[system_name])
+          if (typeof phoxy[func] != 'undefined')
+            throw "Phoxy method mapping failed on '" + func + '. Already exsists.';
+          else
+            phoxy[func] = phoxy[system_name][func];
+        delete phoxy[system_name];
+      }
+    }
+};
 
 /***
  * Overloading EJS method: this.DeferCascade, this.DeferRender etc.
@@ -786,4 +816,12 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
 
     that.cascade.push(callback);
   }
+}
+
+if (!phoxy.prestart.wait)
+  phoxy._EarlyStage.EntryPoint();
+else
+{
+  if (typeof phoxy.prestart.OnWaiting == 'function')
+    phoxy.prestart.OnWaiting();
 }
