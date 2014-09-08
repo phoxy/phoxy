@@ -647,6 +647,7 @@ phoxy._EarlyStage =
             return setTimeout(arguments.callee, 100);
 
           phoxy.OverloadEJSCanvas();
+          requirejs.config({baseUrl: phoxy.Config()['js_dir']});
 
           // Invoke client code
           $('script[phoxy]').each(function()
@@ -659,11 +660,10 @@ phoxy._EarlyStage =
       $.getJSON("api/phoxy", function(data)
       {
         phoxy.config = data;
-        requirejs.config({baseUrl: phoxy.Config()['js_dir']});
+        phoxy._EarlyStage.Compile();
+
         conf_loaded = true;
       });
-
-      phoxy._EarlyStage.Compile();
     }
   ,
   Compile: function()
