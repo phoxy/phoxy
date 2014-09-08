@@ -671,6 +671,9 @@ phoxy._EarlyStage =
 
         phoxy._EarlyStage.Compile();
 
+        if (typeof phoxy.prestart.OnAfterCompile == 'function')
+          phoxy.prestart.OnAfterCompile();
+
         conf_loaded = true;
       });
     }
