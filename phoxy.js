@@ -483,16 +483,14 @@ phoxy._ApiSubsystem =
   AJAX : function( url, callback, params )
     {
       console.log("phoxy.AJAX", arguments);
-      $(function()
-      {
-        $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data)
-          {         
-            if (params == undefined)
-              params = [];
-            params.unshift(data);
-            callback.apply(this, params);
-          });
-      });
+      $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data)
+        {
+          if (params == undefined)
+            params = [];
+          params.unshift(data);
+          callback.apply(this, params);
+        });
+      
     }
   ,
   Serialize : function(obj, prefix)
