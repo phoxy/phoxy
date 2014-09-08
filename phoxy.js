@@ -11,9 +11,12 @@ var phoxy =
     hash : false,
     ajax :
     {
-      nesting_level : 0
+      nesting_level : 0,
+      active_id : 0,
+      active : [],
     },
   },
+  plugin : {},
   prestart: phoxy,
 };
 
@@ -490,14 +493,26 @@ phoxy._ApiSubsystem =
   AJAX : function( url, callback, params )
     {
       console.log("phoxy.AJAX", arguments);
+
+      var current_ajax_id = phoxy.state.ajax.active_id++;
+      phoxy.state.ajax.active[current_ajax_id] = arguments;
+
+      if (!phoxy.state.ajax.nesting_level++)
+        if (typeof phoxy.prestart.OnAjaxBegin == 'function')
+          phoxy.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
+
       $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data)
         {
           if (params == undefined)
             params = [];
           params.unshift(data);
           callback.apply(this, params);
+
+          if (!--phoxy.state.ajax.nesting_level)
+            if (typeof phoxy.prestart.OnAjaxEnd == 'function')
+              phoxy.prestart.OnAjaxEnd(phoxy.state.ajax.active[current_ajax_id]);
+          delete phoxy.state.ajax.active[current_ajax_id];
         });
-      
     }
   ,
   Serialize : function(obj, prefix)
