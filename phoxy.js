@@ -617,7 +617,6 @@ phoxy._EarlyStage =
       (
         [
           "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
-          "phoxy/libs/EJS/ejs.js"
         ],
         function()
         {
@@ -628,16 +627,18 @@ phoxy._EarlyStage =
   ,
   DependenciesLoaded: function()
     {
+      var conf_loaded = false;
       require
       ([
         "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
-        "libs/jquery.form"
-      ]);
-
-      $.getJSON("api/phoxy", function(data)
+        "libs/jquery.form",
+        "phoxy/libs/EJS/ejs.js",
+      ], function()
       {
-        phoxy.config = data;
-        requirejs.config({baseUrl: phoxy.Config()['js_dir']});
+        if (!conf_loaded) // wait until phoxy configuration loaded
+          return setTimeout(arguments.callee, 100);
+
+        phoxy.OverloadEJSCanvas();
 
         // Invoke client code
         $('script[phoxy]').each(function()
@@ -646,8 +647,14 @@ phoxy._EarlyStage =
         });
       });
 
+      $.getJSON("api/phoxy", function(data)
+      {
+        phoxy.config = data;
+        requirejs.config({baseUrl: phoxy.Config()['js_dir']});
+        conf_loaded = true;
+      });
+
       phoxy._EarlyStage.Compile();
-      phoxy.OverloadEJSCanvas();
     }
   ,
   Compile: function()
