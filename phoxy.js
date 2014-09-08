@@ -4,9 +4,16 @@ if (typeof phoxy == 'undefined')
 
 var phoxy =
 {
-  loaded : false,
-  hash : false,
   config : false,
+  state :
+  {
+    loaded : false,
+    hash : false,
+    ajax :
+    {
+      nesting_level : 0
+    },
+  },
   prestart: phoxy,
 };
 
@@ -422,7 +429,7 @@ phoxy._ApiSubsystem =
           window[answer.routeline](answer);
         if (callback)
           callback(answer.data);
-        if (!phoxy.loaded)
+        if (!phoxy.state.loaded)
           phoxy.Load();
       }   
       if (answer.design === undefined)
@@ -540,16 +547,16 @@ phoxy._InternalCode =
   Load : function( )
     {
       delete phoxy.Load; // Cause this is only one time execution
-      phoxy.loaded = true;
+      phoxy.state.loaded = true;
       var hash = location.hash.substring(1);
       if (!phoxy.prestart.skip_initiation)
         phoxy.ApiRequest(hash);
-      phoxy.hash = hash;
+      phoxy.state.hash = hash;
 
       function PhoxyHashChangeCallback()
       {
         if (phoxy.ChangeHash(location.hash))
-          phoxy.ApiRequest(phoxy.hash);
+          phoxy.ApiRequest(phoxy.state.hash);
       }
 
       $(window).bind('hashchange', PhoxyHashChangeCallback);
@@ -564,8 +571,8 @@ phoxy._InternalCode =
       var t = hash.split('#')[1];
       if (t !== undefined)
         hash = t;
-      var ret = phoxy.hash != hash;
-      phoxy.hash = hash;
+      var ret = phoxy.state.hash != hash;
+      phoxy.state.hash = hash;
       location.hash = hash;
       return ret;
     }
