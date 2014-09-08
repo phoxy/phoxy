@@ -1,8 +1,13 @@
+if (typeof phoxy == 'undefined')
+  phoxy = {};
+
+
 var phoxy =
 {
   loaded : false,
   hash : false,
   config : false,
+  prestart: phoxy,
 };
 
 phoxy._TimeSubsystem =
@@ -657,9 +662,12 @@ phoxy._EarlyStage =
         }
       );
 
-      $.getJSON("api/phoxy", function(data)
+      $.getJSON(phoxy.prestart.config || "api/phoxy", function(data)
       {
         phoxy.config = data;
+        if (typeof phoxy.prestart.OnBeforeCompile == 'function')
+          phoxy.prestart.OnBeforeCompile();
+
         phoxy._EarlyStage.Compile();
 
         conf_loaded = true;
@@ -682,8 +690,6 @@ phoxy._EarlyStage =
       }
     }
 };
-
-phoxy._EarlyStage.EntryPoint();
 
 /***
  * Overloading EJS method: this.DeferCascade, this.DeferRender etc.
@@ -809,4 +815,12 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
 
     that.cascade.push(callback);
   }
+}
+
+if (!phoxy.prestart.wait)
+  phoxy._EarlyStage.EntryPoint();
+else
+{
+  if (typeof phoxy.prestart.OnWaiting == 'function')
+    phoxy.prestart.OnWaiting();
 }
