@@ -601,6 +601,18 @@ phoxy._InternalCode =
 
 phoxy._EarlyStage =
 {
+  sync_require: 
+    [
+      "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
+    ]
+  ,
+  async_require:
+    [
+      "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
+      "libs/jquery.form",
+      "libs/EJS/ejs.js",
+    ]
+  ,
   EntryPoint: function()
     {
       requirejs.config(
@@ -615,9 +627,7 @@ phoxy._EarlyStage =
     {
       require
       (
-        [
-          "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
-        ],
+        phoxy._EarlyStage.sync_require,
         function()
         {
           phoxy._EarlyStage.DependenciesLoaded();
@@ -629,23 +639,22 @@ phoxy._EarlyStage =
     {
       var conf_loaded = false;
       require
-      ([
-        "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
-        "libs/jquery.form",
-        "phoxy/libs/EJS/ejs.js",
-      ], function()
-      {
-        if (!conf_loaded) // wait until phoxy configuration loaded
-          return setTimeout(arguments.callee, 100);
-
-        phoxy.OverloadEJSCanvas();
-
-        // Invoke client code
-        $('script[phoxy]').each(function()
+      (
+        phoxy._EarlyStage.async_require,
+        function()
         {
-          phoxy.ApiRequest($(this).attr("phoxy"));
-        });
-      });
+          if (!conf_loaded) // wait until phoxy configuration loaded
+            return setTimeout(arguments.callee, 100);
+
+          phoxy.OverloadEJSCanvas();
+
+          // Invoke client code
+          $('script[phoxy]').each(function()
+          {
+            phoxy.ApiRequest($(this).attr("phoxy"));
+          });
+        }
+      );
 
       $.getJSON("api/phoxy", function(data)
       {
