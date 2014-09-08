@@ -544,7 +544,8 @@ phoxy._InternalCode =
       delete phoxy.Load; // Cause this is only one time execution
       phoxy.loaded = true;
       var hash = location.hash.substring(1);
-      phoxy.ApiRequest(hash);
+      if (!phoxy.prestart.skip_initiation)
+        phoxy.ApiRequest(hash);
       phoxy.hash = hash;
 
       function PhoxyHashChangeCallback()
