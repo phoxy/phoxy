@@ -59,5 +59,5 @@ function GetRpcObject( $str )
     if (!is_null($obj))
       return array("obj" => $obj, "method" => $t["method"]);
   }
-  exit(json_encode(array("error" => 'Undefined api handler required')));
+  exit(json_encode(["error" => 'Module not found']));
 }
