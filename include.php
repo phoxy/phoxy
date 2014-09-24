@@ -10,6 +10,9 @@ function IncludeModule( $dir, $module )
   if (!file_exists($file))
     return null;
 
+  global $phoxy_loading_module;
+  $phoxy_loading_module = $module;
+
   include_once(__DIR__ . "/api.php");
   try
   {
