@@ -26,11 +26,20 @@ function phoxy_protected_assert( $cond, $message, $debug_message = null )
   throw new phoxy_protected_call_error($message);
 }
 
+if (!function_exists("default_addons"))
+{
+  function default_addons( $name )
+  {
+    return [];
+  }
+}
+
 class phoxy_sys_api
 {
   private $obj;
   private $f;
   private $expect_simple_result;
+
   public function phoxy_sys_api( $obj, $force_raw = false, $expect_simple_result = false )
   {
     $this->obj = $obj;
@@ -232,12 +241,17 @@ class api
   protected $addons;
   public $json;
 
-  public function api()
+  public function __construct()
   {
     $this->json = true;
+    
     if (!is_array($this->addons))
-      $this->addons = array();
-    $this->default_addons = $this->addons;
+      $this->addons = [];
+
+    global $phoxy_loading_module;
+    $compiled = default_addons($phoxy_loading_module);
+
+    $this->default_addons = array_merge_recursive($compiled, $this->addons);
   }
   
   public function APICall( $name, $arguments )
