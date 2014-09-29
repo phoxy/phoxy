@@ -104,7 +104,15 @@ class phoxy_return_worker
   
   private function Prepare()
   {
-    $func_list = array("ScriptToArray", "JSPrefix", "EJSPrefix", "DefaultCacheTiming", "NoCache", "Cache");
+    $func_list = 
+    [
+      "ScriptToArray",
+      "JSPrefix",
+      "EJSPrefix",
+      "NoCache",
+      "DefaultCacheTiming",
+      "Cache"
+    ];
     
     foreach ($func_list as $func_name)
       $this->$func_name();
@@ -161,27 +169,51 @@ class phoxy_return_worker
   {
     $conf = phoxy_conf();
     if (!isset($this->obj['cache']))
-      $this->obj['cache'] = array();
+      $this->obj['cache'] = [];
+    $cache = $this->obj['cache'];
 
-    $dictionary = array("global", "session", "local");
-    foreach ($dictionary as $t)
-      if (!isset($this->obj['cache'][$t]) && !is_null($conf["cache_{$t}"]))
-        $this->obj['cache'][$t] = $conf["cache_{$t}"];
+    //var_dump($this->obj);
+    if (isset($cache['no']))
+      if (in_array("all", $cache['no']))
+        return;
+
+    $dictionary = ["global", "session", "local"];
+    foreach ($dictionary as $scope)
+      if (!isset($cache[$scope]) && !is_null($conf["cache_{$scope}"]))
+        if (!isset($cache['no']) || !in_array($scope, $cache['no']))
+          $this->obj['cache'][$scope] = $conf["cache_{$scope}"];
   }
   
   private function NoCache()
   {
-    if (!isset($this->obj['cache']['no']))
+    if (!isset($this->obj['cache']))
+      $this->obj['cache'] = [];
+    $cache = $this->obj['cache'];
+    
+    $simple_mode = in_array("no", $cache);
+    if (!$simple_mode && !isset($this->obj['cache']['no']))
       return;
-    $arr = explode(',', $this->obj['cache']['no']);
-    foreach ($arr as $module)
-      if ($module == 'all')
+
+    if (!isset($cache['no']))
+      $no = [];
+    else
+      $no = explode(',', $cache['no']);
+    $dictionary = ["global", "session", "local"];
+
+    foreach ($dictionary as $scope)
+      if (!isset($cache[$scope]) && !in_array($scope, $no))
+        $no[] = $scope;
+
+    foreach ($no as $scope)
+      if ($scope == 'all')
       {
         unset($this->obj['cache']);
         break;
       }
       else
-        unset($this->obj['cache'][$module]);
+        unset($this->obj['cache'][$scope]);
+
+    $this->obj['cache']['no'] = $no;
   }
   
   private function Cache()
