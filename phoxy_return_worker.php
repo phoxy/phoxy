@@ -4,14 +4,13 @@ class phoxy_return_worker
 {
   public $obj;
   private $prepared;
+  public $hooks = [];
+  public static $add_hook_cb;
   
   public function __construct( $obj )
   {
     $this->obj = $obj;
-  }
-  
-  private function Prepare()
-  {
+
     $func_list = 
     [
       "ScriptToArray",
@@ -23,7 +22,19 @@ class phoxy_return_worker
     ];
     
     foreach ($func_list as $func_name)
-      $this->$func_name();
+      $this->hooks[$func_name] = function($me) use ($func_name)
+      {
+        $me->$func_name();
+      };
+
+    if (isset(self::$add_hook_cb))
+        call_user_func(self::$add_hook_cb, $this);
+  }
+  
+  private function Prepare()
+  {
+    foreach ($this->hooks as $hook)
+        $hook($this);
     return $this->prepared = json_encode($this->obj);
   }  
   
