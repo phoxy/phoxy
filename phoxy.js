@@ -419,12 +419,13 @@ phoxy._ApiSubsystem =
             answer = _answer;
           phoxy.ScriptsLoaded(answer, callback);
         }
-        if (answer.before !== undefined)
-          window[answer.before](answer, AfterBefore);
-        else
-          AfterBefore();
-      }
         
+        if (answer.before === undefined)
+          return AfterBefore();
+
+        phoxy.FindRouteline(answer.before)(answer, AfterBefore);
+      }
+
       if (answer.script)
         require(answer.script, Before);
       else
@@ -435,8 +436,7 @@ phoxy._ApiSubsystem =
     {
       function ScriptsFiresUp()
       {
-        if (answer.routeline !== undefined)
-          window[answer.routeline](answer);
+        phoxy.FindRouteline(answer.routeline, answer);
         if (callback)
           callback(answer);
         if (!phoxy.state.loaded)
@@ -470,6 +470,28 @@ phoxy._ApiSubsystem =
         phoxy.Disappeared('#' + id, ScriptsFiresUp);          
       });
     }
+  ,
+  FindRouteline : function( routeline )
+  {
+    if (typeof routeline == 'undefined')
+      return function() {};
+    if (typeof window[routeline] == 'function')
+      return window[routeline];
+    var arr = routeline.split(".");
+    var method = arr.pop();
+
+    var obj = window;
+    for (var k in arr)
+      if (typeof obj[arr[k]] == 'undefined')
+        throw "Routeline context locate failed";
+      else
+        obj = obj[arr[k]];
+
+    if (typeof obj[method] != 'function')
+      throw "Routeline locate failed";
+
+    return obj[method];
+  }
   ,
   ForwardDownload : function( url, callback_or_true_for_return )
     {
