@@ -431,7 +431,7 @@ phoxy._ApiSubsystem =
         if (answer.routeline !== undefined)
           window[answer.routeline](answer);
         if (callback)
-          callback(answer.data);
+          callback(answer);
         if (!phoxy.state.loaded)
           phoxy.Load();
       }   
