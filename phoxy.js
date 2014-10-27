@@ -1,5 +1,8 @@
 if (typeof phoxy == 'undefined')
   phoxy = {};
+if (typeof phoxy.state !== 'undefined')
+  if (phoxy.state.loaded == true)
+    throw "Phoxy already loaded. Dont mess with this";
 
 
 var phoxy =
@@ -218,6 +221,10 @@ phoxy._RenderSubsystem =
 
       if (result != undefined && result != '')
         $("#" + result).replaceWith(html);
+
+      if (typeof phoxy == 'undefined' || typeof phoxy.state == 'undefined')
+        throw "EJS render failed. Phoxy is missing. Is .ejs file exsists? Is your .htacess right? Check last AJAX request.";
+
       return obj;
     }
   ,
