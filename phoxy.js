@@ -215,9 +215,13 @@ phoxy._RenderSubsystem =
       //else
 //        ejs = new EJS({'text' : phoxy.ForwardDownload(design), 'name' : design});
 
-      var html = obj = ejs.render(data, is_phoxy_internal_call);
-      if (is_phoxy_internal_call)
-        html = obj.html;
+      var obj = ejs.prepare(data);
+      obj.on_complete = function()
+      {
+        console.log("phoxy catched: " + this.name);
+      }
+      ejs.execute(obj);
+      html = obj.html;
 
       if (result != undefined && result != '')
         $("#" + result).replaceWith(html);
@@ -225,7 +229,9 @@ phoxy._RenderSubsystem =
       if (typeof phoxy == 'undefined' || typeof phoxy.state == 'undefined')
         throw "EJS render failed. Phoxy is missing. Is .ejs file exsists? Is your .htacess right? Check last AJAX request.";
 
-      return obj;
+      if (is_phoxy_internal_call)
+        return obj;
+      return html;
     }
   ,
   Fancy : function(design, data, callback, raw_output)
@@ -465,7 +471,8 @@ phoxy._ApiSubsystem =
         phoxy.Render(
           url,
           render_id,
-          answer.data);
+          answer.data,
+          true);
 
         phoxy.Disappeared('#' + id, ScriptsFiresUp);          
       });
