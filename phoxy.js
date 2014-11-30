@@ -200,7 +200,7 @@ phoxy._RenderSubsystem =
       phoxy.__REFACTOR_RenderPrototype.apply(this, args);
     }  
   ,
-  Render : function (design, result, data, is_phoxy_internal_call)
+  Render : function (design, data, is_phoxy_internal_call)
     {
       if (data === undefined)
         data = {};
@@ -222,9 +222,6 @@ phoxy._RenderSubsystem =
       }
       ejs.execute(obj);
       html = obj.html;
-
-      if (result != undefined && result != '')
-        $("#" + result).replaceWith(html);
 
       if (typeof phoxy == 'undefined' || typeof phoxy.state == 'undefined')
         throw "EJS render failed. Phoxy is missing. Is .ejs file exsists? Is your .htacess right? Check last AJAX request.";
@@ -389,7 +386,7 @@ phoxy._RenderSubsystem =
       }
 
       var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
-      html = phoxy.Render(ejs_location, undefined, data, true);
+      html = phoxy.Render(ejs_location, data, true);
 
       if (!raw_output)
         html = html.html;
@@ -470,9 +467,9 @@ phoxy._ApiSubsystem =
 
         phoxy.Render(
           url,
-          render_id,
           answer.data,
           true);
+        debugger; // replace render id
 
         phoxy.Disappeared('#' + id, ScriptsFiresUp);          
       });
