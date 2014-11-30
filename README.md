@@ -1,5 +1,6 @@
 phoxy
 =====
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/Enelar/phoxy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 <br>
 This small framework show you, howto:<br>
 <ul>
