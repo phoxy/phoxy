@@ -200,7 +200,7 @@ phoxy._RenderSubsystem =
       phoxy.__REFACTOR_RenderPrototype.apply(this, args);
     }  
   ,
-  Render : function (design, data, is_phoxy_internal_call)
+  Render : function (design, data, callback, is_phoxy_internal_call)
     {
       if (data === undefined)
         data = {};
@@ -216,10 +216,7 @@ phoxy._RenderSubsystem =
 //        ejs = new EJS({'text' : phoxy.ForwardDownload(design), 'name' : design});
 
       var obj = ejs.prepare(data);
-      obj.on_complete = function()
-      {
-        console.log("phoxy catched: " + this.name);
-      }
+      obj.on_complete = callback;
       ejs.execute(obj);
       html = obj.html;
 
@@ -386,7 +383,7 @@ phoxy._RenderSubsystem =
       }
 
       var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
-      html = phoxy.Render(ejs_location, data, true);
+      html = phoxy.Render(ejs_location, data, undefined, true);
 
       if (!raw_output)
         html = html.html;
@@ -465,13 +462,12 @@ phoxy._ApiSubsystem =
         else
           render_id = answer.replace;      
 
-        phoxy.Render(
+        var obj = phoxy.Render(
           url,
           answer.data,
+          ScriptsFiresUp,
           true);
-        debugger; // replace render id
-
-        phoxy.Disappeared('#' + id, ScriptsFiresUp);          
+        $('#' + render_id).replaceWith(obj.html);
       });
     }
   ,
