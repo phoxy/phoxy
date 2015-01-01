@@ -72,9 +72,15 @@ class phoxy_sys_api
     if (!is_array($d))
       return $d;
 
-    if (count($d) == 1 && $this->expect_simple_result)
-      foreach ($d as $val)
-        return $val;
+    if (count($d) === 1)
+    {
+      if (isset($d[$name])) // directly return [function: data] values
+        return $d[$name];
+      if ($this->expect_simple_result)
+        foreach ($d as $val)
+          return $val;
+    }
+
     return $d;
   }
   private function Call( $name, $arguments )
