@@ -521,8 +521,6 @@ phoxy._ApiSubsystem =
   ,
   AJAX : function( url, callback, params )
     {
-      console.log("phoxy.AJAX", arguments);
-
       var current_ajax_id = phoxy.state.ajax.active_id++;
       phoxy.state.ajax.active[current_ajax_id] = arguments;
 
