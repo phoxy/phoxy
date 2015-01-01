@@ -23,20 +23,20 @@ function PhoxyStart()
   if (isset($_GET[$get_param]))
   {
     $file = $_GET[$get_param];
+    unset($_GET[$get_param]);
     if ($file == 'htaccess')
       exit('Rewrite engine work SUCCESS');
       
     include_once('rpc_string_parser.php');
-    
-    $obj = GetRpcObject($file);
+
+    $obj = GetRpcObject($file, $_GET);
     $a = $obj['obj'];
     $func = $obj['method'];
-
-    $get = $_GET;
-    unset($get[$get_param]);
+    $args = $obj['args'];
+    
     try
     {
-      echo $a->APICall($func, $get);
+      echo $a->APICall($func, $args);
     } catch (phoxy_protected_call_error $e)
     {
       echo json_encode($e->result);
