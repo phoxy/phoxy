@@ -2,7 +2,8 @@
 
 function IncludeModule( $dir, $module )
 {
-  $file = "{$dir}/{$module}.php";
+  $module_file = str_replace('\\', '/', $module);
+  $file = "{$dir}/{$module_file}.php";
 
   if (stripos($file, "..") !== false)
     return null;
