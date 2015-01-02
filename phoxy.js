@@ -656,13 +656,13 @@ phoxy._EarlyStage =
 {
   sync_require: 
     [
-      "//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js",
+      "//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js",
     ]
   ,
   async_require:
     [
-      "//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js",
-      "libs/jquery.form.js",
+      "//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js",
+      "//cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js",
       "libs/EJS/ejs.js",
     ]
   ,
