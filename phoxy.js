@@ -436,7 +436,7 @@ phoxy._ApiSubsystem =
     {
       function ScriptsFiresUp()
       {
-        phoxy.FindRouteline(answer.routeline, answer);
+        phoxy.FindRouteline(answer.routeline, answer)();
         if (callback)
           callback(answer);
         if (!phoxy.state.loaded)
