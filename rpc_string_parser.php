@@ -34,7 +34,7 @@ function ParseGreedy( $str )
   return NameParsedArray(implode("/", array($res["dir"], $res["class"])), $res["method"], "Reserve");
 }
 
-function GetRpcObject( $str )
+function GetRpcObject( $str, $get )
 {
   $greedy = ParseGreedy($str);
   $lazy = ParseLazy($str);
@@ -57,7 +57,12 @@ function GetRpcObject( $str )
     
     $obj = IncludeModule($target_dir.'/'.$t["dir"], $t["class"]);
     if (!is_null($obj))
-      return array("obj" => $obj, "method" => $t["method"]);
+      return
+      [
+        "obj" => $obj,
+        "method" => $t["method"],
+        "args" => $_GET,
+      ];
   }
-  exit(json_encode(array("error" => 'Undefined api handler required')));
+  exit(json_encode(["error" => 'Module not found']));
 }
