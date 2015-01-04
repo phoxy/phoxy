@@ -1,9 +1,43 @@
-<!DOCTYPE html>
-<html>
 <head>
-</head>
-<body>
-<script phoxy="main" data-main="phoxy" src="phoxy_loader.js" type="text/javascript"></script>
-</body>
+<script type="text/javascript">
+/* This part not required. Its just example how to change setting live */
+phoxy =
+{
+  wait: true,
+  config: "/api/phoxy",
+  skip_initiation: true,
+  OnWaiting: function()
+  {
+    phoxy._EarlyStage.async_require[2] = "/phoxy/libs/EJS/ejs.js";
+    phoxy._EarlyStage.EntryPoint();
+  },
+  OnBeforeCompile: function()
+  {
+  	for (var k in ['api_dir', 'ejs_dir', 'js_dir'])
+  		phoxy.config[k] = '/' + phoxy.config[k];
+  },
+  OnAfterCompile: function()
+  {
+    phoxy.ChangeHash = function()
+    {
+      return false;
+    }
+    requirejs.config({baseUrl: phoxy.Config()['js_dir']});
+    console.log("Phoxy ready. Starting");
+  },
+  OnInitialClientCodeComplete: function()
+  {
+    console.log("Initial design load complete");
+    phoxy.MenuCall(location.pathname + location.search);
+  }
+}
+</script>
 
-</html>
+<!-- This one causes load phoxy and execute api/main handler -->
+<script
+  phoxy="main"
+  data-main="/phoxy/phoxy"
+  src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.15/require.min.js" type="text/javascript"></script>
+<!-- This one for search engines, telling that your site is AJAX -->
+<meta name="fragment" content="!">
+</head>
