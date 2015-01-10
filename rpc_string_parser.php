@@ -34,8 +34,80 @@ function ParseGreedy( $str )
   return NameParsedArray(implode("/", array($res["dir"], $res["class"])), $res["method"], "Reserve");
 }
 
+function TryExtractParams( $str )
+{
+  $length = strlen($str);
+  $i = -1;
+
+  while (++$i < $length)
+    if ($str[$i] == '(')
+      break;
+  if ($i >= $length)
+    return null;
+
+  $ConstructParameter = function($str, $start, $end)
+  {
+    $param = stripslashes(substr($str, $start, $end));
+    if (strlen($param) < 2)
+      return $param;
+    if ($param[0] != "\"" && $param[1] != "'")
+      return $param;
+    return substr($param, 1, strlen($param) - 2);
+  };
+
+
+  $began = $i + 1;
+
+  $escape = 0;
+  $mode = 0;
+  $args = [];
+  $argbegin = $began;
+  while (++$i < $length)
+  {
+    $ch = $str[$i];
+    if ($escape)
+      $escape = 0;
+    else if ($ch == "\"" || $ch == "'")
+    {
+      if ($mode == 1)
+        $mode = 0;
+      else
+        $mode = 1;
+    }
+    else if ($ch == "\\" && $mode == 1)
+      $escape = 1;
+    else if ($ch == ')' && !$mode)
+      break;
+    else if ($ch == ',' && !$mode)
+    {
+      $args[] = $ConstructParameter($str, $argbegin, $i - $argbegin);
+      $argbegin = $i + 1;
+    }
+  }
+  if (@$str[$i] != ')')
+    return null;
+
+  if ($i != $argbegin)
+    $args[] = $ConstructParameter($str, $argbegin, $i - $argbegin);
+  $end = $i + 1;
+
+  return
+  [
+    "module" => substr($str, 0, $began - 1),
+    "arguments" => $args,
+    "ending" => substr($str, $end),
+  ];
+}
+
 function GetRpcObject( $str, $get )
 {
+  $args = TryExtractParams($str);
+  if ($args != null)
+  {
+    $str = $args['module'];
+    $get = $args['arguments'];
+  }
+
   $greedy = ParseGreedy($str);
   $lazy = ParseLazy($str);
   
@@ -49,7 +121,7 @@ function GetRpcObject( $str, $get )
   {
     if (!$t['class'] || !$t['method'])
       continue;
-    
+
     if ($t['class'] == 'phoxy') // reserved module name
       $target_dir = realpath(dirname(__FILE__));
     else
