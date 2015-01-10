@@ -133,7 +133,7 @@ function GetRpcObject( $str, $get )
       [
         "obj" => $obj,
         "method" => $t["method"],
-        "args" => $_GET,
+        "args" => $get,
       ];
   }
   exit(json_encode(["error" => 'Module not found']));
