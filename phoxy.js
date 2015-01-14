@@ -544,20 +544,28 @@ phoxy._ApiSubsystem =
   ,
   Serialize : function(obj, prefix)
     {
+      if (typeof prefix != "undefined")
+        console.log("phoxy.Serialize", "using prefix is deprecated");
+      function addslashes( str )
+      { // http://stackoverflow.com/questions/770523/escaping-strings-in-javascript
+        return (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
+      }
+
       var str = [];
       for(var p in obj)
       {
-        var 
-          k = prefix ? prefix + "[" + p + "]" : p,
-          v = obj[p];
-        str.push
-        (
-          typeof v == "object"
-            ? serialize(v, k)
-            : encodeURIComponent(k) + "=" + encodeURIComponent(v)
-        );
+        var v = obj[p];
+        if (typeof v == "object")
+        {
+          str.push("[" + serialize(v) + "]");
+          continue;
+        }
+        else if (typeof v == "string")
+          if (v.search(/["'(),]/) != -1)
+            v = "\"" + addslashes(v) + "\"";
+        str.push(encodeURIComponent(v));
       }
-      return str.join("&");
+      return str.join(",");
     }
   ,
   ApiRequest : function( url, obj_optional, callback )
@@ -568,7 +576,7 @@ phoxy._ApiSubsystem =
         return phoxy.ApiRequest(url, undefined, arguments[1]);
 
       if (obj_optional != undefined)
-        url += '?' + phoxy.Serialize(obj_optional);
+        url += "(" + phoxy.Serialize(obj_optional) + ")";
 
       phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
     }
@@ -577,7 +585,9 @@ phoxy._ApiSubsystem =
     {
       phoxy.ApiRequest(url, obj_optional, function(data)
       {
-        phoxy.ChangeHash(url + '?' + phoxy.Serialize(obj_optional));
+        if (typeof obj_optional != 'undefined')
+          url += "(" + phoxy.Serialize(obj_optional) + ")"
+        phoxy.ChangeHash(url);
         if (typeof callback == 'function')
           callback(data);
       });
