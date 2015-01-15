@@ -158,4 +158,13 @@ class api
   {
     $where = "{$what}{$where}";
   }
+
+  // $this(false, true) <-- reinclude yourself
+  // $this('dir', 'module') <-- include other
+  public function __invoke($force_raw = false, $expect_simple_result = true, $fallback_raw = false, $fallback_simpe = true)
+  {
+    if (is_string($force_raw) && is_string($expect_simple_result))
+      return LoadModule($force_raw, $expect_simple_result, $fallback_raw, $fallback_simpe);
+    return new phoxy_sys_api($this, $force_raw, $expect_simple_result);
+  }
 };
