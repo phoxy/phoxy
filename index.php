@@ -29,7 +29,8 @@ function PhoxyStart()
       
     include_once('rpc_string_parser.php');
 
-    $obj = GetRpcObject($file, $_GET);
+    global $_phoxy_process_obj;
+    $_phoxy_process_obj = $obj = GetRpcObject($file, $_GET);
     $a = $obj['obj'];
     $func = $obj['method'];
     $args = $obj['args'];

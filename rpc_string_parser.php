@@ -131,6 +131,7 @@ function GetRpcObject( $str, $get )
     if (!is_null($obj))
       return
       [
+        "original_str" => $str,
         "obj" => $obj,
         "method" => $t["method"],
         "args" => $get,
