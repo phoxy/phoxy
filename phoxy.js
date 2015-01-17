@@ -18,9 +18,18 @@ var phoxy =
       active_id : 0,
       active : [],
     },
+    verbose : typeof phoxy.verbose == 'undefined' ? 10 : phoxy.verbose,
   },
   plugin : {},
   prestart: phoxy,
+  error_names :
+  [
+    "FATAL",
+    "ERROR",
+    "WARNING",
+    "INFO",
+    "DEBUG",
+  ],
 };
 
 phoxy._TimeSubsystem =
@@ -146,7 +155,7 @@ phoxy._RenderSubsystem =
   ,
   DeferRender : function (ejs, data, rendered_callback, tag)
     {
-      console.log("phoxy.DeferRender", arguments);
+      phoxy.Log(4, "phoxy.DeferRender", arguments);
       if (tag == undefined)
         tag = '<defer_render>';
       var canvas = phoxy.PrepareCanvas(tag);
@@ -165,7 +174,7 @@ phoxy._RenderSubsystem =
         {
           if (typeof obj == 'undefined')
           {
-            console.log('phoxy.Reality', 'Design render skiped. (No design was choosed?)', $(target)[0]);
+            phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', $(target)[0]);
             return; // And break dependencies execution
           }
 
@@ -205,7 +214,7 @@ phoxy._RenderSubsystem =
       if (data === undefined)
         data = {};
 
-      console.log("phoxy.Render", arguments);
+      phoxy.Log(5, "phoxy.Render", arguments);
       var html;
       if (design.indexOf(".ejs") == -1)
         design += ".ejs";
@@ -230,7 +239,7 @@ phoxy._RenderSubsystem =
   ,
   Fancy : function(design, data, callback, raw_output)
     {
-      console.log("phoxy.Fancy", arguments);
+      phoxy.Log(6, "phoxy.Fancy", arguments);
 
       var args = arguments;
 
@@ -544,20 +553,28 @@ phoxy._ApiSubsystem =
   ,
   Serialize : function(obj, prefix)
     {
+      if (typeof prefix != "undefined")
+        phoxy.Log(3, "phoxy.Serialize", "using prefix is deprecated");
+      function addslashes( str )
+      { // http://stackoverflow.com/questions/770523/escaping-strings-in-javascript
+        return (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
+      }
+
       var str = [];
       for(var p in obj)
       {
-        var 
-          k = prefix ? prefix + "[" + p + "]" : p,
-          v = obj[p];
-        str.push
-        (
-          typeof v == "object"
-            ? serialize(v, k)
-            : encodeURIComponent(k) + "=" + encodeURIComponent(v)
-        );
+        var v = obj[p];
+        if (typeof v == "object")
+        {
+          str.push("[" + serialize(v) + "]");
+          continue;
+        }
+        else if (typeof v == "string")
+          if (v.search(/["'(),]/) != -1)
+            v = "\"" + addslashes(v) + "\"";
+        str.push(encodeURIComponent(v));
       }
-      return str.join("&");
+      return str.join(",");
     }
   ,
   ApiRequest : function( url, obj_optional, callback )
@@ -568,7 +585,7 @@ phoxy._ApiSubsystem =
         return phoxy.ApiRequest(url, undefined, arguments[1]);
 
       if (obj_optional != undefined)
-        url += '?' + phoxy.Serialize(obj_optional);
+        url += "(" + phoxy.Serialize(obj_optional) + ")";
 
       phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
     }
@@ -577,7 +594,9 @@ phoxy._ApiSubsystem =
     {
       phoxy.ApiRequest(url, obj_optional, function(data)
       {
-        phoxy.ChangeHash(url + '?' + phoxy.Serialize(obj_optional));
+        if (typeof obj_optional != 'undefined')
+          url += "(" + phoxy.Serialize(obj_optional) + ")"
+        phoxy.ChangeHash(url);
         if (typeof callback == 'function')
           callback(data);
       });
@@ -649,6 +668,24 @@ phoxy._InternalCode =
     Config : function()
     {
       return phoxy.config;
+    }
+  ,
+    Log : function(level)
+    {
+      if (phoxy.state.verbose < level)
+        return;
+
+      var error_names = phoxy.error_names;
+      var errorname = error_names[level < error_names.length ? level : error_names.length - 1];
+
+      var skipfirst = true;
+      var args = [errorname];
+      for (var v in arguments)
+        if (skipfirst)
+          skipfirst = false;
+        else
+          args.push(arguments[v]);
+      console.log.apply(console, args);
     }
 };
 
@@ -731,6 +768,8 @@ phoxy._EarlyStage =
           phoxy.prestart.OnBeforeCompile();
 
         phoxy._EarlyStage.Compile();
+        if (typeof phoxy.config.verbose != 'undefined')
+          phoxy.state.verbose = phoxy.config.verbose;
 
         if (typeof phoxy.prestart.OnAfterCompile == 'function')
           phoxy.prestart.OnAfterCompile();
@@ -791,7 +830,7 @@ phoxy.OverloadEJSCanvas = function()
     var escape = this.escape();
     if (--escape.recursive == 0)
     {
-      console.log("phoxy.FireUp", [escape.name, escape]);
+      phoxy.Log(9, "phoxy.FireUp", [escape.name, escape]);
       escape.fired_up = true;
       for (var k in escape.cascade)
         if (typeof (escape.cascade[k]) == 'function')
@@ -817,7 +856,7 @@ phoxy.OverloadEJSCanvas = function()
     var that = this.escape();
     if (that.fired_up)
     {
-      console.log("You can't invoke this.Defer... methods after rendering finished.\
+      phoxy.Log(1, "You can't invoke this.Defer... methods after rendering finished.\
 Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
 Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
 In that case use phoxy.Defer methods directly. They context-dependence free.");
@@ -845,7 +884,7 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
     that.recursive++;
     if (that.fired_up)
     {
-      console.log("You can't invoke this.Defer... methods after rendering finished.\
+      phoxy.Log(1, "You can't invoke this.Defer... methods after rendering finished.\
 Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
 Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
 In that case use phoxy.Defer methods directly. They context-dependence free.");
@@ -868,7 +907,7 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
     var that = this.escape();
     if (that.fired_up)
     {
-      console.log("You can't invoke this.Defer... methods after rendering finished.\
+      phoxy.Log("You can't invoke this.Defer... methods after rendering finished.\
 Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
 Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
 In that case use phoxy.Defer methods directly. They context-dependence free.");

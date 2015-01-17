@@ -27,6 +27,6 @@ function IncludeModule( $dir, $module )
 
 function LoadModule( $dir, $module, $force_raw = false, $expect_simple_result = true )
 {
-  $module = IncludeModule($dir, $module);
-  return new phoxy_sys_api($module, $force_raw, $expect_simple_result);
+  $obj = IncludeModule($dir, $module);
+  return $obj($force_raw, $expect_simple_result);
 }

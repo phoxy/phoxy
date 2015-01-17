@@ -35,7 +35,7 @@ class phoxy_return_worker
   {
     foreach ($this->hooks as $hook)
         $hook($this);
-    return $this->prepared = json_encode($this->obj);
+    return $this->prepared = json_encode($this->obj, JSON_UNESCAPED_UNICODE);
   }  
   
   public function __toString()
