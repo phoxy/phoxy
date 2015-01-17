@@ -685,7 +685,16 @@ phoxy._InternalCode =
           skipfirst = false;
         else
           args.push(arguments[v]);
-      console.log.apply(console, args);
+      var method;
+      if (level < 2)
+        method = "error";
+      else if (level == 2)
+        method = "warn";
+      else if (level == 3)
+        method = "info";
+      else
+        method = "debug";
+      console[method].apply(console, args);
     }
 };
 
