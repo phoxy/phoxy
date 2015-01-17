@@ -18,18 +18,18 @@ var phoxy =
       active_id : 0,
       active : [],
     },
-    error_names :
-    [
-      "URGENT",
-      "ERROR",
-      "WARNING",
-      "INFO",
-      "DEBUG"
-    ]
+    verbose : typeof phoxy.verbose == 'undefined' ? 10 : phoxy.verbose,
   },
-  verbose : 10,
   plugin : {},
   prestart: phoxy,
+  error_names :
+  [
+    "FATAL",
+    "ERROR",
+    "WARNING",
+    "INFO",
+    "DEBUG",
+  ],
 };
 
 phoxy._TimeSubsystem =
@@ -672,10 +672,10 @@ phoxy._InternalCode =
   ,
     Log : function(level)
     {
-      if (phoxy.verbose < level)
+      if (phoxy.state.verbose < level)
         return;
 
-      var error_names = phoxy.state.error_names;
+      var error_names = phoxy.error_names;
       var errorname = error_names[level < error_names.length ? level : error_names.length - 1];
 
       var skipfirst = true;
@@ -768,6 +768,8 @@ phoxy._EarlyStage =
           phoxy.prestart.OnBeforeCompile();
 
         phoxy._EarlyStage.Compile();
+        if (typeof phoxy.config.verbose != 'undefined')
+          phoxy.state.verbose = phoxy.config.verbose;
 
         if (typeof phoxy.prestart.OnAfterCompile == 'function')
           phoxy.prestart.OnAfterCompile();
