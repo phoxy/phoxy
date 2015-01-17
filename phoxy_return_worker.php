@@ -140,8 +140,10 @@ class phoxy_return_worker
   {
     if (!isset($this->obj['cache']))
       return;
+    
     self::NewCache($this->obj['cache']);
     $this->obj['cache'] = $cache = self::$minimal_cache;
+
     if (isset($cache['global']))
     {
       header('Cache-Control: public, max-age='.self::ParseCache($cache['global']));
@@ -212,11 +214,14 @@ class phoxy_return_worker
       return;
     }
 
+    if (is_array($value)) // assuming that user tried to overload
+      return self::ProcessCache($key, end($value));
     if ($value === 'no')
     {
       self::$minimal_cache[$key] = 'no';
       return;
     }
+
     $curmin = &self::$minimal_cache[$key];
 
     if (!isset($curmin))

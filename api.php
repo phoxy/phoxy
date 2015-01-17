@@ -52,6 +52,7 @@ class phoxy_sys_api
     $ret = $this->Call($name, $arguments);
     if (is_a($ret, 'phoxy_return_worker'))
       $ret = $ret->obj;
+
     if (isset($ret['cache']))
       phoxy_return_worker::NewCache($ret['cache']);
 
