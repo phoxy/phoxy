@@ -432,7 +432,7 @@ phoxy._ApiSubsystem =
         if (answer.before === undefined)
           return AfterBefore();
 
-        phoxy.FindRouteline(answer.before)(answer, AfterBefore);
+        phoxy.FindRouteline(answer.before)(AfterBefore, answer);
       }
 
       if (answer.script)
