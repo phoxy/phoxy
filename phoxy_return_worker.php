@@ -6,6 +6,7 @@ class phoxy_return_worker
   private $prepared;
   public $hooks = [];
   public static $add_hook_cb;
+  private static $minimal_cache = null;
   
   public function __construct( $obj )
   {
@@ -139,10 +140,11 @@ class phoxy_return_worker
   {
     if (!isset($this->obj['cache']))
       return;
-    $cache = $this->obj['cache'];
+    self::NewCache($this->obj['cache']);
+    $this->obj['cache'] = $cache = self::$minimal_cache;
     if (isset($cache['global']))
     {
-      header('Cache-Control: public, max-age='.$this->ParseCache($cache['global']));
+      header('Cache-Control: public, max-age='.self::ParseCache($cache['global']));
     }
     else if (isset($cache['no']['global']))
     {
@@ -151,7 +153,7 @@ class phoxy_return_worker
     // session, local, global
   }
   
-  private function ParseCache( $str )
+  static private function ParseCache( $str )
   {
     $str = trim($str);
     $arr = preg_split('/([0-9]+)([dhms]?)/', $str, -1, PREG_SPLIT_DELIM_CAPTURE);
@@ -183,5 +185,43 @@ class phoxy_return_worker
         break;
     }
     return $ret;
+  }
+
+  static public function NewCache( $array )
+  {
+    if (!is_array($array))
+      return self::ProcessCache('global', $array);
+    foreach ($array as $key => $value)
+      self::ProcessCache($key, $value);
+  }
+
+  static private function ProcessCache( $key, $value )
+  {
+    if ($key === 'no')
+    {
+      if (is_array($value))
+      {
+        foreach ($value as $scope)
+          self::ProcessCache('no', $scope);
+        return;
+      }
+      if (!isset(self::$minimal_cache['no']))
+        self::$minimal_cache['no'] = [];
+      if (!in_array($value, self::$minimal_cache['no']))
+        self::$minimal_cache['no'][] = $value;
+      return;
+    }
+
+    if ($value === 'no')
+    {
+      self::$minimal_cache[$key] = 'no';
+      return;
+    }
+    $curmin = &self::$minimal_cache[$key];
+
+    if (!isset($curmin))
+     $curmin = $value;
+    if (self::ParseCache($curmin) > self::ParseCache($value))
+      $curmin = $value;
   }
 }

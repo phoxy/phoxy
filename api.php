@@ -52,6 +52,8 @@ class phoxy_sys_api
     $ret = $this->Call($name, $arguments);
     if (is_a($ret, 'phoxy_return_worker'))
       $ret = $ret->obj;
+    if (isset($ret['cache']))
+      phoxy_return_worker::NewCache($ret['cache']);
 
     if (is_array($ret) && isset($ret['data'])
         && count($ret['data']) == 1 && isset($ret['data'][$name]))
@@ -83,6 +85,7 @@ class phoxy_sys_api
 
     return $d;
   }
+
   private function Call( $name, $arguments )
   {
     $this->obj->json = false;
