@@ -53,7 +53,7 @@ class phoxy_sys_api
     if (is_a($ret, 'phoxy_return_worker'))
       $ret = $ret->obj;
 
-    if (isset($ret['cache']))
+    if (isset($ret['cache']) && !$this->f) // raw calls do not affects restrictions
       phoxy_return_worker::NewCache($ret['cache']);
 
     if (is_array($ret) && isset($ret['data'])
