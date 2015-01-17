@@ -707,8 +707,6 @@ phoxy._EarlyStage =
   ,
   async_require:
     [
-      "//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js",
-      "//cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js",
       "libs/EJS/ejs.js",
     ]
   ,
