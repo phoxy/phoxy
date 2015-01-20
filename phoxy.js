@@ -583,7 +583,7 @@ phoxy._ApiSubsystem =
         else if (typeof v == "string")
           if (v.search(/["'(),]/) != -1)
             v = "\"" + addslashes(v) + "\"";
-        str.push(encodeURIComponent(v));
+        str.push(v);
       }
       return str.join(",");
     }
