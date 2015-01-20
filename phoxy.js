@@ -239,9 +239,20 @@ phoxy._RenderSubsystem =
   ,
   Fancy : function(design, data, callback, raw_output)
     {
-      phoxy.Log(6, "phoxy.Fancy", arguments);
-
       var args = arguments;
+      for (var i = 0; i < 2; i++)
+        if (Array.isArray(args[i]))
+        {
+          var array = args[i];
+          var url = array.shift();
+          if (array.length > 0)
+            url += '(' + phoxy.Serialize(array) + ')';
+          args[i] = url;
+          phoxy.Fancy.apply(this, args);
+          return;
+        }
+
+      phoxy.Log(6, "phoxy.Fancy", arguments);
 
       var callback = args[2];
       if (typeof(callback) == 'undefined')
