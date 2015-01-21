@@ -11,8 +11,7 @@ if (defined('tempns'))
 define('tempns', 'tempns_'.md5(microtime()));
 //$new_source = preg_replace("/class(\s+)({$module})/", "class /".tempns."/$module", $code);
 $code = str_replace('<?php', 'namespace '.tempns.';', $code);
-$code = str_replace(' api', '\\api', $code);
-
+$code = preg_replace('/ api\s*\n/', '\\api', $code);
 
 eval($code);
 
