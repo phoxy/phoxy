@@ -108,6 +108,10 @@ class phoxy_return_worker
   {
     if (!isset($this->obj['cache']))
       $this->obj['cache'] = [];
+
+    self::NewCache($this->obj['cache']);
+    $this->obj['cache'] = $cache = self::$minimal_cache;
+
     $cache = $this->obj['cache'];
     
     $simple_mode = in_array("no", $cache);
@@ -138,11 +142,7 @@ class phoxy_return_worker
   
   private function Cache()
   {
-    if (!isset($this->obj['cache']))
-      return;
-    
-    self::NewCache($this->obj['cache']);
-    $this->obj['cache'] = $cache = self::$minimal_cache;
+    $cache = self::$minimal_cache;
 
     if (isset($cache['global']))
     {
@@ -218,6 +218,8 @@ class phoxy_return_worker
       return self::ProcessCache($key, end($value));
     if ($value === 'no')
     {
+      if ($key === 0)
+        return self::$minimal_cache = ['no' => 'all'];
       self::$minimal_cache[$key] = 'no';
       return;
     }
