@@ -140,7 +140,7 @@ class api
       $ret = array("data" => $ret);
     }
 
-    $ret = array_merge($this->addons, $ret);
+    $ret = array_merge_recursive($this->addons, $ret);
 
     $conf = phoxy_conf();
 
