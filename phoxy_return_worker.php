@@ -148,7 +148,7 @@ class phoxy_return_worker
     {
       if (in_array('global', $cache['no'])
           || in_array('all', $cache['no']))
-        header('Cache-Control: no-cache');
+        header('Cache-Control: no-cache, no-store');
     }
     else if (isset($cache['session']))
     {
