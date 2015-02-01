@@ -6,7 +6,7 @@ class phoxy_return_worker
   private $prepared;
   public $hooks = [];
   public static $add_hook_cb;
-  private static $minimal_cache = null;
+  private static $minimal_cache = [];
   
   public function __construct( $obj )
   {
