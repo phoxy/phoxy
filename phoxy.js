@@ -577,7 +577,7 @@ phoxy._ApiSubsystem =
         var v = obj[p];
         if (typeof v == "object")
         {
-          str.push("[" + serialize(v) + "]");
+          str.push("[" + phoxy.Serialize(v) + "]");
           continue;
         }
         else if (typeof v == "string")
