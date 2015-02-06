@@ -581,7 +581,7 @@ phoxy._ApiSubsystem =
           continue;
         }
         else if (typeof v == "string")
-          if (v.search(/["'(),]/) != -1 || v == '')
+          if (v.search(/["'(),\/\\]/) != -1 || v == '')
             v = "\"" + addslashes(v) + "\"";
         str.push(v);
       }

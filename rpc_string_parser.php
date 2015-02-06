@@ -74,7 +74,7 @@ function TryExtractParams( $str )
       else
         $mode = 1;
     }
-    else if ($ch == "\\" && $mode == 1)
+    else if (($ch == "\\" || $ch == "/") && $mode == 1)
       $escape = 1;
     else if ($ch == ')' && !$mode)
       break;
