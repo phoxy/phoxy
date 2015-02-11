@@ -787,7 +787,6 @@ phoxy._EarlyStage =
             initial_client_code++;
             phoxy.ApiRequest(
                 $(this).attr("phoxy"),
-                undefined,
                 function()
               { 
                 phoxy.Defer(function()
