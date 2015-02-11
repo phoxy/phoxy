@@ -166,18 +166,17 @@ function TryExtractParams( $str, $support_array = false)
     }
     else if ($support_array && $ch == ':' && !$mode)
     {
-      if (phoxy_conf()['debug'])
-        echo "IM IN [".($i - $argbegin)."]:".substr($str, $argbegin);
       $args[] = $ConstructParameter($str, $argbegin, $i - $argbegin);
       $argbegin = $i + 1;
       $expect_join = $support_array;
     }
   }
 
-  if (phoxy_conf()['debug'])
-    echo "You forget: ".substr($str, $argbegin);
-  if ($nested > $array_mode)
+  if ($nested < 0 || $nested > $array_mode)
+  {
+    var_dump($nested, $array_mode);
     die("Deserealisation fail: Wrong nesting level $nested");
+  }
 
   if ($i >= $length)
     return null;
