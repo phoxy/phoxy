@@ -36,22 +36,20 @@ function ParseGreedy( $str )
 
 function TryExtractParams( $str, $support_array = false)
 {
-  if (phoxy_conf()['debug'])
-    var_dump("WE PARSING",  $str, $support_array);
   $length = strlen($str);
   $i = -1;
 
   while (++$i < $length)
-  {
     if ($str[$i] == '(')
-      break;
-    if ($support_array && $str[$i] == '[')
-      break;
-  }
+      break; // if we found arguments begin
+    else if ($support_array && $str[$i] == '[')
+      break; // or array begin, if it recusion
   if ($i >= $length)
     return null;
+  // Is we working inside recursion
   $array_mode = (int)($str[$i] == '[');
 
+  // Cut borders on parameters
   $ConstructParameter = function($str, $start, $end)
   {
     $param = stripslashes(substr($str, $start, $end));
@@ -62,9 +60,10 @@ function TryExtractParams( $str, $support_array = false)
     return substr($param, 1, strlen($param) - 2);
   };
 
-  $args = [];
-  $expect_join = false;
+  $args = []; // returning array of arguments
+  $expect_join = false; // if next parameter should be joined with previous as key=>value
 
+  // appending new argument to exsist array, respect key=>value joining
   $AppendArg = function($new) use (&$args, &$expect_join, &$argbegin, &$i)
   {
     if (!$expect_join)
@@ -73,11 +72,6 @@ function TryExtractParams( $str, $support_array = false)
     {
       $key = array_pop($args);
       $args[$key] = $new;
-      if (phoxy_conf()['debug'])
-      {
-        echo "POP";
-        var_dump($args);
-      }
     }
 
     $expect_join = false;
@@ -85,23 +79,20 @@ function TryExtractParams( $str, $support_array = false)
   };
 
 
-
+  // Begining of arguments substring
   $began = $i + 1;
-
+  // If we in escaping secuence
   $escape = 0;
+  // Current nesting level (in array mode is already 1)
   $nested = $array_mode;
-  $mode = 0;
+  $mode = 0; // C String mode
+  // First character of current argument
   $argbegin = $began;
 
   while (++$i < $length)
   {
     $ch = $str[$i];
-    if (phoxy_conf()['debug'])
-    {
-      echo "<br>$ch res: ".$ConstructParameter($str, $argbegin, $i - $argbegin + 1);
-      echo "<br>";
-      print_r($args);
-    }
+
     // escaping in strings
     if ($escape)
     {
@@ -138,28 +129,27 @@ function TryExtractParams( $str, $support_array = false)
     else if ($ch == ']')
     {
       $nested--;
-      echo "NESTING: $nested";
-      echo "COND: ".($nested - $array_mode);
       if ($nested < 0)
         break;
 
       if ($nested > $array_mode)
-        continue;
-      echo "WUT";
+        continue; // We still deep in other recursions, should skip to cutoff
 
-      echo "<hr>";
       $new = $ConstructParameter($str, $argbegin, $i - $argbegin);
+      // if we find end of nesting, we should recurse call inside it
       if ($nested - $array_mode == 0)
         $new = TryExtractParams($new.']', true);
-      echo "<hr>";
 
       $AppendArg($new);
 
+      // If we was in array recursion, and now we at 0 level, we should return
       if ($array_mode && !$nested)
         break;
 
-      if (@$str[$argbegin] == ',') // or != ) and != ], maybe
-        continue;
+      if (@$str[$argbegin] != ',') // or == ) and == ], maybe
+        continue; // OK, just go
+      // Move pointers in situations like ],
+      // but not in situations like ]] and ])
       $argbegin++;
       $i++;
     }
@@ -186,8 +176,6 @@ function TryExtractParams( $str, $support_array = false)
 
   $end = $i + 1;
 
-  if (phoxy_conf()['debug'])
-  var_dump($args);
   return
   [
     "module" => substr($str, 0, $began - 1),
