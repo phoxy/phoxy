@@ -97,11 +97,14 @@ function TryExtractParams( $str, $support_array = false)
     else if ($ch == ']' && !$mode)
     {
       $nested--;
+      echo "NESTING: $nested";
+      echo "COND: ".($nested - $array_mode);
       if ($nested < 0)
         break;
 
-      if ($nested - $array_mode > 1)
+      if ($nested > $array_mode)
         continue;
+      echo "WUT";
 
       echo "<hr>";
       $new = $ConstructParameter($str, $argbegin, $i - $argbegin);
@@ -124,7 +127,7 @@ function TryExtractParams( $str, $support_array = false)
         }
       }
 
-      if ($array_mode)
+      if ($array_mode && !$nested)
         break;
 
       $argbegin = $i + 1;
@@ -170,7 +173,10 @@ function TryExtractParams( $str, $support_array = false)
       $expect_join = $support_array;
     }
   }
-  if ($nested)
+
+  if (phoxy_conf()['debug'])
+    echo "You forget: ".substr($str, $argbegin);
+  if ($nested > $array_mode)
     die("Deserealisation fail: Wrong nesting level $nested");
 
   if ($i >= $length)
