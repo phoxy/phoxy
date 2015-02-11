@@ -120,6 +120,23 @@ function TryExtractParams( $str, $support_array = false)
     // complext data structure code
     if ($ch == '[')
       $nested++;
+    else if ($ch == ')')
+      break;
+    else if ($ch == ',')
+    {
+      if ($nested < 0)
+        die("Deserealisation fail: Unexpected ']' found at $i");
+      if ($nested > $array_mode)
+        continue;
+      $new = $ConstructParameter($str, $argbegin, $i - $argbegin);
+      $AppendArg($new);
+    }
+    else if ($support_array && $ch == ':')
+    {
+      $args[] = $ConstructParameter($str, $argbegin, $i - $argbegin);
+      $argbegin = $i + 1;
+      $expect_join = $support_array;
+    }
     else if ($ch == ']')
     {
       $nested--;
@@ -150,25 +167,6 @@ function TryExtractParams( $str, $support_array = false)
       }
 
       continue;
-    }
-    else if ($ch == ')')
-      break;
-    else if ($ch == ',')
-    {
-      if (phoxy_conf()['debug'])
-        var_dump($nested);
-      if ($nested < 0)
-        die("Deserealisation fail: Unexpected ']' found at $i");
-      if ($nested > $array_mode)
-        continue;
-      $new = $ConstructParameter($str, $argbegin, $i - $argbegin);
-      $AppendArg($new);
-    }
-    else if ($support_array && $ch == ':')
-    {
-      $args[] = $ConstructParameter($str, $argbegin, $i - $argbegin);
-      $argbegin = $i + 1;
-      $expect_join = $support_array;
     }
   }
 
