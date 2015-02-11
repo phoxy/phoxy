@@ -65,7 +65,7 @@ function TryExtractParams( $str, $support_array = false)
   $args = [];
   $expect_join = false;
 
-  $AppendArg = function($new) use (&$args, &$expect_join)
+  $AppendArg = function($new) use (&$args, &$expect_join, &$argbegin, &$i)
   {
     if (!$expect_join)
       $args[] = $new;
@@ -81,6 +81,7 @@ function TryExtractParams( $str, $support_array = false)
     }
 
     $expect_join = false;
+    $argbegin = $i + 1;
   };
 
 
@@ -137,8 +138,6 @@ function TryExtractParams( $str, $support_array = false)
       if ($array_mode && !$nested)
         break;
 
-      $argbegin = $i + 1;
-      $expect_join = false;
       if (@$str[$argbegin] == ',') // or != ) and != ], maybe
       {
         $argbegin++;
@@ -159,9 +158,6 @@ function TryExtractParams( $str, $support_array = false)
         continue;
       $new = $ConstructParameter($str, $argbegin, $i - $argbegin);
       $AppendArg($new);
-
-      $argbegin = $i + 1;
-      $expect_join = false;
     }
     else if ($support_array && $ch == ':' && !$mode)
     {
@@ -187,7 +183,11 @@ function TryExtractParams( $str, $support_array = false)
     return null;
 
   if ($i != $argbegin)
-    $args[] = $ConstructParameter($str, $argbegin, $i - $argbegin);
+  {
+    $new = $ConstructParameter($str, $argbegin, $i - $argbegin);
+    $AppendArg($new);
+  }
+
   $end = $i + 1;
 
   if (phoxy_conf()['debug'])
