@@ -159,12 +159,9 @@ function TryExtractParams( $str, $support_array = false)
         break;
 
       if (@$str[$argbegin] == ',') // or != ) and != ], maybe
-      {
-        $argbegin++;
-        $i++;
-      }
-
-      continue;
+        continue;
+      $argbegin++;
+      $i++;
     }
   }
 
@@ -175,13 +172,9 @@ function TryExtractParams( $str, $support_array = false)
 
   if ($i >= $length)
     return null;
-  if ($array_mode)
-  {
-    if ($str[$i] != ']')
-      return null;
-    return $args;
-  }
 
+  if ($str[$i] == ']' && $array_mode)
+    return $args;
   if ($str[$i] != ')')
     return null;
 
