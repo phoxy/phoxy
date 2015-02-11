@@ -124,8 +124,6 @@ function TryExtractParams( $str, $support_array = false)
       break;
     else if ($ch == ',')
     {
-      if ($nested < 0)
-        die("Deserealisation fail: Unexpected ']' found at $i");
       if ($nested > $array_mode)
         continue;
       $new = $ConstructParameter($str, $argbegin, $i - $argbegin);
@@ -170,7 +168,9 @@ function TryExtractParams( $str, $support_array = false)
     }
   }
 
-  if ($nested < 0 || $nested > $array_mode)
+  if ($nested < 0)
+    die("Deserealisation fail: Unexpected ']' found at $i");
+  if ($nested > $array_mode)
     die("Deserealisation fail: Wrong nesting level $nested");
 
   if ($i >= $length)
