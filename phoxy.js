@@ -541,6 +541,15 @@ phoxy._ApiSubsystem =
   ,
   AJAX : function( url, callback, params )
     {
+      if (Array.isArray(url))
+        if (url.length < 2)
+          url = url.shift();
+        else
+        {
+          var tmp = url.shift();
+          url = tmp + '(' + phoxy.Serialize(url) + ')';
+        }
+
       var current_ajax_id = phoxy.state.ajax.active_id++;
       phoxy.state.ajax.active[current_ajax_id] = arguments;
 
