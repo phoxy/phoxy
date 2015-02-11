@@ -562,30 +562,36 @@ phoxy._ApiSubsystem =
         });
     }
   ,
-  Serialize : function(obj, prefix)
-    {
-      if (typeof prefix != "undefined")
-        phoxy.Log(3, "phoxy.Serialize", "using prefix is deprecated");
+  Serialize : function(obj, nested_mode)
+    { // Its more and more looks like JSON bycicle
       function addslashes( str )
       { // http://stackoverflow.com/questions/770523/escaping-strings-in-javascript
         return (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
       }
 
+      function SerializeRaw(element)
+      {
+        if (typeof element == "object")
+          return phoxy.Serialize(element, true);
+        else if (typeof v == "string")
+          if (v.search(/["'(),\/\\]/) != -1 || v == '')
+            element = "\"" + addslashes(element) + "\"";
+        return element;
+      }
+
       var str = [];
+      var array_mode = Array.isArray(obj);
       for(var p in obj)
       {
         var v = obj[p];
-        if (typeof v == "object")
-        {
-          str.push("[" + phoxy.Serialize(v) + "]");
-          continue;
-        }
-        else if (typeof v == "string")
-          if (v.search(/["'(),\/\\]/) != -1 || v == '')
-            v = "\"" + addslashes(v) + "\"";
-        str.push(v);
+        var prefix = '';
+        if (nested_mode && !array_mode)
+          prefix = SerializeRaw(p) + ":";
+        str.push(prefix + SerializeRaw(v));
       }
-      return str.join(",");
+      if (!nested_mode)
+        return str.join(",");
+      return "[" + str.join(",") + "]";
     }
   ,
   ApiRequest : function( url, obj_optional, callback )

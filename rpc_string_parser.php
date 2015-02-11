@@ -34,16 +34,23 @@ function ParseGreedy( $str )
   return NameParsedArray(implode("/", array($res["dir"], $res["class"])), $res["method"], "Reserve");
 }
 
-function TryExtractParams( $str )
+function TryExtractParams( $str, $support_array = false)
 {
+  if (phoxy_conf()['debug'])
+    var_dump("WE PARSING",  $str, $support_array);
   $length = strlen($str);
   $i = -1;
 
   while (++$i < $length)
+  {
     if ($str[$i] == '(')
       break;
+    if ($support_array && $str[$i] == '[')
+      break;
+  }
   if ($i >= $length)
     return null;
+  $array_mode = (int)($str[$i] == '[');
 
   $ConstructParameter = function($str, $start, $end)
   {
@@ -59,12 +66,21 @@ function TryExtractParams( $str )
   $began = $i + 1;
 
   $escape = 0;
+  $nested = $array_mode;
   $mode = 0;
   $args = [];
   $argbegin = $began;
+
+  $expect_join = false;
   while (++$i < $length)
   {
     $ch = $str[$i];
+    if (phoxy_conf()['debug'])
+    {
+      echo "<br>$ch res: ".$ConstructParameter($str, $argbegin, $i - $argbegin + 1);
+      echo "<br>";
+      print_r($args);
+    }
     if ($escape)
       $escape = 0;
     else if ($ch == "\"" || $ch == "'")
@@ -76,21 +92,105 @@ function TryExtractParams( $str )
     }
     else if (($ch == "\\" || $ch == "/") && $mode == 1)
       $escape = 1;
+    else if ($ch == '[' && !$mode)
+      $nested++;
+    else if ($ch == ']' && !$mode)
+    {
+      $nested--;
+      if ($nested < 0)
+        break;
+
+      if ($nested - $array_mode > 1)
+        continue;
+
+      echo "<hr>";
+      $new = $ConstructParameter($str, $argbegin, $i - $argbegin);
+      if ($nested - $array_mode == 0)
+        $new = TryExtractParams($new.']', true);
+      echo "<hr>";
+
+      if (phoxy_conf()['debug'])
+        var_dump($new);
+      if (!$expect_join)
+        $args[] = $new;
+      else
+      {
+        $key = array_pop($args);
+        $args[$key] = $new;
+        if (phoxy_conf()['debug'])
+        {
+          echo "POP";
+          var_dump($args);
+        }
+      }
+
+      if ($array_mode)
+        break;
+
+      $argbegin = $i + 1;
+      $expect_join = false;
+      if (@$str[$argbegin] == ',') // or != ) and != ], maybe
+      {
+        $argbegin++;
+        $i++;
+      }
+
+      continue;
+    }
     else if ($ch == ')' && !$mode)
       break;
     else if ($ch == ',' && !$mode)
     {
+      if (phoxy_conf()['debug'])
+        var_dump($nested);
+      if ($nested < 0)
+        die("Deserealisation fail: Unexpected ']' found at $i");
+      if ($nested > $array_mode)
+        continue;
+      $new = $ConstructParameter($str, $argbegin, $i - $argbegin);
+      if (!$expect_join)
+        $args[] = $new;
+      else
+      {
+        if (phoxy_conf()['debug'])
+          echo "POP";
+        $key = array_pop($args);
+        $args[$key] = $new;
+      }
+
+      $argbegin = $i + 1;
+      $expect_join = false;
+    }
+    else if ($support_array && $ch == ':' && !$mode)
+    {
+      if (phoxy_conf()['debug'])
+        echo "IM IN [".($i - $argbegin)."]:".substr($str, $argbegin);
       $args[] = $ConstructParameter($str, $argbegin, $i - $argbegin);
       $argbegin = $i + 1;
+      $expect_join = $support_array;
     }
   }
-  if (@$str[$i] != ')')
+  if ($nested)
+    die("Deserealisation fail: Wrong nesting level $nested");
+
+  if ($i >= $length)
+    return null;
+  if ($array_mode)
+  {
+    if ($str[$i] != ']')
+      return null;
+    return $args;
+  }
+
+  if ($str[$i] != ')')
     return null;
 
   if ($i != $argbegin)
     $args[] = $ConstructParameter($str, $argbegin, $i - $argbegin);
   $end = $i + 1;
 
+  if (phoxy_conf()['debug'])
+  var_dump($args);
   return
   [
     "module" => substr($str, 0, $began - 1),
