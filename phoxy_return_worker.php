@@ -6,6 +6,7 @@ class phoxy_return_worker
   private $prepared;
   public $hooks = [];
   public static $add_hook_cb;
+  private static $minimal_cache = [];
   
   public function __construct( $obj )
   {
@@ -35,7 +36,7 @@ class phoxy_return_worker
   {
     foreach ($this->hooks as $hook)
         $hook($this);
-    return $this->prepared = json_encode($this->obj);
+    return $this->prepared = json_encode($this->obj, JSON_UNESCAPED_UNICODE);
   }  
   
   public function __toString()
@@ -107,6 +108,10 @@ class phoxy_return_worker
   {
     if (!isset($this->obj['cache']))
       $this->obj['cache'] = [];
+
+    self::NewCache($this->obj['cache']);
+    $this->obj['cache'] = $cache = self::$minimal_cache;
+
     $cache = $this->obj['cache'];
     
     $simple_mode = in_array("no", $cache);
@@ -137,21 +142,26 @@ class phoxy_return_worker
   
   private function Cache()
   {
-    if (!isset($this->obj['cache']))
-      return;
     $cache = $this->obj['cache'];
-    if (isset($cache['global']))
+
+    if (isset($cache['no']))
     {
-      header('Cache-Control: public, max-age='.$this->ParseCache($cache['global']));
+      if (in_array('global', $cache['no'])
+          || in_array('all', $cache['no']))
+        header('Cache-Control: no-cache, no-store');
     }
-    else if (isset($cache['no']['global']))
+    else if (isset($cache['session']))
     {
-      header('Cache-Control: no-cache');
+      header('Cache-Control: private, max-age='.self::ParseCache($cache['session']));
+    }
+    else if (isset($cache['global']))
+    {
+      header('Cache-Control: public, max-age='.self::ParseCache($cache['global']));
     }
     // session, local, global
   }
   
-  private function ParseCache( $str )
+  static private function ParseCache( $str )
   {
     $str = trim($str);
     $arr = preg_split('/([0-9]+)([dhms]?)/', $str, -1, PREG_SPLIT_DELIM_CAPTURE);
@@ -183,5 +193,48 @@ class phoxy_return_worker
         break;
     }
     return $ret;
+  }
+
+  static public function NewCache( $array )
+  {
+    if (!is_array($array))
+      return self::ProcessCache('global', $array);
+    foreach ($array as $key => $value)
+      self::ProcessCache($key, $value);
+  }
+
+  static private function ProcessCache( $key, $value )
+  {
+    if ($key === 'no')
+    {
+      if (is_array($value))
+      {
+        foreach ($value as $scope)
+          self::ProcessCache('no', $scope);
+        return;
+      }
+      if (!isset(self::$minimal_cache['no']))
+        self::$minimal_cache['no'] = [];
+      if (!in_array($value, self::$minimal_cache['no']))
+        self::$minimal_cache['no'][] = $value;
+      return;
+    }
+
+    if (is_array($value)) // assuming that user tried to overload
+      return self::ProcessCache($key, end($value));
+    if ($value === 'no')
+    {
+      if ($key === 0)
+        return self::$minimal_cache = ['no' => 'all'];
+      self::$minimal_cache[$key] = 'no';
+      return;
+    }
+
+    $curmin = &self::$minimal_cache[$key];
+
+    if (!isset($curmin))
+     $curmin = $value;
+    if (self::ParseCache($curmin) > self::ParseCache($value))
+      $curmin = $value;
   }
 }
