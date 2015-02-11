@@ -102,20 +102,25 @@ function TryExtractParams( $str, $support_array = false)
       echo "<br>";
       print_r($args);
     }
+    // escaping in strings
     if ($escape)
-      $escape = 0;
-    else if ($ch == "\"" || $ch == "'")
     {
-      if ($mode == 1)
-        $mode = 0;
-      else
-        $mode = 1;
+      $escape = 0;
+      continue;
     }
-    else if (($ch == "\\" || $ch == "/") && $mode == 1)
-      $escape = 1;
-    else if ($ch == '[' && !$mode)
+
+    // C strings support
+    if ($ch == "\"" || $ch == "'")
+      $mode = !$mode;
+    else if ($ch == "\\" || $ch == "/")
+      $escape = $mode; // only with enabled string mode escape sequences work
+    if ($mode)
+      continue;
+
+    // complext data structure code
+    if ($ch == '[')
       $nested++;
-    else if ($ch == ']' && !$mode)
+    else if ($ch == ']')
     {
       $nested--;
       echo "NESTING: $nested";
@@ -146,9 +151,9 @@ function TryExtractParams( $str, $support_array = false)
 
       continue;
     }
-    else if ($ch == ')' && !$mode)
+    else if ($ch == ')')
       break;
-    else if ($ch == ',' && !$mode)
+    else if ($ch == ',')
     {
       if (phoxy_conf()['debug'])
         var_dump($nested);
@@ -159,7 +164,7 @@ function TryExtractParams( $str, $support_array = false)
       $new = $ConstructParameter($str, $argbegin, $i - $argbegin);
       $AppendArg($new);
     }
-    else if ($support_array && $ch == ':' && !$mode)
+    else if ($support_array && $ch == ':')
     {
       $args[] = $ConstructParameter($str, $argbegin, $i - $argbegin);
       $argbegin = $i + 1;
