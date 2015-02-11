@@ -62,16 +62,36 @@ function TryExtractParams( $str, $support_array = false)
     return substr($param, 1, strlen($param) - 2);
   };
 
+  $args = [];
+  $expect_join = false;
+
+  $AppendArg = function($new) use (&$args, &$expect_join)
+  {
+    if (!$expect_join)
+      $args[] = $new;
+    else
+    {
+      $key = array_pop($args);
+      $args[$key] = $new;
+      if (phoxy_conf()['debug'])
+      {
+        echo "POP";
+        var_dump($args);
+      }
+    }
+
+    $expect_join = false;
+  };
+
+
 
   $began = $i + 1;
 
   $escape = 0;
   $nested = $array_mode;
   $mode = 0;
-  $args = [];
   $argbegin = $began;
 
-  $expect_join = false;
   while (++$i < $length)
   {
     $ch = $str[$i];
@@ -112,20 +132,7 @@ function TryExtractParams( $str, $support_array = false)
         $new = TryExtractParams($new.']', true);
       echo "<hr>";
 
-      if (phoxy_conf()['debug'])
-        var_dump($new);
-      if (!$expect_join)
-        $args[] = $new;
-      else
-      {
-        $key = array_pop($args);
-        $args[$key] = $new;
-        if (phoxy_conf()['debug'])
-        {
-          echo "POP";
-          var_dump($args);
-        }
-      }
+      $AppendArg($new);
 
       if ($array_mode && !$nested)
         break;
@@ -151,15 +158,7 @@ function TryExtractParams( $str, $support_array = false)
       if ($nested > $array_mode)
         continue;
       $new = $ConstructParameter($str, $argbegin, $i - $argbegin);
-      if (!$expect_join)
-        $args[] = $new;
-      else
-      {
-        if (phoxy_conf()['debug'])
-          echo "POP";
-        $key = array_pop($args);
-        $args[$key] = $new;
-      }
+      $AppendArg($new);
 
       $argbegin = $i + 1;
       $expect_join = false;
@@ -173,10 +172,7 @@ function TryExtractParams( $str, $support_array = false)
   }
 
   if ($nested < 0 || $nested > $array_mode)
-  {
-    var_dump($nested, $array_mode);
     die("Deserealisation fail: Wrong nesting level $nested");
-  }
 
   if ($i >= $length)
     return null;
