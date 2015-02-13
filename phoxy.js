@@ -605,7 +605,11 @@ phoxy._ApiSubsystem =
   ,
   ApiRequest : function( url, callback )
     {
-      if (arguments.length == 3)
+      if (arguments.length == 3
+            ||
+            (typeof callback != 'function'
+              && typeof callback != 'undefined')
+          )
       {
         phoxy.Log(1, "Object optional IS deprecated. Look at #91");
         if (typeof url != 'string')
@@ -627,7 +631,11 @@ phoxy._ApiSubsystem =
   ,
   MenuCall : function( url, callback )
     {
-      if (arguments.length == 3)
+      if (arguments.length == 3
+            ||
+            (typeof callback != 'function'
+              && typeof callback != 'undefined')
+          )
       {
         phoxy.Log(1, "Object optional IS deprecated. Look at #91");
         if (typeof url != 'string')
