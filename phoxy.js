@@ -778,6 +778,29 @@ phoxy._EarlyStage =
         phoxy._EarlyStage.sync_require,
         function()
         {
+          $.getJSON(phoxy.prestart.config || "api/phoxy", function(data)
+          {
+            phoxy.config = data;
+            if (typeof phoxy.prestart.OnBeforeCompile == 'function')
+              phoxy.prestart.OnBeforeCompile();
+
+            phoxy._EarlyStage.Compile();
+            if (typeof phoxy.config.verbose != 'undefined')
+              phoxy.state.verbose = phoxy.config.verbose;
+
+            if (typeof phoxy.prestart.OnAfterCompile == 'function')
+              phoxy.prestart.OnAfterCompile();
+
+            phoxy.state.conf_loaded = true;
+          });
+        }
+      );
+
+      require
+      (
+        phoxy._EarlyStage.async_require,
+        function()
+        {
           phoxy._EarlyStage.DependenciesLoaded();
         }
       );
@@ -785,53 +808,29 @@ phoxy._EarlyStage =
   ,
   DependenciesLoaded: function()
     {
-      var conf_loaded = false;
-      require
-      (
-        phoxy._EarlyStage.async_require,
-        function()
-        {
-          if (!conf_loaded) // wait until phoxy configuration loaded
-            return setTimeout(arguments.callee, 100);
+      if (!phoxy.state.conf_loaded) // wait until phoxy configuration loaded
+        return setTimeout(arguments.callee, 100);
 
-          phoxy.OverloadEJSCanvas();
-          requirejs.config({baseUrl: phoxy.Config()['js_dir']});
+      phoxy.OverloadEJSCanvas();
+      requirejs.config({baseUrl: phoxy.Config()['js_dir']});
 
-          var initial_client_code = 0;
-          // Invoke client code
-          $('script[phoxy]').each(function()
-          {
-            initial_client_code++;
-            phoxy.ApiRequest(
-                $(this).attr("phoxy"),
-                function()
-              { 
-                phoxy.Defer(function()
-                { // Be sure that zero reached only once
-                  if (--initial_client_code)
-                    return;
-                  if (typeof phoxy.prestart.OnInitialClientCodeComplete == 'function')
-                    phoxy.prestart.OnInitialClientCodeComplete();
-                });                            
-              });
-          });
-        }
-      );
-
-      $.getJSON(phoxy.prestart.config || "api/phoxy", function(data)
+      var initial_client_code = 0;
+      // Invoke client code
+      $('script[phoxy]').each(function()
       {
-        phoxy.config = data;
-        if (typeof phoxy.prestart.OnBeforeCompile == 'function')
-          phoxy.prestart.OnBeforeCompile();
-
-        phoxy._EarlyStage.Compile();
-        if (typeof phoxy.config.verbose != 'undefined')
-          phoxy.state.verbose = phoxy.config.verbose;
-
-        if (typeof phoxy.prestart.OnAfterCompile == 'function')
-          phoxy.prestart.OnAfterCompile();
-
-        conf_loaded = true;
+        initial_client_code++;
+        phoxy.ApiRequest(
+            $(this).attr("phoxy"),
+            function()
+          {
+            phoxy.Defer(function()
+            { // Be sure that zero reached only once
+              if (--initial_client_code)
+                return;
+              if (typeof phoxy.prestart.OnInitialClientCodeComplete == 'function')
+                phoxy.prestart.OnInitialClientCodeComplete();
+            });
+          });
       });
     }
   ,
