@@ -6,7 +6,7 @@ class phoxy_return_worker
   private $prepared;
   public $hooks = [];
   public static $add_hook_cb;
-  private static $minimal_cache = null;
+  private static $minimal_cache = [];
   
   public function __construct( $obj )
   {
@@ -108,6 +108,10 @@ class phoxy_return_worker
   {
     if (!isset($this->obj['cache']))
       $this->obj['cache'] = [];
+
+    self::NewCache($this->obj['cache']);
+    $this->obj['cache'] = $cache = self::$minimal_cache;
+
     $cache = $this->obj['cache'];
     
     $simple_mode = in_array("no", $cache);
@@ -138,19 +142,21 @@ class phoxy_return_worker
   
   private function Cache()
   {
-    if (!isset($this->obj['cache']))
-      return;
-    
-    self::NewCache($this->obj['cache']);
-    $this->obj['cache'] = $cache = self::$minimal_cache;
+    $cache = $this->obj['cache'];
 
-    if (isset($cache['global']))
+    if (isset($cache['no']))
+    {
+      if (in_array('global', $cache['no'])
+          || in_array('all', $cache['no']))
+        header('Cache-Control: no-cache, no-store');
+    }
+    else if (isset($cache['session']))
+    {
+      header('Cache-Control: private, max-age='.self::ParseCache($cache['session']));
+    }
+    else if (isset($cache['global']))
     {
       header('Cache-Control: public, max-age='.self::ParseCache($cache['global']));
-    }
-    else if (isset($cache['no']['global']))
-    {
-      header('Cache-Control: no-cache');
     }
     // session, local, global
   }
@@ -218,6 +224,8 @@ class phoxy_return_worker
       return self::ProcessCache($key, end($value));
     if ($value === 'no')
     {
+      if ($key === 0)
+        return self::$minimal_cache = ['no' => 'all'];
       self::$minimal_cache[$key] = 'no';
       return;
     }

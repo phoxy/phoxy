@@ -239,9 +239,20 @@ phoxy._RenderSubsystem =
   ,
   Fancy : function(design, data, callback, raw_output)
     {
-      phoxy.Log(6, "phoxy.Fancy", arguments);
-
       var args = arguments;
+      for (var i = 0; i < 2; i++)
+        if (Array.isArray(args[i]))
+        {
+          var array = args[i];
+          var url = array.shift();
+          if (array.length > 0)
+            url += '(' + phoxy.Serialize(array) + ')';
+          args[i] = url;
+          phoxy.Fancy.apply(this, args);
+          return;
+        }
+
+      phoxy.Log(6, "phoxy.Fancy", arguments);
 
       var callback = args[2];
       if (typeof(callback) == 'undefined')
@@ -530,6 +541,15 @@ phoxy._ApiSubsystem =
   ,
   AJAX : function( url, callback, params )
     {
+      if (Array.isArray(url))
+        if (url.length < 2)
+          url = url.shift();
+        else
+        {
+          var tmp = url.shift();
+          url = tmp + '(' + phoxy.Serialize(url) + ')';
+        }
+
       var current_ajax_id = phoxy.state.ajax.active_id++;
       phoxy.state.ajax.active[current_ajax_id] = arguments;
 
@@ -551,51 +571,82 @@ phoxy._ApiSubsystem =
         });
     }
   ,
-  Serialize : function(obj, prefix)
-    {
-      if (typeof prefix != "undefined")
-        phoxy.Log(3, "phoxy.Serialize", "using prefix is deprecated");
+  Serialize : function(obj, nested_mode)
+    { // Its more and more looks like JSON bycicle
       function addslashes( str )
       { // http://stackoverflow.com/questions/770523/escaping-strings-in-javascript
         return (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
       }
 
+      function SerializeRaw(element)
+      {
+        if (typeof element == "object")
+          return phoxy.Serialize(element, true);
+        else if (typeof v == "string")
+          if (v.search(/["'(),\/\\]/) != -1 || v == '')
+            element = "\"" + addslashes(element) + "\"";
+        return element;
+      }
+
       var str = [];
+      var array_mode = Array.isArray(obj);
       for(var p in obj)
       {
         var v = obj[p];
-        if (typeof v == "object")
-        {
-          str.push("[" + serialize(v) + "]");
-          continue;
-        }
-        else if (typeof v == "string")
-          if (v.search(/["'(),]/) != -1)
-            v = "\"" + addslashes(v) + "\"";
-        str.push(encodeURIComponent(v));
+        var prefix = '';
+        if (nested_mode && !array_mode)
+          prefix = SerializeRaw(p) + ":";
+        str.push(prefix + SerializeRaw(v));
       }
-      return str.join(",");
+      if (!nested_mode)
+        return str.join(",");
+      return "[" + str.join(",") + "]";
     }
   ,
-  ApiRequest : function( url, obj_optional, callback )
+  ApiRequest : function( url, callback )
     {
-      if (arguments.length == 1)
-        return phoxy.ApiRequest(url, undefined);
-      if (arguments.length == 2 && typeof arguments[1] == 'function')
-        return phoxy.ApiRequest(url, undefined, arguments[1]);
+      if (arguments.length == 3
+            ||
+            (typeof callback != 'function'
+              && typeof callback != 'undefined')
+          )
+      {
+        phoxy.Log(1, "Object optional IS deprecated. Look at #91");
+        if (typeof url != 'string')
+          return phoxy.Log(0, "Failed to soft translate call");
+        if (typeof arguments[1] != 'undefined')
+          url = [url].concat(arguments[1]);
+        return arguments.callee.call(this, url, arguments[2]);
+      }
 
-      if (obj_optional != undefined)
-        url += "(" + phoxy.Serialize(obj_optional) + ")";
+      args = url;
+      if (typeof url != 'string')
+      {
+        url = args.shift();
+        url += "(" + phoxy.Serialize(args) + ")";
+      }
 
       phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
     }
   ,
-  MenuCall : function( url, obj_optional, callback )
+  MenuCall : function( url, callback )
     {
-      phoxy.ApiRequest(url, obj_optional, function(data)
+      if (arguments.length == 3
+            ||
+            (typeof callback != 'function'
+              && typeof callback != 'undefined')
+          )
       {
-        if (typeof obj_optional != 'undefined')
-          url += "(" + phoxy.Serialize(obj_optional) + ")"
+        phoxy.Log(1, "Object optional IS deprecated. Look at #91");
+        if (typeof url != 'string')
+          return phoxy.Log(0, "Failed to soft translate call");
+        if (typeof arguments[1] != 'undefined')
+          url = [url].concat(arguments[1]);
+        return arguments.callee.call(this, url, arguments[2]);
+      }
+
+      phoxy.ApiRequest(url, function(data)
+      {
         phoxy.ChangeHash(url);
         if (typeof callback == 'function')
           callback(data);
@@ -753,7 +804,6 @@ phoxy._EarlyStage =
             initial_client_code++;
             phoxy.ApiRequest(
                 $(this).attr("phoxy"),
-                undefined,
                 function()
               { 
                 phoxy.Defer(function()

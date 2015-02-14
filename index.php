@@ -40,7 +40,7 @@ function PhoxyStart()
       echo $a->APICall($func, $args);
     } catch (phoxy_protected_call_error $e)
     {
-      echo json_encode($e->result, JSON_UNESCAPED_UNICODE );
+      echo new phoxy_return_worker($e->result);
     }
     
   }
