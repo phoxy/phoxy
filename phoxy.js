@@ -166,7 +166,32 @@ phoxy._RenderSubsystem =
       return canvas.html;
     }
   ,
-  __REFACTOR_RenderPrototype : function (target, ejs, data, rendered_callback, difference)
+  AsyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
+    {
+      phoxy.Fancy(ejs, data, function(obj, ejs, data)
+      {
+        if (typeof obj == 'undefined')
+        {
+          phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', $(target)[0]);
+          return; // And break dependencies execution
+        }
+
+        // Potential cascade memleak
+        // Should clear listeners with callback
+        phoxy.Appeared(target, function()
+        {
+          difference.call(phoxy, target, obj.html, arguments);
+        }, undefined, -1);
+
+        obj.on_complete = function()
+        {
+          if (typeof(rendered_callback) != 'undefined')
+            rendered_callback.call(obj.across, ejs, data, obj.html);
+        };
+      }, true);
+    }
+  ,
+  SyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
     {
       phoxy.Appeared(target, function()
       {
@@ -187,6 +212,13 @@ phoxy._RenderSubsystem =
           };
         }, true);
       }, undefined, -1);
+    }
+  ,
+  RenderStrategy : "Will be replaced by selected strategy after compilation."
+  ,
+  __REFACTOR_RenderPrototype : function (target, ejs, data, rendered_callback, difference)
+    {
+      phoxy.RenderStrategy.apply(this, arguments);
     }
   ,
   RenderInto : function (target, ejs, data, rendered_callback)
@@ -848,6 +880,11 @@ phoxy._EarlyStage =
             phoxy[func] = phoxy[system_name][func];
         delete phoxy[system_name];
       }
+
+      if (1 || phoxy.prestart.sync_cascade)
+        phoxy.RenderStrategy = phoxy.SyncRender_Strategy;
+      else
+        phoxy.RenderStrategy = phoxy.AsyncRender_Strategy;
     }
 };
 
