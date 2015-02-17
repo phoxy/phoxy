@@ -102,13 +102,13 @@ phoxy._TimeSubsystem =
     {
       function Div()
       {
-        return $(jquery_selector);
+        return document.getElementById(jquery_selector);
       }
       function IsDivAppeared()
       {
-        return Div()[0] != undefined;
-      }    
-      
+        return Div() != null;
+      }
+
       phoxy.Defer(function()
       {
         phoxy.WaitFor(IsDivAppeared, function()
@@ -122,8 +122,8 @@ phoxy._TimeSubsystem =
     {
       function IsDivDisappeared()
       {
-        return $(jquery_selector)[0] == undefined;
-      }    
+        return document.getElementById(jquery_selector) == null;
+      }
     
       phoxy.Defer(function()
       {
@@ -161,7 +161,7 @@ phoxy._RenderSubsystem =
       var canvas = phoxy.PrepareCanvas(tag);
       var id = canvas.id;
       
-      phoxy.RenderReplace('#' + id, ejs, data, rendered_callback);
+      phoxy.RenderReplace(id, ejs, data, rendered_callback);
 
       return canvas.html;
     }
@@ -223,7 +223,7 @@ phoxy._RenderSubsystem =
       var args = Array.prototype.slice.call(arguments);
       args.push(function(target, html)
       {
-        $(target).html(html);
+        $('#' + target).html(html);
       });
       phoxy.RenderStrategy.apply(this, args);
     }
@@ -233,10 +233,10 @@ phoxy._RenderSubsystem =
       var args = Array.prototype.slice.call(arguments);
       args.push(function(target, html)
       {
-        $(target).replaceWith(html);
+        $('#' + target).replaceWith(html);
       });
       phoxy.RenderStrategy.apply(this, args);
-    }  
+    }
   ,
   Render : function (design, data, callback, is_phoxy_internal_call)
     {
