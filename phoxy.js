@@ -166,7 +166,34 @@ phoxy._RenderSubsystem =
       return canvas.html;
     }
   ,
-  __REFACTOR_RenderPrototype : function (target, ejs, data, rendered_callback, difference)
+  AsyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
+    {
+      phoxy.Fancy(ejs, data, function(obj, ejs, data)
+      {
+        if (typeof obj == 'undefined')
+        {
+          phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', $(target)[0]);
+          return; // And break dependencies execution
+        }
+
+        // Potential cascade memleak
+        // Should clear listeners with callback
+        phoxy.Appeared(target, function()
+        {
+          difference.call(phoxy, target, obj.html, arguments);
+          for (var k in obj.defer)
+              obj.defer[k]();
+        }, undefined, -1);
+
+        obj.on_complete = function()
+        {
+          if (typeof(rendered_callback) != 'undefined')
+            rendered_callback.call(obj.across, ejs, data, obj.html);
+        };
+      }, true);
+    }
+  ,
+  SyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
     {
       phoxy.Appeared(target, function()
       {
@@ -189,6 +216,8 @@ phoxy._RenderSubsystem =
       }, undefined, -1);
     }
   ,
+  RenderStrategy : "Will be replaced by selected strategy after compilation."
+  ,
   RenderInto : function (target, ejs, data, rendered_callback)
     { 
       var args = Array.prototype.slice.call(arguments);
@@ -196,7 +225,7 @@ phoxy._RenderSubsystem =
       {
         $(target).html(html);
       });
-      phoxy.__REFACTOR_RenderPrototype.apply(this, args);
+      phoxy.RenderStrategy.apply(this, args);
     }
   ,
   RenderReplace : function (target, ejs, data, rendered_callback)
@@ -206,7 +235,7 @@ phoxy._RenderSubsystem =
       {
         $(target).replaceWith(html);
       });
-      phoxy.__REFACTOR_RenderPrototype.apply(this, args);
+      phoxy.RenderStrategy.apply(this, args);
     }  
   ,
   Render : function (design, data, callback, is_phoxy_internal_call)
@@ -488,6 +517,10 @@ phoxy._ApiSubsystem =
           ScriptsFiresUp,
           true);
         $('#' + render_id).replaceWith(obj.html);
+        // Refactor
+        if (!phoxy.state.sync_cascade)
+          for (var k in obj.defer)
+            obj.defer[k]();
       });
     }
   ,
@@ -848,6 +881,17 @@ phoxy._EarlyStage =
             phoxy[func] = phoxy[system_name][func];
         delete phoxy[system_name];
       }
+
+      if (phoxy.prestart.sync_cascade)
+      {
+        phoxy.state.sync_cascade = true;
+        phoxy.RenderStrategy = phoxy.SyncRender_Strategy;
+      }
+      else
+      {
+        phoxy.state.sync_cascade = false;
+        phoxy.RenderStrategy = phoxy.AsyncRender_Strategy;
+      }
     }
 };
 
@@ -955,7 +999,17 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
       that.CheckIsCompleted.call(that.across);
     }
 
-    return OriginDefer.call(this, CBHook, time);
+    if (phoxy.state.sync_cascade)
+      return OriginDefer.call(this, CBHook, time);
+    if (typeof that.defer == 'undefined')
+      that.defer = [];
+    if (typeof time == 'undefined')
+      return that.defer.push(CBHook);
+
+    that.defer.push(function()
+    {
+      return OriginDefer(CBHook, time);
+    })
   }
 
   EJS.Canvas.across.prototype.DeferCascade = function(callback)
