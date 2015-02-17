@@ -877,9 +877,15 @@ phoxy._EarlyStage =
       }
 
       if (1 || phoxy.prestart.sync_cascade)
+      {
+        phoxy.state.sync_cascade = true;
         phoxy.RenderStrategy = phoxy.SyncRender_Strategy;
+      }
       else
+      {
+        phoxy.state.sync_cascade = false;
         phoxy.RenderStrategy = phoxy.AsyncRender_Strategy;
+      }
     }
 };
 
@@ -987,7 +993,9 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
       that.CheckIsCompleted.call(that.across);
     }
 
-    return OriginDefer.call(this, CBHook, time);
+    if (phoxy.state.sync_cascade)
+      return OriginDefer.call(this, CBHook, time);
+    phoxy.Log(0, "Coming soon");
   }
 
   EJS.Canvas.across.prototype.DeferCascade = function(callback)
