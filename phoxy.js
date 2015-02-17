@@ -216,11 +216,6 @@ phoxy._RenderSubsystem =
   ,
   RenderStrategy : "Will be replaced by selected strategy after compilation."
   ,
-  __REFACTOR_RenderPrototype : function (target, ejs, data, rendered_callback, difference)
-    {
-      phoxy.RenderStrategy.apply(this, arguments);
-    }
-  ,
   RenderInto : function (target, ejs, data, rendered_callback)
     { 
       var args = Array.prototype.slice.call(arguments);
@@ -228,7 +223,7 @@ phoxy._RenderSubsystem =
       {
         $(target).html(html);
       });
-      phoxy.__REFACTOR_RenderPrototype.apply(this, args);
+      phoxy.RenderStrategy.apply(this, args);
     }
   ,
   RenderReplace : function (target, ejs, data, rendered_callback)
@@ -238,7 +233,7 @@ phoxy._RenderSubsystem =
       {
         $(target).replaceWith(html);
       });
-      phoxy.__REFACTOR_RenderPrototype.apply(this, args);
+      phoxy.RenderStrategy.apply(this, args);
     }  
   ,
   Render : function (design, data, callback, is_phoxy_internal_call)
