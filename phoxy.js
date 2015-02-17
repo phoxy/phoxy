@@ -867,23 +867,28 @@ phoxy._EarlyStage =
       requirejs.config({baseUrl: phoxy.Config()['js_dir']});
 
       var initial_client_code = 0;
+
       // Invoke client code
-      $('script[phoxy]').each(function()
-      {
-        initial_client_code++;
-        phoxy.ApiRequest(
-            $(this).attr("phoxy"),
+      var scripts = document.getElementsByTagName('script');
+      for (var i = 0; i < scripts.length; i++)
+        if (scripts[i].getAttribute('phoxy') == null)
+          continue;
+        else
+        {
+          initial_client_code++;
+          phoxy.ApiRequest(
+            scripts[i].getAttribute('phoxy'),
             function()
-          {
-            phoxy.Defer(function()
-            { // Be sure that zero reached only once
-              if (--initial_client_code)
-                return;
-              if (typeof phoxy.prestart.OnInitialClientCodeComplete == 'function')
-                phoxy.prestart.OnInitialClientCodeComplete();
+            {
+              phoxy.Defer(function()
+              { // Be sure that zero reached only once
+                if (--initial_client_code)
+                  return;
+                if (typeof phoxy.prestart.OnInitialClientCodeComplete == 'function')
+                  phoxy.prestart.OnInitialClientCodeComplete();
+              });
             });
-          });
-      });
+        }
     }
   ,
   Compile: function()
