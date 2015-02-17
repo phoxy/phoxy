@@ -608,8 +608,9 @@ phoxy._ApiSubsystem =
         if (typeof phoxy.prestart.OnAjaxBegin == 'function')
           phoxy.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
 
-      $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data)
+      phoxy.ajax(phoxy.Config()['api_dir'] + "/" + url, function(response)
         {
+          data = JSON.parse(response);
           if (params == undefined)
             params = [];
           params.unshift(data);
