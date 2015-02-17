@@ -181,6 +181,8 @@ phoxy._RenderSubsystem =
         phoxy.Appeared(target, function()
         {
           difference.call(phoxy, target, obj.html, arguments);
+          for (var k in obj.defer)
+              obj.defer[k]();
         }, undefined, -1);
 
         obj.on_complete = function()
@@ -515,6 +517,10 @@ phoxy._ApiSubsystem =
           ScriptsFiresUp,
           true);
         $('#' + render_id).replaceWith(obj.html);
+        // Refactor
+        if (!phoxy.state.sync_cascade)
+          for (var k in obj.defer)
+            obj.defer[k]();
       });
     }
   ,
@@ -876,7 +882,7 @@ phoxy._EarlyStage =
         delete phoxy[system_name];
       }
 
-      if (1 || phoxy.prestart.sync_cascade)
+      if (phoxy.prestart.sync_cascade)
       {
         phoxy.state.sync_cascade = true;
         phoxy.RenderStrategy = phoxy.SyncRender_Strategy;
@@ -995,7 +1001,15 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
 
     if (phoxy.state.sync_cascade)
       return OriginDefer.call(this, CBHook, time);
-    phoxy.Log(0, "Coming soon");
+    if (typeof that.defer == 'undefined')
+      that.defer = [];
+    if (typeof time == 'undefined')
+      return that.defer.push(CBHook);
+
+    that.defer.push(function()
+    {
+      return OriginDefer(CBHook, time);
+    })
   }
 
   EJS.Canvas.across.prototype.DeferCascade = function(callback)
