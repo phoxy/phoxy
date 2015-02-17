@@ -38,15 +38,15 @@ phoxy._TimeSubsystem =
   {
     if (time == undefined)
       time = 0;
-    var func = $.proxy(
+    if (typeof callback != 'function')
+      debugger;
+
+    var that = this;
+    var func =
       function()
       {
-        if (typeof callback == 'function')
-          callback.call(this);
-        else
-          debugger;
-      },
-      this);
+        callback.call(that);
+      };
 
     if (time == -1)
       func();
