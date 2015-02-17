@@ -571,6 +571,24 @@ phoxy._ApiSubsystem =
       $.get(url, AddToLocalStorage);
       return false;
     }
+  , // vanilla.js ajax
+  ajax : function (url, callback, data, x)
+    {  // https://gist.github.com/Xeoncross/7663273
+      try
+      {
+        x = new(window.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
+        x.open(data ? 'POST' : 'GET', url, 1);
+        x.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        x.onreadystatechange = function () {
+          x.readyState > 3 && callback && callback(x.responseText, x);
+        };
+        x.send(data)
+      } catch (e)
+      {
+        window.console && console.log(e);
+      }
+    }
   ,
   AJAX : function( url, callback, params )
     {
@@ -806,26 +824,7 @@ phoxy._EarlyStage =
   ,
   CriticalRequire: function()
     {
-      // https://gist.github.com/Xeoncross/7663273
-      function ajax(url, callback, data, x)
-      {
-        try
-        {
-          x = new(this.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
-          x.open(data ? 'POST' : 'GET', url, 1);
-          x.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-          x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-          x.onreadystatechange = function () {
-            x.readyState > 3 && callback && callback(x.responseText, x);
-          };
-          x.send(data)
-        } catch (e)
-        {
-          window.console && console.log(e);
-        }
-      };
-
-      ajax(phoxy.prestart.config || "api/phoxy", function(response)
+      phoxy._ApiSubsystem.ajax(phoxy.prestart.config || "api/phoxy", function(response)
       {
         data = JSON.parse(response);
         phoxy.config = data;
