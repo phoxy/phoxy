@@ -787,11 +787,11 @@ phoxy._EarlyStage =
   sync_require: 
     [
       "//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js",
+      "libs/EJS/ejs.js",
     ]
   ,
   async_require:
     [
-      "libs/EJS/ejs.js",
     ]
   ,
   EntryPoint: function()
@@ -806,43 +806,62 @@ phoxy._EarlyStage =
   ,
   CriticalRequire: function()
     {
+      // https://gist.github.com/Xeoncross/7663273
+      function ajax(url, callback, data, x)
+      {
+        try
+        {
+          x = new(this.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
+          x.open(data ? 'POST' : 'GET', url, 1);
+          x.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+          x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+          x.onreadystatechange = function () {
+            x.readyState > 3 && callback && callback(x.responseText, x);
+          };
+          x.send(data)
+        } catch (e)
+        {
+          window.console && console.log(e);
+        }
+      };
+
+      ajax(phoxy.prestart.config || "api/phoxy", function(response)
+      {
+        data = JSON.parse(response);
+        phoxy.config = data;
+        if (typeof phoxy.prestart.OnBeforeCompile == 'function')
+          phoxy.prestart.OnBeforeCompile();
+
+        phoxy._EarlyStage.Compile();
+        if (typeof phoxy.config.verbose != 'undefined')
+          phoxy.state.verbose = phoxy.config.verbose;
+
+        if (typeof phoxy.prestart.OnAfterCompile == 'function')
+          phoxy.prestart.OnAfterCompile();
+
+        phoxy.state.conf_loaded = true;
+      })
+
       require
       (
         phoxy._EarlyStage.sync_require,
         function()
         {
-          $.getJSON(phoxy.prestart.config || "api/phoxy", function(data)
-          {
-            phoxy.config = data;
-            if (typeof phoxy.prestart.OnBeforeCompile == 'function')
-              phoxy.prestart.OnBeforeCompile();
-
-            phoxy._EarlyStage.Compile();
-            if (typeof phoxy.config.verbose != 'undefined')
-              phoxy.state.verbose = phoxy.config.verbose;
-
-            if (typeof phoxy.prestart.OnAfterCompile == 'function')
-              phoxy.prestart.OnAfterCompile();
-
-            phoxy.state.conf_loaded = true;
-          });
+          phoxy._EarlyStage.DependenciesLoaded();
         }
       );
 
       require
       (
         phoxy._EarlyStage.async_require,
-        function()
-        {
-          phoxy._EarlyStage.DependenciesLoaded();
-        }
+        function() {}
       );
     }
   ,
   DependenciesLoaded: function()
     {
       if (!phoxy.state.conf_loaded) // wait until phoxy configuration loaded
-        return setTimeout(arguments.callee, 100);
+        return setTimeout(arguments.callee, 10);
 
       phoxy.OverloadEJSCanvas();
       requirejs.config({baseUrl: phoxy.Config()['js_dir']});
