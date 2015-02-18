@@ -141,14 +141,12 @@ phoxy._RenderSubsystem =
     {
       if (tag == undefined)
         tag = '<div>';
-      function GetElementCode( el )
-      {
-        return $(el).wrapAll('<div></div>').parent().html();
-      }
+      var vanilla_tag = tag.substring(1, tag.length - 1);
 
       var id =  phoxy.GenerateUniqueID();
-      var obj = $(tag).attr('id', id);
-      var div = GetElementCode(obj);
+      var obj = document.createElement(vanilla_tag);
+      obj.setAttribute('id', id);
+      var div = obj.outerHTML;
       
       return { id: id, obj: obj, html: div };
     }
