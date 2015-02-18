@@ -172,7 +172,7 @@ phoxy._RenderSubsystem =
       {
         if (typeof obj == 'undefined')
         {
-          phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', $(target)[0]);
+          phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
           return; // And break dependencies execution
         }
 
@@ -201,7 +201,7 @@ phoxy._RenderSubsystem =
         {
           if (typeof obj == 'undefined')
           {
-            phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', $(target)[0]);
+            phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
             return; // And break dependencies execution
           }
 
@@ -728,7 +728,7 @@ phoxy._InternalCode =
           phoxy.ApiRequest(phoxy.state.hash);
       }
 
-      $(window).bind('hashchange', PhoxyHashChangeCallback);
+      window.addEventListener('hashchange', PhoxyHashChangeCallback);
     }
   ,
   ChangeHash : function (hash)
