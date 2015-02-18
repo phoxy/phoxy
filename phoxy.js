@@ -815,6 +815,9 @@ phoxy._EarlyStage =
   ,
   EntryPoint: function()
     {
+      if (typeof requirejs == 'undefined')
+        return phoxy._TimeSubsystem.Defer(arguments.callee, 10);
+
       requirejs.config(
       {
         waitSeconds: 60
