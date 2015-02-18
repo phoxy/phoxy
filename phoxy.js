@@ -38,15 +38,11 @@ phoxy._TimeSubsystem =
   {
     if (time == undefined)
       time = 0;
-    var func = $.proxy(
-      function()
-      {
-        if (typeof callback == 'function')
-          callback.call(this);
-        else
-          debugger;
-      },
-      this);
+    if (typeof callback != 'function')
+      return phoxy.Log(0, "phoxy.Defer: Callback not a function", callback);
+
+    var func = callback;
+    func.bind(this);
 
     if (time == -1)
       func();
@@ -102,13 +98,13 @@ phoxy._TimeSubsystem =
     {
       function Div()
       {
-        return $(jquery_selector);
+        return document.getElementById(jquery_selector);
       }
       function IsDivAppeared()
       {
-        return Div()[0] != undefined;
-      }    
-      
+        return Div() != null;
+      }
+
       phoxy.Defer(function()
       {
         phoxy.WaitFor(IsDivAppeared, function()
@@ -122,8 +118,8 @@ phoxy._TimeSubsystem =
     {
       function IsDivDisappeared()
       {
-        return $(jquery_selector)[0] == undefined;
-      }    
+        return document.getElementById(jquery_selector) == null;
+      }
     
       phoxy.Defer(function()
       {
@@ -141,14 +137,12 @@ phoxy._RenderSubsystem =
     {
       if (tag == undefined)
         tag = '<div>';
-      function GetElementCode( el )
-      {
-        return $(el).wrapAll('<div></div>').parent().html();
-      }
+      var vanilla_tag = tag.substring(1, tag.length - 1);
 
       var id =  phoxy.GenerateUniqueID();
-      var obj = $(tag).attr('id', id);
-      var div = GetElementCode(obj);
+      var obj = document.createElement(vanilla_tag);
+      obj.setAttribute('id', id);
+      var div = obj.outerHTML;
       
       return { id: id, obj: obj, html: div };
     }
@@ -161,7 +155,7 @@ phoxy._RenderSubsystem =
       var canvas = phoxy.PrepareCanvas(tag);
       var id = canvas.id;
       
-      phoxy.RenderReplace('#' + id, ejs, data, rendered_callback);
+      phoxy.RenderReplace(id, ejs, data, rendered_callback);
 
       return canvas.html;
     }
@@ -172,7 +166,7 @@ phoxy._RenderSubsystem =
       {
         if (typeof obj == 'undefined')
         {
-          phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', $(target)[0]);
+          phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
           return; // And break dependencies execution
         }
 
@@ -201,7 +195,7 @@ phoxy._RenderSubsystem =
         {
           if (typeof obj == 'undefined')
           {
-            phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', $(target)[0]);
+            phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
             return; // And break dependencies execution
           }
 
@@ -223,7 +217,7 @@ phoxy._RenderSubsystem =
       var args = Array.prototype.slice.call(arguments);
       args.push(function(target, html)
       {
-        $(target).html(html);
+        document.getElementById(target).innerHTMl = html;
       });
       phoxy.RenderStrategy.apply(this, args);
     }
@@ -233,10 +227,12 @@ phoxy._RenderSubsystem =
       var args = Array.prototype.slice.call(arguments);
       args.push(function(target, html)
       {
-        $(target).replaceWith(html);
+        var that = document.getElementById(target);
+        that.insertAdjacentHTML("afterEnd", html);
+        that.parentNode.removeChild(that);
       });
       phoxy.RenderStrategy.apply(this, args);
-    }  
+    }
   ,
   Render : function (design, data, callback, is_phoxy_internal_call)
     {
@@ -498,29 +494,32 @@ phoxy._ApiSubsystem =
       var id = canvas.id;
       var render_id = id;
 
-      var element = canvas.obj;
-      
+      var element = canvas.html;
+
       var url = phoxy.Config()['ejs_dir'] + "/" + answer.design;
       phoxy.ForwardDownload(url + ".ejs", function()
       {
         if (answer.replace === undefined)
           if (answer.result === undefined)
-            $('body').append(element);
+            document.getElementsByTagName('body')[0].innerHTML += element;
+          else if (typeof answer.result == 'string')
+            document.getElementById(answer.result).innerHTML = element;
           else
-            $('#' + answer.result).html(element);
-        else
-          render_id = answer.replace;      
+            for (var k in answer.result)
+            {
+              var v = document.getElementById(answer.result[k]);
+              if (v != null)
+                v.innerHTML = element;
+            }
 
-        var obj = phoxy.Render(
-          url,
-          answer.data,
-          ScriptsFiresUp,
-          true);
-        $('#' + render_id).replaceWith(obj.html);
-        // Refactor
-        if (!phoxy.state.sync_cascade)
-          for (var k in obj.defer)
-            obj.defer[k]();
+        else
+          render_id = answer.replace;
+
+        phoxy.RenderReplace(
+          render_id,
+          answer.design,
+          answer.data || {},
+          ScriptsFiresUp);
       });
     }
   ,
@@ -568,8 +567,26 @@ phoxy._ApiSubsystem =
         return true;
       }
 
-      $.get(url, AddToLocalStorage);
+      phoxy.ajax(url, AddToLocalStorage);
       return false;
+    }
+  , // vanilla.js ajax
+  ajax : function (url, callback, data, x)
+    {  // https://gist.github.com/Xeoncross/7663273
+      try
+      {
+        x = new(window.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
+        x.open(data ? 'POST' : 'GET', url, 1);
+        x.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        x.onreadystatechange = function () {
+          x.readyState > 3 && callback && callback(x.responseText, x);
+        };
+        x.send(data)
+      } catch (e)
+      {
+        window.console && console.log(e);
+      }
     }
   ,
   AJAX : function( url, callback, params )
@@ -590,8 +607,9 @@ phoxy._ApiSubsystem =
         if (typeof phoxy.prestart.OnAjaxBegin == 'function')
           phoxy.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
 
-      $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data)
+      phoxy.ajax(phoxy.Config()['api_dir'] + "/" + url, function(response)
         {
+          data = JSON.parse(response);
           if (params == undefined)
             params = [];
           params.unshift(data);
@@ -704,7 +722,7 @@ phoxy._InternalCode =
           phoxy.ApiRequest(phoxy.state.hash);
       }
 
-      $(window).bind('hashchange', PhoxyHashChangeCallback);
+      window.addEventListener('hashchange', PhoxyHashChangeCallback);
     }
   ,
   ChangeHash : function (hash)
@@ -722,7 +740,7 @@ phoxy._InternalCode =
       return ret;
     }
   ,
-  GenerateUniqueID : function() // Deprecated, use $.uniqueId();
+  GenerateUniqueID : function()
     {
       var ret = "";
       var dictonary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -779,6 +797,8 @@ phoxy._InternalCode =
       else
         method = "debug";
       console[method].apply(console, args);
+      if (level == 0)
+        debugger;
     }
 };
 
@@ -786,7 +806,6 @@ phoxy._EarlyStage =
 {
   sync_require: 
     [
-      "//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js",
       "libs/EJS/ejs.js",
     ]
   ,
@@ -806,26 +825,7 @@ phoxy._EarlyStage =
   ,
   CriticalRequire: function()
     {
-      // https://gist.github.com/Xeoncross/7663273
-      function ajax(url, callback, data, x)
-      {
-        try
-        {
-          x = new(this.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
-          x.open(data ? 'POST' : 'GET', url, 1);
-          x.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-          x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-          x.onreadystatechange = function () {
-            x.readyState > 3 && callback && callback(x.responseText, x);
-          };
-          x.send(data)
-        } catch (e)
-        {
-          window.console && console.log(e);
-        }
-      };
-
-      ajax(phoxy.prestart.config || "api/phoxy", function(response)
+      phoxy._ApiSubsystem.ajax(phoxy.prestart.config || "api/phoxy", function(response)
       {
         data = JSON.parse(response);
         phoxy.config = data;
@@ -867,23 +867,28 @@ phoxy._EarlyStage =
       requirejs.config({baseUrl: phoxy.Config()['js_dir']});
 
       var initial_client_code = 0;
+
       // Invoke client code
-      $('script[phoxy]').each(function()
-      {
-        initial_client_code++;
-        phoxy.ApiRequest(
-            $(this).attr("phoxy"),
+      var scripts = document.getElementsByTagName('script');
+      for (var i = 0; i < scripts.length; i++)
+        if (scripts[i].getAttribute('phoxy') == null)
+          continue;
+        else
+        {
+          initial_client_code++;
+          phoxy.ApiRequest(
+            scripts[i].getAttribute('phoxy'),
             function()
-          {
-            phoxy.Defer(function()
-            { // Be sure that zero reached only once
-              if (--initial_client_code)
-                return;
-              if (typeof phoxy.prestart.OnInitialClientCodeComplete == 'function')
-                phoxy.prestart.OnInitialClientCodeComplete();
+            {
+              phoxy.Defer(function()
+              { // Be sure that zero reached only once
+                if (--initial_client_code)
+                  return;
+                if (typeof phoxy.prestart.OnInitialClientCodeComplete == 'function')
+                  phoxy.prestart.OnInitialClientCodeComplete();
+              });
             });
-          });
-      });
+        }
     }
   ,
   Compile: function()
@@ -961,10 +966,25 @@ phoxy.OverloadEJSCanvas = function()
 
   EJS.Canvas.prototype.hook_first = function(result)
   {
-    result = $(result);
-    if (result.not('defer_render,render,.phoxy_ignore').size())
-      return result;
-    return result.nextAll().not('defer_render,render,.phoxy_ignore,.ejs_ancor').first();
+    while (true)
+    {
+      if (typeof root == 'undefined')
+        var root = result;
+      else
+        root = root.nextSibling;
+
+      if (!root)
+        break;
+      if (root.nodeType !== 1)
+        continue;
+
+      if (
+        ['defer_render','render'].indexOf(root.tagName) == -1 &&
+        root.classList.contains('phoxy_ignore') == false &&
+        root.classList.contains('ejs_ancor') == false)
+        break;
+    }
+    return root;
   };
 
   EJS.Canvas.prototype.recursive = 0;
