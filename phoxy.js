@@ -223,7 +223,7 @@ phoxy._RenderSubsystem =
       var args = Array.prototype.slice.call(arguments);
       args.push(function(target, html)
       {
-        $('#' + target).html(html);
+        document.getElementById(target).innerHTMl = html;
       });
       phoxy.RenderStrategy.apply(this, args);
     }
@@ -233,7 +233,9 @@ phoxy._RenderSubsystem =
       var args = Array.prototype.slice.call(arguments);
       args.push(function(target, html)
       {
-        $('#' + target).replaceWith(html);
+        var that = document.getElementById(target);
+        that.insertAdjacentHTML("afterEnd", html);
+        that.parentNode.removeChild(that);
       });
       phoxy.RenderStrategy.apply(this, args);
     }
