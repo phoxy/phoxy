@@ -500,18 +500,26 @@ phoxy._ApiSubsystem =
       var id = canvas.id;
       var render_id = id;
 
-      var element = canvas.obj;
+      var element = canvas.html;
       
       var url = phoxy.Config()['ejs_dir'] + "/" + answer.design;
       phoxy.ForwardDownload(url + ".ejs", function()
       {
         if (answer.replace === undefined)
           if (answer.result === undefined)
-            $('body').append(element);
+            document.getElementsByTagName('body')[0].innerHTML += element;
+          else if (typeof answer.result == 'string')
+            document.getElementById(answer.result).innerHTML = element;
           else
-            $('#' + answer.result).html(element);
+            for (var k in answer.result)
+            {
+              var v = document.getElementById(answer.result[k]);
+              if (v != null)
+                v.innerHTML = element;
+            }
+
         else
-          render_id = answer.replace;      
+          render_id = answer.replace;
 
         var obj = phoxy.Render(
           url,
