@@ -39,14 +39,10 @@ phoxy._TimeSubsystem =
     if (time == undefined)
       time = 0;
     if (typeof callback != 'function')
-      debugger;
+      return phoxy.Log(0, "phoxy.Defer: Callback not a function", callback);
 
-    var that = this;
-    var func =
-      function()
-      {
-        callback.call(that);
-      };
+    var func = callback;
+    func.bind(this);
 
     if (time == -1)
       func();
@@ -801,6 +797,8 @@ phoxy._InternalCode =
       else
         method = "debug";
       console[method].apply(console, args);
+      if (level == 0)
+        debugger;
     }
 };
 
