@@ -501,7 +501,8 @@ phoxy._ApiSubsystem =
       var render_id = id;
 
       var element = canvas.html;
-      
+
+      var url = phoxy.Config()['ejs_dir'] + "/" + answer.design;
       phoxy.ForwardDownload(url + ".ejs", function()
       {
         if (answer.replace === undefined)
@@ -572,7 +573,7 @@ phoxy._ApiSubsystem =
         return true;
       }
 
-      $.get(url, AddToLocalStorage);
+      phoxy.ajax(url, AddToLocalStorage);
       return false;
     }
   , // vanilla.js ajax
