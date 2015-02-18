@@ -815,19 +815,6 @@ phoxy._EarlyStage =
   ,
   EntryPoint: function()
     {
-      if (typeof requirejs == 'undefined')
-        return phoxy._TimeSubsystem.Defer(arguments.callee, 10);
-
-      requirejs.config(
-      {
-        waitSeconds: 60
-      });
-
-      phoxy._EarlyStage.CriticalRequire();
-    }
-  ,
-  CriticalRequire: function()
-    {
       phoxy._ApiSubsystem.ajax(phoxy.prestart.config || "api/phoxy", function(response)
       {
         data = JSON.parse(response);
@@ -845,6 +832,26 @@ phoxy._EarlyStage =
         phoxy.state.conf_loaded = true;
       })
 
+      function NextStep()
+      {
+        if (typeof requirejs == 'undefined')
+          if (phoxy.state.compiled)
+            return phoxy.Defer(arguments.callee, 10);
+          else
+            return phoxy._TimeSubsystem.Defer(arguments.callee, 10);
+
+        requirejs.config(
+        {
+          waitSeconds: 60
+        });
+
+        phoxy._EarlyStage.CriticalRequire();
+      }
+      NextStep();
+    }
+  ,
+  CriticalRequire: function()
+    {
       require
       (
         phoxy._EarlyStage.sync_require,
@@ -871,6 +878,8 @@ phoxy._EarlyStage =
 
       var initial_client_code = 0;
 
+      if (typeof phoxy.prestart.OnBeforeFirstApiCall == 'function')
+        phoxy.prestart.OnBeforeFirstApiCall();
       // Invoke client code
       var scripts = document.getElementsByTagName('script');
       for (var i = 0; i < scripts.length; i++)
@@ -919,6 +928,8 @@ phoxy._EarlyStage =
         phoxy.state.sync_cascade = false;
         phoxy.RenderStrategy = phoxy.AsyncRender_Strategy;
       }
+
+      phoxy.state.compiled = true;
     }
 };
 
