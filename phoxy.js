@@ -502,7 +502,6 @@ phoxy._ApiSubsystem =
 
       var element = canvas.html;
       
-      var url = phoxy.Config()['ejs_dir'] + "/" + answer.design;
       phoxy.ForwardDownload(url + ".ejs", function()
       {
         if (answer.replace === undefined)
@@ -521,16 +520,11 @@ phoxy._ApiSubsystem =
         else
           render_id = answer.replace;
 
-        var obj = phoxy.Render(
-          url,
-          answer.data,
-          ScriptsFiresUp,
-          true);
-        $('#' + render_id).replaceWith(obj.html);
-        // Refactor
-        if (!phoxy.state.sync_cascade)
-          for (var k in obj.defer)
-            obj.defer[k]();
+        phoxy.RenderReplace(
+          render_id,
+          answer.design,
+          answer.data || {},
+          ScriptsFiresUp);
       });
     }
   ,
