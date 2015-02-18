@@ -971,10 +971,25 @@ phoxy.OverloadEJSCanvas = function()
 
   EJS.Canvas.prototype.hook_first = function(result)
   {
-    result = $(result);
-    if (result.not('defer_render,render,.phoxy_ignore').size())
-      return result;
-    return result.nextAll().not('defer_render,render,.phoxy_ignore,.ejs_ancor').first();
+    while (true)
+    {
+      if (typeof root == 'undefined')
+        var root = result;
+      else
+        root = root.nextSibling;
+
+      if (!root)
+        break;
+      if (root.nodeType !== 1)
+        continue;
+
+      if (
+        ['defer_render','render'].indexOf(root.tagName) == -1 &&
+        root.classList.contains('phoxy_ignore') == false &&
+        root.classList.contains('ejs_ancor') == false)
+        break;
+    }
+    return $(root);
   };
 
   EJS.Canvas.prototype.recursive = 0;
