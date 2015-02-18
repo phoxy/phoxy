@@ -744,7 +744,7 @@ phoxy._InternalCode =
       return ret;
     }
   ,
-  GenerateUniqueID : function() // Deprecated, use $.uniqueId();
+  GenerateUniqueID : function()
     {
       var ret = "";
       var dictonary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -808,7 +808,6 @@ phoxy._EarlyStage =
 {
   sync_require: 
     [
-      "//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js",
       "libs/EJS/ejs.js",
     ]
   ,
@@ -987,7 +986,7 @@ phoxy.OverloadEJSCanvas = function()
         root.classList.contains('ejs_ancor') == false)
         break;
     }
-    return $(root);
+    return root;
   };
 
   EJS.Canvas.prototype.recursive = 0;
