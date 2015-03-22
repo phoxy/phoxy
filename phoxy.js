@@ -161,7 +161,7 @@ phoxy._RenderSubsystem =
     }
   ,
   AsyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
-    {
+    { // AsyncRender strategy: for production
       phoxy.Fancy(ejs, data, function(obj, ejs, data)
       {
         if (typeof obj == 'undefined')
@@ -188,7 +188,7 @@ phoxy._RenderSubsystem =
     }
   ,
   SyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
-    {
+    { // SyncRender strategy: for debug/develop purposes
       phoxy.Appeared(target, function()
       {
         phoxy.Fancy(ejs, data, function(obj, ejs, data)
