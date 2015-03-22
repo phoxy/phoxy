@@ -34,7 +34,7 @@ function PhoxyStart()
     $a = $obj['obj'];
     $func = $obj['method'];
     $args = $obj['args'];
-    
+
     try
     {
       echo $a->APICall($func, $args);

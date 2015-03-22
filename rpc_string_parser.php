@@ -34,6 +34,33 @@ function ParseGreedy( $str )
   return NameParsedArray(implode("/", array($res["dir"], $res["class"])), $res["method"], "Reserve");
 }
 
+function ParamWalker($str, $begin, $length)
+{
+  $escape_mode = false;
+  $string_mode = false;
+
+  $i = $begin;
+  while ($i++ < $length)
+  {
+    if ($escape_mode)
+    {
+      $escape_mode = false;
+      continue;
+    }
+
+    if ($str[$i] == '"')
+      $string_mode = !$string_mode;
+    else if ($str[$i] == '/')
+      $escape_mode = true;
+    else if ($string_mode)
+      continue;
+    else if ($str[$i] == ')')
+      break;
+  }
+
+  return $i - 1;
+}
+
 function TryExtractParams( $str, $support_array = false)
 {
   $length = strlen($str);
@@ -46,142 +73,31 @@ function TryExtractParams( $str, $support_array = false)
       break; // or array begin, if it recusion
   if ($i >= $length)
     return null;
-  // Is we working inside recursion
-  $array_mode = (int)($str[$i] == '[');
 
-  // Cut borders on parameters
-  $ConstructParameter = function($str, $start, $end)
-  {
-    $param = stripslashes(substr($str, $start, $end));
-    if (strlen($param) < 2)
-      return $param;
-    if ($param[0] != "\"" && $param[1] != "'")
-      return $param;
-    return substr($param, 1, strlen($param) - 2);
-  };
-
-  $args = []; // returning array of arguments
-  $expect_join = false; // if next parameter should be joined with previous as key=>value
-
-  // appending new argument to exsist array, respect key=>value joining
-  $AppendArg = function($new) use (&$args, &$expect_join, &$argbegin, &$i)
-  {
-    if (!$expect_join)
-      $args[] = $new;
-    else
-    {
-      $key = array_pop($args);
-      $args[$key] = $new;
-    }
-
-    $expect_join = false;
-    $argbegin = $i + 1;
-  };
-
-
-  // Begining of arguments substring
   $began = $i + 1;
-  // If we in escaping secuence
-  $escape = 0;
-  // Current nesting level (in array mode is already 1)
-  $nested = $array_mode;
-  $mode = 0; // C String mode
-  // First character of current argument
-  $argbegin = $began;
+  $end = ParamWalker($str, $began, $length);
+  $args = [];
 
-  while (++$i < $length)
+  if ($end != $began)
   {
-    $ch = $str[$i];
-
-    // escaping in strings
-    if ($escape)
-    {
-      $escape = 0;
-      continue;
-    }
-
-    // C strings support
-    if ($ch == "\"" || $ch == "'")
-      $mode = !$mode;
-    else if ($ch == "\\" || $ch == "/")
-      $escape = $mode; // only with enabled string mode escape sequences work
-    if ($mode)
-      continue;
-
-    // complext data structure code
-    if ($ch == '[')
-      $nested++;
-    else if ($ch == ')')
-      break;
-    else if ($ch == ',')
-    {
-      if ($nested > $array_mode)
-        continue;
-      $new = $ConstructParameter($str, $argbegin, $i - $argbegin);
-      $AppendArg($new);
-    }
-    else if ($support_array && $ch == ':')
-    {
-      $args[] = $ConstructParameter($str, $argbegin, $i - $argbegin);
-      $argbegin = $i + 1;
-      $expect_join = $support_array;
-    }
-    else if ($ch == ']')
-    {
-      $nested--;
-      if ($nested < 0)
-        break;
-
-      if ($nested > $array_mode)
-        continue; // We still deep in other recursions, should skip to cutoff
-
-      $new = $ConstructParameter($str, $argbegin, $i - $argbegin);
-      // if we find end of nesting, we should recurse call inside it
-      if ($nested - $array_mode == 0)
-        $new = TryExtractParams($new.']', true);
-
-      $AppendArg($new);
-
-      // If we was in array recursion, and now we at 0 level, we should return
-      if ($array_mode && !$nested)
-        break;
-
-      if (@$str[$argbegin] != ',') // or == ) and == ], maybe
-        continue; // OK, just go
-      // Move pointers in situations like ],
-      // but not in situations like ]] and ])
-      $argbegin++;
-      $i++;
-    }
+    $raw_args_str = substr($str, $began, $end - $began - 1);
+    $args_str = preg_replace('/\|(.)/', '$1', $raw_args_str);
+    $args = json_decode("[$args_str]", true);
+    if (is_null($args))
+      die("JSON decode failure");
   }
 
-  if ($nested < 0)
-    die("Deserealisation fail: Unexpected ']' found at $i");
-  if ($nested > $array_mode)
-    die("Deserealisation fail: Wrong nesting level $nested");
-
-  if ($i >= $length)
+  if ($str[$end - 1] != ')')
     return null;
 
-  if ($str[$i] == ']' && $array_mode)
-    return $args;
-  if ($str[$i] != ')')
-    return null;
-
-  if ($i != $argbegin)
-  {
-    $new = $ConstructParameter($str, $argbegin, $i - $argbegin);
-    $AppendArg($new);
-  }
-
-  $end = $i + 1;
-
-  return
+  $ret = 
   [
     "module" => substr($str, 0, $began - 1),
     "arguments" => $args,
     "ending" => substr($str, $end),
   ];
+
+  return $ret;
 }
 
 function GetRpcObject( $str, $get )
@@ -199,7 +115,7 @@ function GetRpcObject( $str, $get )
   if (!$lazy['method'])
     $lazy['method'] = 'Reserve';
   $try = array($greedy, $lazy);
-    
+
   include_once('include.php');
 
   foreach ($try as $t)

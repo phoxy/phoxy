@@ -626,7 +626,9 @@ phoxy._ApiSubsystem =
     { // Its more and more looks like JSON bycicle
       function addslashes( str )
       { // http://stackoverflow.com/questions/770523/escaping-strings-in-javascript
-        return (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
+        return (str + '')
+          .replace(/[\/\\\|"']/g, '\|$&')
+          .replace(/\u0000/g, '\\0');
       }
 
       function SerializeRaw(element)
