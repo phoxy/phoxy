@@ -55,7 +55,7 @@ function ParamWalker($str, $begin, $length)
     else if ($string_mode)
       continue;
     else if ($str[$i] == ')')
-      break;
+      return $i;
   }
 
   return $i - 1;
@@ -80,14 +80,14 @@ function TryExtractParams( $str, $support_array = false)
 
   if ($end != $began)
   {
-    $raw_args_str = substr($str, $began, $end - $began - 1);
+    $raw_args_str = substr($str, $began, $end - $began);
     $args_str = preg_replace('/\|(.)/', '$1', $raw_args_str);
     $args = json_decode("[$args_str]", true);
     if (is_null($args))
       die("JSON decode failure");
   }
 
-  if ($str[$end - 1] != ')')
+  if ($str[$end] != ')')
     return null;
 
   $ret = 

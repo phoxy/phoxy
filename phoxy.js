@@ -636,24 +636,32 @@ phoxy._ApiSubsystem =
         if (typeof element == "object")
           return phoxy.Serialize(element, true);
         else if (typeof v == "string")
-          if (v.search(/["'(),\/\\]/) != -1 || v == '')
-            element = "\"" + addslashes(element) + "\"";
-        return element;
+          element = addslashes(element);
+        return JSON.stringify(element);
       }
 
-      var str = [];
       var array_mode = Array.isArray(obj);
+      var str = array_mode ? [] : {};
       for(var p in obj)
       {
         var v = obj[p];
-        var prefix = '';
         if (nested_mode && !array_mode)
-          prefix = SerializeRaw(p) + ":";
-        str.push(prefix + SerializeRaw(v));
+        {
+          var key = SerializeRaw(p);
+          str[key] = SerializeRaw(v);
+        }
+        else
+          str.push(SerializeRaw(v));
       }
       if (!nested_mode)
         return str.join(",");
-      return "[" + str.join(",") + "]";
+      if (array_mode)
+        return "[" + str.join(",") + "]";
+
+      var res = [];
+      for (var k in str)
+        res.push(k + ":" + str[k]);
+      return "{" + res.join(",") + "}";
     }
   ,
   ApiRequest : function( url, callback )
