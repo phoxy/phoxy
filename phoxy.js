@@ -637,7 +637,7 @@ phoxy._ApiSubsystem =
           return phoxy.Serialize(element, true);
         else if (typeof v == "string")
           element = addslashes(element);
-        return JSON.stringify(element);
+        return encodeURIComponent(JSON.stringify(element));
       }
 
       var array_mode = Array.isArray(obj);
