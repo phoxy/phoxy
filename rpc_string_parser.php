@@ -34,31 +34,19 @@ function ParseGreedy( $str )
   return NameParsedArray(implode("/", array($res["dir"], $res["class"])), $res["method"], "Reserve");
 }
 
-function ParamWalker($str, $begin, $length)
+function DecodeStrings( &$obj )
 {
-  $escape_mode = false;
-  $string_mode = false;
-
-  $i = $begin;
-  while ($i++ < $length)
+  foreach ($obj as &$arg)
   {
-    if ($escape_mode)
+    if (is_array($arg))
+      DecodeStrings($arg);
+    if (is_string($arg))
     {
-      $escape_mode = false;
-      continue;
+      $res = base64_decode($arg);
+      if ($res != false)
+        $arg = $res;
     }
-
-    if ($str[$i] == '"')
-      $string_mode = !$string_mode;
-    else if ($str[$i] == '/')
-      $escape_mode = true;
-    else if ($string_mode)
-      continue;
-    else if ($str[$i] == ')')
-      return $i;
   }
-
-  return $i - 1;
 }
 
 function TryExtractParams( $str, $support_array = false)
@@ -75,16 +63,18 @@ function TryExtractParams( $str, $support_array = false)
     return null;
 
   $began = $i + 1;
-  $end = ParamWalker($str, $began, $length);
+  $end = strpos($str, ')');
   $args = [];
 
-  if ($end != $began)
+  if ($end != $began + 1)
   {
     $raw_args_str = substr($str, $began, $end - $began);
-    $args_str = preg_replace('/\|(.)/', '$1', $raw_args_str);
+      // deprecated. backward compatibility
+      $args_str = preg_replace('/\|(.)/', '$1', $raw_args_str);
     $args = json_decode("[$args_str]", true);
     if (is_null($args))
       die("JSON decode failure");
+    DecodeStrings($args);
   }
 
   if ($str[$end] != ')')

@@ -623,21 +623,14 @@ phoxy._ApiSubsystem =
     }
   ,
   Serialize : function(obj, nested_mode)
-    { // Its more and more looks like JSON bycicle
-      function addslashes( str )
-      { // http://stackoverflow.com/questions/770523/escaping-strings-in-javascript
-        return (str + '')
-          .replace(/[\/\\\|"']/g, '\|$&')
-          .replace(/\u0000/g, '\\0');
-      }
-
+    { 
       function SerializeRaw(element)
       {
         if (typeof element == "object")
           return phoxy.Serialize(element, true);
         else if (typeof v == "string")
-          element = addslashes(element);
-        return encodeURIComponent(JSON.stringify(element));
+          element = btoa(element);
+        return JSON.stringify(element);
       }
 
       var array_mode = Array.isArray(obj);
