@@ -1,132 +1,135 @@
-<?php
+<?php namespace phoxy;
 
-function NameParsedArray( $a, $b, $c )
+class rpc_string_parser
 {
-  return array("dir" => $a, "class" => $b, "method" => $c);
-}
-
-function ParseLazy( $str )
-{
-  $res = explode("/", $str);
-  if (end($res) == '')
-    array_pop($res);
-  if (count($res) <= 3)
+  public function NameParsedArray( $a, $b, $c )
   {
-    if (count($res) == 1)
-      return NameParsedArray("", $res[0], false);
-    if (count($res) == 2)
-      return NameParsedArray("", $res[0], $res[1]);
-    return NameParsedArray($res[0], $res[1], $res[2]);
+    return array("dir" => $a, "class" => $b, "method" => $c);
   }
-  $func = array_pop($res);
-  $class = array_pop($res);
-  return NameParsedArray(implode("/", $res), $class, $func);
-}
 
-function ParseGreedy( $str )
-{
-  $res = ParseLazy($str);
-  if (!$res['method'])
+  public function ParseLazy( $str )
   {
-    $res['method'] = 'Reserve';
-    return $res;
-  }
-  return NameParsedArray(implode("/", array($res["dir"], $res["class"])), $res["method"], "Reserve");
-}
-
-function DecodeStrings( &$obj )
-{
-  foreach ($obj as &$arg)
-  {
-    if (is_array($arg))
-      DecodeStrings($arg);
-    if (is_string($arg))
+    $res = explode("/", $str);
+    if (end($res) == '')
+      array_pop($res);
+    if (count($res) <= 3)
     {
-      $res = base64_decode($arg);
-      if ($res != false)
-        $arg = $res;
+      if (count($res) == 1)
+        return $this->NameParsedArray("", $res[0], false);
+      if (count($res) == 2)
+        return $this->NameParsedArray("", $res[0], $res[1]);
+      return $this->NameParsedArray($res[0], $res[1], $res[2]);
+    }
+    $func = array_pop($res);
+    $class = array_pop($res);
+    return $this->NameParsedArray(implode("/", $res), $class, $func);
+  }
+
+  public function ParseGreedy( $str )
+  {
+    $res = $this->ParseLazy($str);
+    if (!$res['method'])
+    {
+      $res['method'] = 'Reserve';
+      return $res;
+    }
+    return $this->NameParsedArray(implode("/", array($res["dir"], $res["class"])), $res["method"], "Reserve");
+  }
+
+  public function DecodeStrings( &$obj )
+  {
+    foreach ($obj as &$arg)
+    {
+      if (is_array($arg))
+        $this->DecodeStrings($arg);
+      if (is_string($arg))
+      {
+        $res = base64_decode($arg);
+        if ($res != false)
+          $arg = $res;
+      }
     }
   }
-}
 
-function TryExtractParams( $str, $support_array = false)
-{
-  $length = strlen($str);
-  $i = -1;
-
-  while (++$i < $length)
-    if ($str[$i] == '(')
-      break; // if we found arguments begin
-    else if ($support_array && $str[$i] == '[')
-      break; // or array begin, if it recusion
-  if ($i >= $length)
-    return null;
-
-  $began = $i + 1;
-  $end = strpos($str, ')');
-  $args = [];
-
-  if ($end != $began + 1)
+  public function TryExtractParams( $str, $support_array = false)
   {
-    $raw_args_str = substr($str, $began, $end - $began);
-      // deprecated. backward compatibility
-      $args_str = preg_replace('/\|(.)/', '$1', $raw_args_str);
-    $args = json_decode("[$args_str]", true);
-    if (is_null($args))
-      die("JSON decode failure");
-    DecodeStrings($args);
+    $length = strlen($str);
+    $i = -1;
+
+    while (++$i < $length)
+      if ($str[$i] == '(')
+        break; // if we found arguments begin
+      else if ($support_array && $str[$i] == '[')
+        break; // or array begin, if it recusion
+    if ($i >= $length)
+      return null;
+
+    $began = $i + 1;
+    $end = strpos($str, ')');
+    $args = [];
+
+    if ($end != $began + 1)
+    {
+      $raw_args_str = substr($str, $began, $end - $began);
+        // deprecated. backward compatibility
+        $args_str = preg_replace('/\|(.)/', '$1', $raw_args_str);
+      $args = json_decode("[$args_str]", true);
+      if (is_null($args))
+        die("JSON decode failure");
+      $this->DecodeStrings($args);
+    }
+
+    if ($str[$end] != ')')
+      return null;
+
+    $ret = 
+    [
+      "module" => substr($str, 0, $began - 1),
+      "arguments" => $args,
+      "ending" => substr($str, $end),
+    ];
+
+    return $ret;
   }
 
-  if ($str[$end] != ')')
-    return null;
-
-  $ret = 
-  [
-    "module" => substr($str, 0, $began - 1),
-    "arguments" => $args,
-    "ending" => substr($str, $end),
-  ];
-
-  return $ret;
-}
-
-function GetRpcObject( $str, $get )
-{
-  $args = TryExtractParams($str);
-  if ($args != null)
+  public function GetRpcObject( $str, $get )
   {
-    $str = $args['module'];
-    $get = $args['arguments'];
-  }
+    $args = $this->TryExtractParams($str);
+    if ($args != null)
+    {
+      $str = $args['module'];
+      $get = $args['arguments'];
+    }
 
-  $greedy = ParseGreedy($str);
-  $lazy = ParseLazy($str);
-  
-  if (!$lazy['method'])
-    $lazy['method'] = 'Reserve';
-  $try = array($greedy, $lazy);
-
-  include_once('include.php');
-
-  foreach ($try as $t)
-  {
-    if (!$t['class'] || !$t['method'])
-      continue;
-
-    if ($t['class'] == 'phoxy') // reserved module name
-      $target_dir = realpath(dirname(__FILE__));
-    else
-      $target_dir = phoxy_conf()["api_dir"];
+    $greedy = $this->ParseGreedy($str);
+    $lazy = $this->ParseLazy($str);
     
-    $obj = IncludeModule($target_dir.'/'.$t["dir"], $t["class"]);
-    if (!is_null($obj))
-      return
-      [
-        "original_str" => $str,
-        "obj" => $obj,
-        "method" => $t["method"],
-        "args" => $get,
-      ];
+    if (!$lazy['method'])
+      $lazy['method'] = 'Reserve';
+    $try = array($greedy, $lazy);
+
+    include_once('include.php');
+
+    foreach ($try as $t)
+    {
+      if (!$t['class'] || !$t['method'])
+        continue;
+
+      if ($t['class'] == 'phoxy') // reserved module name
+        $target_dir = realpath(dirname(__FILE__));
+      else
+        $target_dir = phoxy_conf()["api_dir"];
+      
+      $obj = IncludeModule($target_dir.'/'.$t["dir"], $t["class"]);
+      if (!is_null($obj))
+        return
+        [
+          "original_str" => $str,
+          "obj" => $obj,
+          "method" => $t["method"],
+          "args" => $get,
+        ];
+    }
+    exit(json_encode(["error" => 'Module not found']));
   }
-  exit(json_encode(["error" => 'Module not found']));
 }

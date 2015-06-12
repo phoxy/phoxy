@@ -28,9 +28,10 @@ function PhoxyStart()
       exit('Rewrite engine work SUCCESS');
       
     include_once('rpc_string_parser.php');
+    $parser = new \phoxy\rpc_string_parser();
 
     global $_phoxy_process_obj;
-    $_phoxy_process_obj = $obj = GetRpcObject($file, $_GET);
+    $_phoxy_process_obj = $obj = $parser->GetRpcObject($file, $_GET);
     $a = $obj['obj'];
     $func = $obj['method'];
     $args = $obj['args'];
