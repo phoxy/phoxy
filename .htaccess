@@ -1,10 +1,40 @@
-<IfModule mod_rewrite.c>
-#Deny From All
-RewriteEngine on
+# By default access phoxy bootstraper
+DirectoryIndex load.html
 
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+# Prevent ambigious resolving on similar api modules and directories nearby
+# http://site/module instead of calling /api/module.php, turning into http://site/module/
+# and calling /api/module/ directory. And failing.
+DirectorySlash Off
 
-RewriteRule ^api/(.*)$ index.php?api=$1 [L,QSA]
+# Prevent access any .git files in clue to determine current version
+RedirectMatch 403 /\.git
 
-</IfModule>
+# ATTENTION! Do not forget make true 404 file!
+ErrorDocument 404 load.html
+
+# By default cache any static files for hour
+<FilesMatch ".(ejs|css|js)$">
+  Header set Cache-Control "public, max-age=3600"
+</FilesMatch>
+
+# Cache all images and other objects for 2 days
+<FilesMatch ".(flv|gif|jpg|jpeg|png|ico|swf|pdf)$">
+  Header set Cache-Control "public, max-age=172800"
+</FilesMatch>
+
+
+# Begin rewrite magic
+RewriteEngine On
+
+#
+# DO NOT FORGET about google crawl bot
+#
+#RewriteRule ^robots.txt$ api/utils/robot/robot
+#RewriteRule ^sitemap.xml$ api/utils/robot/sitemap
+# You HAVE to respond with valid rendered page
+#RewriteCond %{QUERY_STRING} _escaped_fragment_
+#RewriteRule ^(.*)$ shot.php [END,PT,QSA]
+
+# Any request of api folder hooks into rpc file
+RewriteRule ^api/$ api/main/home [QSA]
+RewriteRule ^api/(.*)$ /index.php?api=$1 [END,PT,QSA]
