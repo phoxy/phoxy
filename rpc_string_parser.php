@@ -94,6 +94,12 @@ class rpc_string_parser
 
   public function GetRpcObject( $str, $get )
   {
+    var_dump($str);
+    $t = $this->GetOrganizedTokens($str);
+    var_dump($t);
+    exit('todo');
+    return;
+
     $args = $this->TryExtractParams($str);
     if ($args != null)
     {
@@ -131,5 +137,92 @@ class rpc_string_parser
         ];
     }
     exit(json_encode(["error" => 'Module not found']));
+  }
+
+  public function GetOrganizedTokens($string)
+  {
+    $raw_tokens = explode('/', $string);
+    $ret = [];
+
+    $lastpath = null;
+    foreach ($raw_tokens as $raw_token)
+    {
+      $res = $this->PathFromToken($raw_token);
+
+      if ($lastpath > 0)
+      {
+        $ref = &$ret[count($ret) - 1];
+        $ref[0] .= '/'.$raw_token;
+        $ref[1] = array_merge($ref[1], $res);
+        $res = $ref[1];
+      }
+      else
+      {
+        $ret[] = [$raw_token, $res];
+      }
+
+      $symmetric_check = $this->IsSymmetric($res);
+
+      if ($symmetric_check === false)
+        die("Error at rpc resolve: Braces symmetric check failed");
+      $lastpath = $symmetric_check;
+    }
+
+    return $ret;
+  }
+
+  private function PathFromToken($token)
+  {
+    $path = [];
+    $in_string = false;
+
+    $length = strlen($token);
+    for ($i = 0; $i < $length; $i++)
+    {
+      $ch = $token[$i];
+      if ($in_string)
+        if ($ch != $in_string)
+          continue;
+        else
+          $in_string = false;
+      else if ($ch == '"' || $ch == "'")
+        $in_string = $ch;
+      else if (strpos("()[]{}", $ch) !== false)
+        $path[] = $ch;
+    }
+
+    if ($in_string)
+      $path[] = $in_string;
+
+    return $path;
+  }
+
+  private function IsSymmetric($path)
+  {
+    $mirroring =
+    [
+      ["(", "{", "["],
+      [")", "}", "]"],
+    ];
+
+    $expect = [];
+
+    foreach ($path as $ch)
+    {
+      $pos = array_search($ch, $mirroring[0]);
+      if ($pos !== false)
+      {
+        $expect[] = $mirroring[1][$pos];
+        continue;
+      }
+      if (!in_array($ch, $mirroring[1]))
+        continue; // ignore for path resolve
+
+      if (end($expect) != $ch)
+        return false;
+      array_pop($expect);
+    }
+
+    return count($expect);
   }
 }
