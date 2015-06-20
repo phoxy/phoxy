@@ -33,12 +33,14 @@ function PhoxyStart()
     global $_phoxy_process_obj;
     $_phoxy_process_obj = $obj = $parser->GetRpcObject($file, $_GET);
     $a = $obj['obj'];
-    $func = $obj['method'];
-    $args = $obj['args'];
+
+    $method = $obj['method'];
+    if (is_string($method))
+      $method = [$method, []];
 
     try
     {
-      echo $a->APICall($func, $args);
+      echo $a->APICall($method[0], $method[1]);
     } catch (phoxy_protected_call_error $e)
     {
       echo new phoxy_return_worker($e->result);
