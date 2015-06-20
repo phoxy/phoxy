@@ -97,6 +97,9 @@ class rpc_string_parser
     var_dump($str);
     $t = $this->GetOrganizedTokens($str);
     var_dump($t);
+
+    $args = $this->ExplodeTokensToCallee($t);
+    var_dump($args);
     exit('todo');
     return;
 
@@ -139,6 +142,35 @@ class rpc_string_parser
     exit(json_encode(["error" => 'Module not found']));
   }
 
+  public function ExplodeTokensToCallee($tokens)
+  {
+    $ret = [];
+
+    foreach ($tokens as $token)
+      $ret[] = $this->ExtractParamsFromToken($token);
+
+    return $ret;
+  }
+
+  public function ExtractParamsFromToken($token)
+  {
+    $length = strlen($token);
+
+    $pos = strpos($token, '(');
+    if ($pos == false)
+      return [$token, null];
+
+    if ($token[$length - 1] != ')')
+      die("Error at rpc resolve: Complex token found. Expecting ')' at the end");
+
+    $method = substr($token, 0, $pos);
+    $pos++;
+    $argstring = substr($token, $pos, $length - $pos - 1);
+
+    $args = json_decode("[$argstring]");
+    return [$method, $args];
+  }
+
   public function GetOrganizedTokens($string)
   {
     $raw_tokens = explode('/', $string);
@@ -168,7 +200,10 @@ class rpc_string_parser
       $lastpath = $symmetric_check;
     }
 
-    return $ret;
+    $return = [];
+    foreach ($ret as $token)
+      $return[] = $token[0];
+    return $return;
   }
 
   private function PathFromToken($token)
