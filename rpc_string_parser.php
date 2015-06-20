@@ -94,52 +94,73 @@ class rpc_string_parser
 
   public function GetRpcObject( $str, $get )
   {
-    var_dump($str);
     $t = $this->GetOrganizedTokens($str);
-    var_dump($t);
-
     $args = $this->ExplodeTokensToCallee($t);
-    var_dump($args);
-    exit('todo');
-    return;
-
-    $args = $this->TryExtractParams($str);
-    if ($args != null)
-    {
-      $str = $args['module'];
-      $get = $args['arguments'];
-    }
-
-    $greedy = $this->ParseGreedy($str);
-    $lazy = $this->ParseLazy($str);
-    
-    if (!$lazy['method'])
-      $lazy['method'] = 'Reserve';
-    $try = array($greedy, $lazy);
+    $try = $this->GetAllCallVariations($args);
 
     include_once('include.php');
 
+    var_dump($try);
+
     foreach ($try as $t)
     {
-      if (!$t['class'] || !$t['method'])
-        continue;
-
       if ($t['class'] == 'phoxy') // reserved module name
         $target_dir = realpath(dirname(__FILE__));
       else
         $target_dir = phoxy_conf()["api_dir"];
-      
-      $obj = IncludeModule($target_dir.'/'.$t["dir"], $t["class"]);
+
+      $file_location = $target_dir.'/'.$t["scope"];
+      $obj = IncludeModule($file_location, $t["class"]);
+
       if (!is_null($obj))
         return
         [
           "original_str" => $str,
           "obj" => $obj,
           "method" => $t["method"],
-          "args" => $get,
         ];
     }
     exit(json_encode(["error" => 'Module not found']));
+  }
+
+  public function GetAllCallVariations($callee)
+  {
+    $lazy = $this->FormCallable($callee);
+    $callee[] = ["Reserve", []];
+    $greedy = $this->FormCallable($callee);
+
+    $ret = [];
+
+    if ($greedy)
+      $ret[] = $greedy;
+
+    if ($lazy)
+      $ret[] = $lazy;
+
+    return $ret;
+  }
+
+  public function FormCallable($callee)
+  {
+    $method = array_pop($callee);
+    $object = array_pop($callee);
+
+    if (!$object || !$method)
+      return null;
+
+    $scope = [];
+    foreach ($callee as $token)
+      if (is_array($token))
+        return null; // scope cant be complex (have arguments)
+      else
+        $scope[] = $token;
+
+    return
+    [
+      "scope" => implode('/', $scope),
+      "class" => $object,
+      "method" => $method,
+    ];
   }
 
   public function ExplodeTokensToCallee($tokens)
@@ -158,7 +179,7 @@ class rpc_string_parser
 
     $pos = strpos($token, '(');
     if ($pos == false)
-      return [$token, null];
+      return $token;
 
     if ($token[$length - 1] != ')')
       die("Error at rpc resolve: Complex token found. Expecting ')' at the end");
