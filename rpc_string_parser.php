@@ -34,7 +34,23 @@ class rpc_string_parser
   private function GetAllCallVariations($callee)
   {
     $lazy = $this->FormCallable($callee);
-    $callee[] = ["Reserve", []];
+
+    // Greedy also inherit last token arguments:
+    // api/main(5) become /api/main/Reserve(5)
+    // not /api/main(5)/Reserve which is obnoxious
+
+    $last = array_pop($callee);
+    if (is_string($last))
+    {
+      $callee[] = $last;
+      $callee[] = "Reserve";  
+    }
+    else
+    {
+      $callee[] = $last[0];
+      $callee[] = ["Reserve", $last[1]];
+    }
+
     $greedy = $this->FormCallable($callee);
 
     $ret = [];
