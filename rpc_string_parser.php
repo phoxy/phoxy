@@ -31,7 +31,7 @@ class rpc_string_parser
     exit(json_encode(["error" => 'Module not found']));
   }
 
-  public function GetAllCallVariations($callee)
+  private function GetAllCallVariations($callee)
   {
     $lazy = $this->FormCallable($callee);
     $callee[] = ["Reserve", []];
@@ -48,7 +48,7 @@ class rpc_string_parser
     return $ret;
   }
 
-  public function FormCallable($callee)
+  private function FormCallable($callee)
   {
     $method = array_pop($callee);
     $object = array_pop($callee);
@@ -71,7 +71,7 @@ class rpc_string_parser
     ];
   }
 
-  public function ExplodeTokensToCallee($tokens)
+  private function ExplodeTokensToCallee($tokens)
   {
     $ret = [];
 
@@ -81,7 +81,7 @@ class rpc_string_parser
     return $ret;
   }
 
-  public function ExtractParamsFromToken($token)
+  private function ExtractParamsFromToken($token)
   {
     $length = strlen($token);
 
@@ -100,7 +100,7 @@ class rpc_string_parser
     return [$method, $args];
   }
 
-  public function GetOrganizedTokens($string)
+  private function GetOrganizedTokens($string)
   {
     $raw_tokens = explode('/', $string);
     $ret = [];
