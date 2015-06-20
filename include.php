@@ -3,6 +3,13 @@
 $_phoxy_loaded_classes = [];
 function IncludeModule( $dir, $module )
 {
+  $args = [];
+  if (is_array($module))
+  {
+    $args = $module[1];
+    $module = $module[0];
+  }
+
   $module_file = str_replace('\\', '/', $module);
   $file = "{$dir}/{$module_file}.php";
 
@@ -40,7 +47,9 @@ function IncludeModule( $dir, $module )
     }
 
     include_once($file);
-    $obj = new $module;
+
+    $reflection = new ReflectionClass($module);
+    $obj = $reflection->newInstanceArgs($args);
 
     if (!isset($_phoxy_loaded_classes[$dir]))
       $_phoxy_loaded_classes[$dir] = [];

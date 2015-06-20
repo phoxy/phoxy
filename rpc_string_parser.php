@@ -100,8 +100,6 @@ class rpc_string_parser
 
     include_once('include.php');
 
-    var_dump($try);
-
     foreach ($try as $t)
     {
       if ($t['class'] == 'phoxy') // reserved module name
