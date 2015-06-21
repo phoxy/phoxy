@@ -48,6 +48,9 @@ function IncludeModule( $dir, $module )
 
     include_once($file);
 
+    if (!class_exists($module))
+      die('Class include failed. File do not carrying that');
+
     $reflection = new ReflectionClass($module);
     $obj = $reflection->newInstanceArgs($args);
 

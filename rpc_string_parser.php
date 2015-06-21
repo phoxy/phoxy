@@ -10,14 +10,19 @@ class rpc_string_parser
 
     include_once('include.php');
 
+    if (!count($try))
+      die('Error at rpc resolve: All variations were invalid. Unable to resolve');
+
     foreach ($try as $t)
     {
+      $target_dir = ".";
       if ($t['class'] == 'phoxy') // reserved module name
+      {
         $target_dir = realpath(dirname(__FILE__));
-      else
-        $target_dir = phoxy_conf()["api_dir"];
+        $t["scope"] = str_replace(phoxy_conf()["api_dir"], "", $t["scope"]);
+      }
 
-      $file_location = $target_dir.'/'.$t["scope"];
+      $file_location = $target_dir.$t["scope"];
       $obj = IncludeModule($file_location, $t["class"]);
 
       if (!is_null($obj))
@@ -112,7 +117,9 @@ class rpc_string_parser
     $pos++;
     $argstring = substr($token, $pos, $length - $pos - 1);
 
-    $args = json_decode("[$argstring]");
+
+    $unescaped = str_replace(["%28", "%29"], ["(", ")"], $argstring);
+    $args = json_decode("[$unescaped]");
     return [$method, $args];
   }
 
