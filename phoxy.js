@@ -18,9 +18,18 @@ var phoxy =
       active_id : 0,
       active : [],
     },
+    verbose : typeof phoxy.verbose == 'undefined' ? 10 : phoxy.verbose,
   },
   plugin : {},
   prestart: phoxy,
+  error_names :
+  [
+    "FATAL",
+    "ERROR",
+    "WARNING",
+    "INFO",
+    "DEBUG",
+  ],
 };
 
 phoxy._TimeSubsystem =
@@ -29,15 +38,11 @@ phoxy._TimeSubsystem =
   {
     if (time == undefined)
       time = 0;
-    var func = $.proxy(
-      function()
-      {
-        if (typeof callback == 'function')
-          callback.call(this);
-        else
-          debugger;
-      },
-      this);
+    if (typeof callback != 'function')
+      return phoxy.Log(0, "phoxy.Defer: Callback not a function", callback);
+
+    var func = callback;
+    func.bind(this);
 
     if (time == -1)
       func();
@@ -93,13 +98,13 @@ phoxy._TimeSubsystem =
     {
       function Div()
       {
-        return $(jquery_selector);
+        return document.getElementById(jquery_selector);
       }
       function IsDivAppeared()
       {
-        return Div()[0] != undefined;
-      }    
-      
+        return Div() != null;
+      }
+
       phoxy.Defer(function()
       {
         phoxy.WaitFor(IsDivAppeared, function()
@@ -113,8 +118,8 @@ phoxy._TimeSubsystem =
     {
       function IsDivDisappeared()
       {
-        return $(jquery_selector)[0] == undefined;
-      }    
+        return document.getElementById(jquery_selector) == null;
+      }
     
       phoxy.Defer(function()
       {
@@ -132,40 +137,65 @@ phoxy._RenderSubsystem =
     {
       if (tag == undefined)
         tag = '<div>';
-      function GetElementCode( el )
-      {
-        return $(el).wrapAll('<div></div>').parent().html();
-      }
+      var vanilla_tag = tag.substring(1, tag.length - 1);
 
       var id =  phoxy.GenerateUniqueID();
-      var obj = $(tag).attr('id', id);
-      var div = GetElementCode(obj);
+      var obj = document.createElement(vanilla_tag);
+      obj.setAttribute('id', id);
+      var div = obj.outerHTML;
       
       return { id: id, obj: obj, html: div };
     }
   ,
   DeferRender : function (ejs, data, rendered_callback, tag)
     {
-      console.log("phoxy.DeferRender", arguments);
+      phoxy.Log(4, "phoxy.DeferRender", arguments);
       if (tag == undefined)
         tag = '<defer_render>';
       var canvas = phoxy.PrepareCanvas(tag);
       var id = canvas.id;
       
-      phoxy.RenderReplace('#' + id, ejs, data, rendered_callback);
+      phoxy.RenderReplace(id, ejs, data, rendered_callback);
 
       return canvas.html;
     }
   ,
-  __REFACTOR_RenderPrototype : function (target, ejs, data, rendered_callback, difference)
-    {
+  AsyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
+    { // AsyncRender strategy: for production
+      phoxy.Fancy(ejs, data, function(obj, ejs, data)
+      {
+        if (typeof obj == 'undefined')
+        {
+          phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
+          return; // And break dependencies execution
+        }
+
+        // Potential cascade memleak
+        // Should clear listeners with callback
+        phoxy.Appeared(target, function()
+        {
+          difference.call(phoxy, target, obj.html, arguments);
+          for (var k in obj.defer)
+              obj.defer[k]();
+        }, undefined, -1);
+
+        obj.on_complete = function()
+        {
+          if (typeof(rendered_callback) != 'undefined')
+            rendered_callback.call(obj.across, ejs, data, obj.html);
+        };
+      }, true);
+    }
+  ,
+  SyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
+    { // SyncRender strategy: for debug/develop purposes
       phoxy.Appeared(target, function()
       {
         phoxy.Fancy(ejs, data, function(obj, ejs, data)
         {
           if (typeof obj == 'undefined')
           {
-            console.log('phoxy.Reality', 'Design render skiped. (No design was choosed?)', $(target)[0]);
+            phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
             return; // And break dependencies execution
           }
 
@@ -180,14 +210,16 @@ phoxy._RenderSubsystem =
       }, undefined, -1);
     }
   ,
+  RenderStrategy : "Will be replaced by selected strategy after compilation."
+  ,
   RenderInto : function (target, ejs, data, rendered_callback)
     { 
       var args = Array.prototype.slice.call(arguments);
       args.push(function(target, html)
       {
-        $(target).html(html);
+        document.getElementById(target).innerHTMl = html;
       });
-      phoxy.__REFACTOR_RenderPrototype.apply(this, args);
+      phoxy.RenderStrategy.apply(this, args);
     }
   ,
   RenderReplace : function (target, ejs, data, rendered_callback)
@@ -195,17 +227,19 @@ phoxy._RenderSubsystem =
       var args = Array.prototype.slice.call(arguments);
       args.push(function(target, html)
       {
-        $(target).replaceWith(html);
+        var that = document.getElementById(target);
+        that.insertAdjacentHTML("afterEnd", html);
+        that.parentNode.removeChild(that);
       });
-      phoxy.__REFACTOR_RenderPrototype.apply(this, args);
-    }  
+      phoxy.RenderStrategy.apply(this, args);
+    }
   ,
   Render : function (design, data, callback, is_phoxy_internal_call)
     {
       if (data === undefined)
         data = {};
 
-      console.log("phoxy.Render", arguments);
+      phoxy.Log(5, "phoxy.Render", arguments);
       var html;
       if (design.indexOf(".ejs") == -1)
         design += ".ejs";
@@ -230,9 +264,20 @@ phoxy._RenderSubsystem =
   ,
   Fancy : function(design, data, callback, raw_output)
     {
-      console.log("phoxy.Fancy", arguments);
-
       var args = arguments;
+      for (var i = 0; i < 2; i++)
+        if (Array.isArray(args[i]))
+        {
+          var array = args[i];
+          var url = array.shift();
+          if (array.length > 0)
+            url += '(' + phoxy.Serialize(array) + ')';
+          args[i] = url;
+          phoxy.Fancy.apply(this, args);
+          return;
+        }
+
+      phoxy.Log(6, "phoxy.Fancy", arguments);
 
       var callback = args[2];
       if (typeof(callback) == 'undefined')
@@ -423,7 +468,7 @@ phoxy._ApiSubsystem =
         if (answer.before === undefined)
           return AfterBefore();
 
-        phoxy.FindRouteline(answer.before)(answer, AfterBefore);
+        phoxy.FindRouteline(answer.before)(AfterBefore, answer);
       }
 
       if (answer.script)
@@ -449,25 +494,32 @@ phoxy._ApiSubsystem =
       var id = canvas.id;
       var render_id = id;
 
-      var element = canvas.obj;
-      
+      var element = canvas.html;
+
       var url = phoxy.Config()['ejs_dir'] + "/" + answer.design;
       phoxy.ForwardDownload(url + ".ejs", function()
       {
         if (answer.replace === undefined)
           if (answer.result === undefined)
-            $('body').append(element);
+            document.getElementsByTagName('body')[0].innerHTML += element;
+          else if (typeof answer.result == 'string')
+            document.getElementById(answer.result).innerHTML = element;
           else
-            $('#' + answer.result).html(element);
-        else
-          render_id = answer.replace;      
+            for (var k in answer.result)
+            {
+              var v = document.getElementById(answer.result[k]);
+              if (v != null)
+                v.innerHTML = element;
+            }
 
-        var obj = phoxy.Render(
-          url,
-          answer.data,
-          ScriptsFiresUp,
-          true);
-        $('#' + render_id).replaceWith(obj.html);
+        else
+          render_id = answer.replace;
+
+        phoxy.RenderReplace(
+          render_id,
+          answer.design,
+          answer.data || {},
+          ScriptsFiresUp);
       });
     }
   ,
@@ -515,12 +567,39 @@ phoxy._ApiSubsystem =
         return true;
       }
 
-      $.get(url, AddToLocalStorage);
+      phoxy.ajax(url, AddToLocalStorage);
       return false;
+    }
+  , // vanilla.js ajax
+  ajax : function (url, callback, data, x)
+    {  // https://gist.github.com/Xeoncross/7663273
+      try
+      {
+        x = new(window.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
+        x.open(data ? 'POST' : 'GET', url, 1);
+        x.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        x.onreadystatechange = function () {
+          x.readyState > 3 && callback && callback(x.responseText, x);
+        };
+        x.send(data)
+      } catch (e)
+      {
+        window.console && console.log(e);
+      }
     }
   ,
   AJAX : function( url, callback, params )
     {
+      if (Array.isArray(url))
+        if (url.length < 2)
+          url = url.shift();
+        else
+        {
+          var tmp = url.shift();
+          url = tmp + '(' + phoxy.Serialize(url) + ')';
+        }
+
       var current_ajax_id = phoxy.state.ajax.active_id++;
       phoxy.state.ajax.active[current_ajax_id] = arguments;
 
@@ -528,8 +607,9 @@ phoxy._ApiSubsystem =
         if (typeof phoxy.prestart.OnAjaxBegin == 'function')
           phoxy.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
 
-      $.getJSON(phoxy.Config()['api_dir'] + "/" + url, function(data)
+      phoxy.ajax(phoxy.Config()['api_dir'] + "/" + url, function(response)
         {
+          data = JSON.parse(response);
           if (params == undefined)
             params = [];
           params.unshift(data);
@@ -542,42 +622,72 @@ phoxy._ApiSubsystem =
         });
     }
   ,
-  Serialize : function(obj, prefix)
-    {
-      var str = [];
-      for(var p in obj)
+  Serialize : function(obj, nested_mode)
+    { 
+      json_encoded = JSON.stringify(obj);
+      send_string = json_encoded.substring(1, json_encoded.length - 1);
+
+      function EscapeReserved(str, reserved)
       {
-        var 
-          k = prefix ? prefix + "[" + p + "]" : p,
-          v = obj[p];
-        str.push
-        (
-          typeof v == "object"
-            ? serialize(v, k)
-            : encodeURIComponent(k) + "=" + encodeURIComponent(v)
-        );
+        reserved_characters = reserved.split('');
+        search_string = "\\" + reserved_characters.join("|\\");
+        var regexp = new RegExp(search_string, "gi");
+
+        return str.replace(regexp, 
+          function(matched)
+          {
+            return escape(escape(matched));
+          });
       }
-      return str.join("&");
+ 
+      return EscapeReserved(send_string, "()");
     }
   ,
-  ApiRequest : function( url, obj_optional, callback )
+  ApiRequest : function( url, callback )
     {
-      if (arguments.length == 1)
-        return phoxy.ApiRequest(url, undefined);
-      if (arguments.length == 2 && typeof arguments[1] == 'function')
-        return phoxy.ApiRequest(url, undefined, arguments[1]);
+      if (arguments.length == 3
+            ||
+            (typeof callback != 'function'
+              && typeof callback != 'undefined')
+          )
+      {
+        phoxy.Log(1, "Object optional IS deprecated. Look at #91");
+        if (typeof url != 'string')
+          return phoxy.Log(0, "Failed to soft translate call");
+        if (typeof arguments[1] != 'undefined')
+          url = [url].concat(arguments[1]);
+        return arguments.callee.call(this, url, arguments[2]);
+      }
 
-      if (obj_optional != undefined)
-        url += '?' + phoxy.Serialize(obj_optional);
+      args = url;
+      if (typeof url != 'string')
+      {
+        url = args.shift();
+        url += "(" + phoxy.Serialize(args) + ")";
+      }
 
       phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
     }
   ,
-  MenuCall : function( url, obj_optional, callback )
+  MenuCall : function( url, callback )
     {
-      phoxy.ApiRequest(url, obj_optional, function(data)
+      if (arguments.length == 3
+            ||
+            (typeof callback != 'function'
+              && typeof callback != 'undefined')
+          )
       {
-        phoxy.ChangeHash(url + '?' + phoxy.Serialize(obj_optional));
+        phoxy.Log(1, "Object optional IS deprecated. Look at #91");
+        if (typeof url != 'string')
+          return phoxy.Log(0, "Failed to soft translate call");
+        if (typeof arguments[1] != 'undefined')
+          url = [url].concat(arguments[1]);
+        return arguments.callee.call(this, url, arguments[2]);
+      }
+
+      phoxy.ApiRequest(url, function(data)
+      {
+        phoxy.ChangeHash(url);
         if (typeof callback == 'function')
           callback(data);
       });
@@ -601,7 +711,7 @@ phoxy._InternalCode =
           phoxy.ApiRequest(phoxy.state.hash);
       }
 
-      $(window).bind('hashchange', PhoxyHashChangeCallback);
+      window.addEventListener('hashchange', PhoxyHashChangeCallback);
     }
   ,
   ChangeHash : function (hash)
@@ -619,7 +729,7 @@ phoxy._InternalCode =
       return ret;
     }
   ,
-  GenerateUniqueID : function() // Deprecated, use $.uniqueId();
+  GenerateUniqueID : function()
     {
       var ret = "";
       var dictonary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -650,30 +760,83 @@ phoxy._InternalCode =
     {
       return phoxy.config;
     }
+  ,
+    Log : function(level)
+    {
+      if (phoxy.state.verbose < level)
+        return;
+
+      var error_names = phoxy.error_names;
+      var errorname = error_names[level < error_names.length ? level : error_names.length - 1];
+
+      var skipfirst = true;
+      var args = [errorname];
+      for (var v in arguments)
+        if (skipfirst)
+          skipfirst = false;
+        else
+          args.push(arguments[v]);
+      var method;
+      if (level < 2)
+        method = "error";
+      else if (level == 2)
+        method = "warn";
+      else if (level == 3)
+        method = "info";
+      else
+        method = "debug";
+      console[method].apply(console, args);
+      if (level == 0)
+        debugger;
+    }
 };
 
 phoxy._EarlyStage =
 {
   sync_require: 
     [
-      "//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js",
+      "libs/EJS/ejs.js",
     ]
   ,
   async_require:
     [
-      "//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js",
-      "//cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js",
-      "libs/EJS/ejs.js",
     ]
   ,
   EntryPoint: function()
     {
-      requirejs.config(
+      phoxy._ApiSubsystem.ajax(phoxy.prestart.config || "api/phoxy", function(response)
       {
-        waitSeconds: 60
-      });
+        data = JSON.parse(response);
+        phoxy.config = data;
+        if (typeof phoxy.prestart.OnBeforeCompile == 'function')
+          phoxy.prestart.OnBeforeCompile();
 
-      phoxy._EarlyStage.CriticalRequire();
+        phoxy._EarlyStage.Compile();
+        if (typeof phoxy.config.verbose != 'undefined')
+          phoxy.state.verbose = phoxy.config.verbose;
+
+        if (typeof phoxy.prestart.OnAfterCompile == 'function')
+          phoxy.prestart.OnAfterCompile();
+
+        phoxy.state.conf_loaded = true;
+      })
+
+      function NextStep()
+      {
+        if (typeof requirejs == 'undefined')
+          if (phoxy.state.compiled)
+            return phoxy.Defer(arguments.callee, 10);
+          else
+            return phoxy._TimeSubsystem.Defer(arguments.callee, 10);
+
+        requirejs.config(
+        {
+          waitSeconds: 60
+        });
+
+        phoxy._EarlyStage.CriticalRequire();
+      }
+      NextStep();
     }
   ,
   CriticalRequire: function()
@@ -686,57 +849,47 @@ phoxy._EarlyStage =
           phoxy._EarlyStage.DependenciesLoaded();
         }
       );
+
+      require
+      (
+        phoxy._EarlyStage.async_require,
+        function() {}
+      );
     }
   ,
   DependenciesLoaded: function()
     {
-      var conf_loaded = false;
-      require
-      (
-        phoxy._EarlyStage.async_require,
-        function()
+      if (!phoxy.state.conf_loaded) // wait until phoxy configuration loaded
+        return setTimeout(arguments.callee, 10);
+
+      phoxy.OverloadEJSCanvas();
+      requirejs.config({baseUrl: phoxy.Config()['js_dir']});
+
+      var initial_client_code = 0;
+
+      if (typeof phoxy.prestart.OnBeforeFirstApiCall == 'function')
+        phoxy.prestart.OnBeforeFirstApiCall();
+      // Invoke client code
+      var scripts = document.getElementsByTagName('script');
+      for (var i = 0; i < scripts.length; i++)
+        if (scripts[i].getAttribute('phoxy') == null)
+          continue;
+        else
         {
-          if (!conf_loaded) // wait until phoxy configuration loaded
-            return setTimeout(arguments.callee, 100);
-
-          phoxy.OverloadEJSCanvas();
-          requirejs.config({baseUrl: phoxy.Config()['js_dir']});
-
-          var initial_client_code = 0;
-          // Invoke client code
-          $('script[phoxy]').each(function()
-          {
-            initial_client_code++;
-            phoxy.ApiRequest(
-                $(this).attr("phoxy"),
-                undefined,
-                function()
-              { 
-                phoxy.Defer(function()
-                { // Be sure that zero reached only once
-                  if (--initial_client_code)
-                    return;
-                  if (typeof phoxy.prestart.OnInitialClientCodeComplete == 'function')
-                    phoxy.prestart.OnInitialClientCodeComplete();
-                });                            
+          initial_client_code++;
+          phoxy.ApiRequest(
+            scripts[i].getAttribute('phoxy'),
+            function()
+            {
+              phoxy.Defer(function()
+              { // Be sure that zero reached only once
+                if (--initial_client_code)
+                  return;
+                if (typeof phoxy.prestart.OnInitialClientCodeComplete == 'function')
+                  phoxy.prestart.OnInitialClientCodeComplete();
               });
-          });
+            });
         }
-      );
-
-      $.getJSON(phoxy.prestart.config || "api/phoxy", function(data)
-      {
-        phoxy.config = data;
-        if (typeof phoxy.prestart.OnBeforeCompile == 'function')
-          phoxy.prestart.OnBeforeCompile();
-
-        phoxy._EarlyStage.Compile();
-
-        if (typeof phoxy.prestart.OnAfterCompile == 'function')
-          phoxy.prestart.OnAfterCompile();
-
-        conf_loaded = true;
-      });
     }
   ,
   Compile: function()
@@ -753,6 +906,19 @@ phoxy._EarlyStage =
             phoxy[func] = phoxy[system_name][func];
         delete phoxy[system_name];
       }
+
+      if (phoxy.prestart.sync_cascade)
+      {
+        phoxy.state.sync_cascade = true;
+        phoxy.RenderStrategy = phoxy.SyncRender_Strategy;
+      }
+      else
+      {
+        phoxy.state.sync_cascade = false;
+        phoxy.RenderStrategy = phoxy.AsyncRender_Strategy;
+      }
+
+      phoxy.state.compiled = true;
     }
 };
 
@@ -791,7 +957,7 @@ phoxy.OverloadEJSCanvas = function()
     var escape = this.escape();
     if (--escape.recursive == 0)
     {
-      console.log("phoxy.FireUp", [escape.name, escape]);
+      phoxy.Log(9, "phoxy.FireUp", [escape.name, escape]);
       escape.fired_up = true;
       for (var k in escape.cascade)
         if (typeof (escape.cascade[k]) == 'function')
@@ -803,10 +969,25 @@ phoxy.OverloadEJSCanvas = function()
 
   EJS.Canvas.prototype.hook_first = function(result)
   {
-    result = $(result);
-    if (result.not('defer_render,render,.phoxy_ignore').size())
-      return result;
-    return result.nextAll().not('defer_render,render,.phoxy_ignore,.ejs_ancor').first();
+    while (true)
+    {
+      if (typeof root == 'undefined')
+        var root = result;
+      else
+        root = root.nextSibling;
+
+      if (!root)
+        break;
+      if (root.nodeType !== 1)
+        continue;
+
+      if (
+        ['defer_render','render'].indexOf(root.tagName) == -1 &&
+        root.classList.contains('phoxy_ignore') == false &&
+        root.classList.contains('ejs_ancor') == false)
+        break;
+    }
+    return root;
   };
 
   EJS.Canvas.prototype.recursive = 0;
@@ -817,7 +998,7 @@ phoxy.OverloadEJSCanvas = function()
     var that = this.escape();
     if (that.fired_up)
     {
-      console.log("You can't invoke this.Defer... methods after rendering finished.\
+      phoxy.Log(1, "You can't invoke this.Defer... methods after rendering finished.\
 Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
 Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
 In that case use phoxy.Defer methods directly. They context-dependence free.");
@@ -845,7 +1026,7 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
     that.recursive++;
     if (that.fired_up)
     {
-      console.log("You can't invoke this.Defer... methods after rendering finished.\
+      phoxy.Log(1, "You can't invoke this.Defer... methods after rendering finished.\
 Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
 Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
 In that case use phoxy.Defer methods directly. They context-dependence free.");
@@ -860,7 +1041,17 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
       that.CheckIsCompleted.call(that.across);
     }
 
-    return OriginDefer.call(this, CBHook, time);
+    if (phoxy.state.sync_cascade)
+      return OriginDefer.call(this, CBHook, time);
+    if (typeof that.defer == 'undefined')
+      that.defer = [];
+    if (typeof time == 'undefined')
+      return that.defer.push(CBHook);
+
+    that.defer.push(function()
+    {
+      return OriginDefer(CBHook, time);
+    })
   }
 
   EJS.Canvas.across.prototype.DeferCascade = function(callback)
@@ -868,7 +1059,7 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
     var that = this.escape();
     if (that.fired_up)
     {
-      console.log("You can't invoke this.Defer... methods after rendering finished.\
+      phoxy.Log("You can't invoke this.Defer... methods after rendering finished.\
 Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
 Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
 In that case use phoxy.Defer methods directly. They context-dependence free.");

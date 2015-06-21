@@ -1,68 +1,215 @@
-<?php
+<?php namespace phoxy;
 
-function NameParsedArray( $a, $b, $c )
+class rpc_string_parser
 {
-  return array("dir" => $a, "class" => $b, "method" => $c);
-}
-
-function ParseLazy( $str )
-{
-  $res = explode("/", $str);
-  if (end($res) == '')
-    array_pop($res);
-  if (count($res) <= 3)
+  public function GetRpcObject( $str, $get )
   {
-    if (count($res) == 1)
-      return NameParsedArray("", $res[0], false);
-    if (count($res) == 2)
-      return NameParsedArray("", $res[0], $res[1]);
-    return NameParsedArray($res[0], $res[1], $res[2]);
+    $t = $this->GetOrganizedTokens($str);
+    $args = $this->ExplodeTokensToCallee($t);
+    $try = $this->GetAllCallVariations($args);
+
+    include_once('include.php');
+
+    if (!count($try))
+      die('Error at rpc resolve: All variations were invalid. Unable to resolve');
+
+    foreach ($try as $t)
+    {
+      $target_dir = ".";
+      if ($t['class'] == 'phoxy') // reserved module name
+      {
+        $target_dir = realpath(dirname(__FILE__));
+        $t["scope"] = str_replace(phoxy_conf()["api_dir"], "", $t["scope"]);
+      }
+
+      $file_location = $target_dir.$t["scope"];
+      $obj = IncludeModule($file_location, $t["class"]);
+
+      if (!is_null($obj))
+        return
+        [
+          "original_str" => $str,
+          "obj" => $obj,
+          "method" => $t["method"],
+        ];
+    }
+    exit(json_encode(["error" => 'Module not found']));
   }
-  $func = array_pop($res);
-  $class = array_pop($res);
-  return NameParsedArray(implode("/", $res), $class, $func);
-}
 
-function ParseGreedy( $str )
-{
-  $res = ParseLazy($str);
-  if (!$res['method'])
+  private function GetAllCallVariations($callee)
   {
-    $res['method'] = 'Reserve';
-    return $res;
-  }
-  return NameParsedArray(implode("/", array($res["dir"], $res["class"])), $res["method"], "Reserve");
-}
+    $lazy = $this->FormCallable($callee);
 
-function GetRpcObject( $str, $get )
-{
-  $greedy = ParseGreedy($str);
-  $lazy = ParseLazy($str);
-  
-  if (!$lazy['method'])
-    $lazy['method'] = 'Reserve';
-  $try = array($greedy, $lazy);
-    
-  include_once('include.php');
+    // Greedy also inherit last token arguments:
+    // api/main(5) become /api/main/Reserve(5)
+    // not /api/main(5)/Reserve which is obnoxious
 
-  foreach ($try as $t)
-  {
-    if (!$t['class'] || !$t['method'])
-      continue;
-    
-    if ($t['class'] == 'phoxy') // reserved module name
-      $target_dir = realpath(dirname(__FILE__));
+    $last = array_pop($callee);
+    if (is_string($last))
+    {
+      $callee[] = $last;
+      $callee[] = "Reserve";  
+    }
     else
-      $target_dir = phoxy_conf()["api_dir"];
-    
-    $obj = IncludeModule($target_dir.'/'.$t["dir"], $t["class"]);
-    if (!is_null($obj))
-      return
-      [
-        "obj" => $obj,
-        "method" => $t["method"],
-        "args" => $_GET,
-      ];
+    {
+      $callee[] = $last[0];
+      $callee[] = ["Reserve", $last[1]];
+    }
+
+    $greedy = $this->FormCallable($callee);
+
+    $ret = [];
+
+    if ($greedy)
+      $ret[] = $greedy;
+
+    if ($lazy)
+      $ret[] = $lazy;
+
+    return $ret;
   }
-  exit(json_encode(["error" => 'Module not found']));
+
+  private function FormCallable($callee)
+  {
+    $method = array_pop($callee);
+    $object = array_pop($callee);
+
+    if (!$object || !$method)
+      return null;
+
+    $scope = [];
+    foreach ($callee as $token)
+      if (is_array($token))
+        return null; // scope cant be complex (have arguments)
+      else
+        $scope[] = $token;
+
+    return
+    [
+      "scope" => implode('/', $scope),
+      "class" => $object,
+      "method" => $method,
+    ];
+  }
+
+  private function ExplodeTokensToCallee($tokens)
+  {
+    $ret = [];
+
+    foreach ($tokens as $token)
+      $ret[] = $this->ExtractParamsFromToken($token);
+
+    return $ret;
+  }
+
+  private function ExtractParamsFromToken($token)
+  {
+    $length = strlen($token);
+
+    $pos = strpos($token, '(');
+    if ($pos == false)
+      return $token;
+
+    if ($token[$length - 1] != ')')
+      die("Error at rpc resolve: Complex token found. Expecting ')' at the end");
+
+    $method = substr($token, 0, $pos);
+    $pos++;
+    $argstring = substr($token, $pos, $length - $pos - 1);
+
+
+    $unescaped = str_replace(["%28", "%29"], ["(", ")"], $argstring);
+    $args = json_decode("[$unescaped]");
+    return [$method, $args];
+  }
+
+  private function GetOrganizedTokens($string)
+  {
+    $raw_tokens = explode('/', $string);
+    $ret = [];
+
+    $lastpath = null;
+    foreach ($raw_tokens as $raw_token)
+    {
+      $res = $this->PathFromToken($raw_token);
+
+      if ($lastpath > 0)
+      {
+        $ref = &$ret[count($ret) - 1];
+        $ref[0] .= '/'.$raw_token;
+        $ref[1] = array_merge($ref[1], $res);
+        $res = $ref[1];
+      }
+      else
+      {
+        $ret[] = [$raw_token, $res];
+      }
+
+      $symmetric_check = $this->IsSymmetric($res);
+
+      if ($symmetric_check === false)
+        die("Error at rpc resolve: Braces symmetric check failed");
+      $lastpath = $symmetric_check;
+    }
+
+    $return = [];
+    foreach ($ret as $token)
+      $return[] = $token[0];
+    return $return;
+  }
+
+  private function PathFromToken($token)
+  {
+    $path = [];
+    $in_string = false;
+
+    $length = strlen($token);
+    for ($i = 0; $i < $length; $i++)
+    {
+      $ch = $token[$i];
+      if ($in_string)
+        if ($ch != $in_string)
+          continue;
+        else
+          $in_string = false;
+      else if ($ch == '"' || $ch == "'")
+        $in_string = $ch;
+      else if (strpos("()[]{}", $ch) !== false)
+        $path[] = $ch;
+    }
+
+    if ($in_string)
+      $path[] = $in_string;
+
+    return $path;
+  }
+
+  private function IsSymmetric($path)
+  {
+    $mirroring =
+    [
+      ["(", "{", "["],
+      [")", "}", "]"],
+    ];
+
+    $expect = [];
+
+    foreach ($path as $ch)
+    {
+      $pos = array_search($ch, $mirroring[0]);
+      if ($pos !== false)
+      {
+        $expect[] = $mirroring[1][$pos];
+        continue;
+      }
+      if (!in_array($ch, $mirroring[1]))
+        continue; // ignore for path resolve
+
+      if (end($expect) != $ch)
+        return false;
+      array_pop($expect);
+    }
+
+    return count($expect);
+  }
 }
