@@ -174,7 +174,7 @@ class rpc_string_parser
           $in_string = false;
       else if ($ch == '"' || $ch == "'")
         $in_string = $ch;
-      else if (strpos("()[]{}", $ch) !== false)
+      else if (strpos("()", $ch) !== false)
         $path[] = $ch;
     }
 
@@ -188,8 +188,8 @@ class rpc_string_parser
   {
     $mirroring =
     [
-      ["(", "{", "["],
-      [")", "}", "]"],
+      ["("],
+      [")"],
     ];
 
     $expect = [];
