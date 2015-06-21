@@ -16,4 +16,5 @@ $code = preg_replace('/ api\s*\n/', '\\api', $code);
 eval($code);
 
 $classname = "\\".tempns."\\$module";
-$obj = new $classname;
+$reflection = new ReflectionClass($classname);
+$obj = $reflection->newInstanceArgs($args);

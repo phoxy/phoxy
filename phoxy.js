@@ -624,37 +624,23 @@ phoxy._ApiSubsystem =
   ,
   Serialize : function(obj, nested_mode)
     { 
-      function SerializeRaw(element)
-      {
-        if (typeof element == "object")
-          return phoxy.Serialize(element, true);
-        else if (typeof v == "string")
-          element = btoa(element);
-        return JSON.stringify(element);
-      }
+      json_encoded = JSON.stringify(obj);
+      send_string = json_encoded.substring(1, json_encoded.length - 1);
 
-      var array_mode = Array.isArray(obj);
-      var str = array_mode ? [] : {};
-      for(var p in obj)
+      function EscapeReserved(str, reserved)
       {
-        var v = obj[p];
-        if (nested_mode && !array_mode)
-        {
-          var key = SerializeRaw(p);
-          str[key] = SerializeRaw(v);
-        }
-        else
-          str.push(SerializeRaw(v));
-      }
-      if (!nested_mode)
-        return str.join(",");
-      if (array_mode)
-        return "[" + str.join(",") + "]";
+        reserved_characters = reserved.split('');
+        search_string = "\\" + reserved_characters.join("|\\");
+        var regexp = new RegExp(search_string, "gi");
 
-      var res = [];
-      for (var k in str)
-        res.push(k + ":" + str[k]);
-      return "{" + res.join(",") + "}";
+        return str.replace(regexp, 
+          function(matched)
+          {
+            return escape(escape(matched));
+          });
+      }
+ 
+      return EscapeReserved(send_string, "()");
     }
   ,
   ApiRequest : function( url, callback )
