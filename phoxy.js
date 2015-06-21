@@ -501,7 +501,7 @@ phoxy._ApiSubsystem =
       {
         if (answer.replace === undefined)
           if (answer.result === undefined)
-            document.getElementsByTagName('body')[0].innerHTML += element;
+            document.getElementsByTagName('body')[0].appendChild(canvas.obj);
           else if (typeof answer.result == 'string')
             document.getElementById(answer.result).innerHTML = element;
           else
