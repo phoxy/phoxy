@@ -3,22 +3,14 @@ header('Lain: Hot');
 if (strnatcmp(phpversion(),'5.5') < 0)
   exit("PHP 5.5 or newer is required");
 
-if (!count($_GET))
-{
-  $expires = 60*60;
-  header("Pragma: public");
-  header("Cache-Control: maxage=".$expires);
-  header('Expires: ' . gmdate('D, d M Y H:i:s', time()+$expires) . ' GMT');
-  include_once('index.html');
-  exit();
-}
-
 include('config.php');
 
 function PhoxyStart()
 {
-  global $_SERVER;
-  $file = urldecode($_SERVER['REQUEST_URI']);
+  global $_GET;
+  $get_param = phoxy_conf()["get_api_param"];  
+  $file = $_GET[$get_param];
+  unset($_GET[$get_param]);
 
   if ($file == 'htaccess')
     exit('Rewrite engine work SUCCESS');

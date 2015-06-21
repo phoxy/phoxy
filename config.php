@@ -8,6 +8,7 @@ function phoxy_default_conf()
     "ejs_dir" => "ejs",
     "js_dir" => "js",
     "api_dir" => "api",
+    "get_api_param" => "api",
     "js_prefix" => null,
     "ejs_prefix" => null,
     "api_prefix" => null,
