@@ -659,7 +659,7 @@ phoxy._ApiSubsystem =
         return arguments.callee.call(this, url, arguments[2]);
       }
 
-      args = url;
+      args = url.slice(0);
       if (typeof url != 'string')
       {
         url = args.shift();
