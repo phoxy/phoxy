@@ -685,12 +685,8 @@ phoxy._ApiSubsystem =
         return arguments.callee.call(this, url, arguments[2]);
       }
 
-      phoxy.ApiRequest(url, function(data)
-      {
-        phoxy.ChangeHash(url);
-        if (typeof callback == 'function')
-          callback(data);
-      });
+      phoxy.ChangeHash(url);
+      phoxy.ApiRequest(url, callback);
     }
 }
 
