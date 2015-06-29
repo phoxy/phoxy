@@ -10,6 +10,9 @@ function IncludeModule( $dir, $module )
     $module = $module[0];
   }
 
+  if (substr($dir, 0, 2) == './')
+    $dir = substr($dir, 2);
+
   $module_file = str_replace('\\', '/', $module);
   $file = "{$dir}/{$module_file}.php";
 
@@ -26,6 +29,7 @@ function IncludeModule( $dir, $module )
   try
   {
     global $_phoxy_loaded_classes;
+
     if (isset($_phoxy_loaded_classes[$dir][$module]))
       return $_phoxy_loaded_classes[$dir][$module];
 
