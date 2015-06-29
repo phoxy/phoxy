@@ -53,6 +53,9 @@ class phoxy_sys_api
     if (is_a($ret, 'phoxy_return_worker'))
       $ret = $ret->obj;
 
+    if (isset($ret['cache']) && !$this->f) // raw calls do not affects restrictions
+      phoxy_return_worker::NewCache($ret['cache']);
+
     if (is_array($ret) && isset($ret['data'])
         && count($ret['data']) == 1 && isset($ret['data'][$name]))
       $ret = $ret['data'][$name];
@@ -83,6 +86,7 @@ class phoxy_sys_api
 
     return $d;
   }
+
   private function Call( $name, $arguments )
   {
     $this->obj->json = false;
@@ -136,7 +140,7 @@ class api
       $ret = array("data" => $ret);
     }
 
-    $ret = array_merge($this->addons, $ret);
+    $ret = array_merge_recursive($this->addons, $ret);
 
     $conf = phoxy_conf();
 
@@ -157,5 +161,14 @@ class api
   private function AddPrefix( &$where, $what )
   {
     $where = "{$what}{$where}";
+  }
+
+  // $this(false, true) <-- reinclude yourself
+  // $this('dir', 'module') <-- include other
+  public function __invoke($force_raw = false, $expect_simple_result = true, $fallback_raw = false, $fallback_simpe = true)
+  {
+    if (is_string($force_raw) && is_string($expect_simple_result))
+      return LoadModule($force_raw, $expect_simple_result, $fallback_raw, $fallback_simpe);
+    return new phoxy_sys_api($this, $force_raw, $expect_simple_result);
   }
 };

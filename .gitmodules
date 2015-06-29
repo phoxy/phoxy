@@ -1,3 +1,6 @@
-[submodule "libs/EJS"]
-	path = libs/EJS
-	url = https://github.com/Enelar/EJS
+[submodule "EJS"]
+	path = EJS
+	url = https://github.com/phoxy/EJS
+[submodule "ENJS"]
+	path = ENJS
+	url = https://github.com/phoxy/ENJS

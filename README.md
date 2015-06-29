@@ -1,3 +1,5 @@
+[![Codacy Badge](https://www.codacy.com/project/badge/9acde29aed7e4accb8bd302520fb4608)](https://www.codacy.com/app/enelar/phoxy)
+
 phoxy
 =====
 [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/Enelar/phoxy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
