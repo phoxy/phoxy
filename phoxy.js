@@ -640,7 +640,7 @@ phoxy._ApiSubsystem =
           });
       }
  
-      return EscapeReserved(send_string, "()");
+      return EscapeReserved(send_string, "()?");
     }
   ,
   ApiRequest : function( url, callback )
