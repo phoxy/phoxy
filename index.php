@@ -7,7 +7,8 @@ include('config.php');
 
 function PhoxyStart()
 {
-  if (phoxy_conf()["api_xss_prevent"] && getallheaders()['X-Lain'] !== 'Wake up')
+  global $_SERVER;
+  if (phoxy_conf()["api_xss_prevent"] && $_SERVER['HTTP_X_LAIN'] !== 'Wake up')
     die("Requiest aborted due API direct XSS warning");
 
   global $_GET;
