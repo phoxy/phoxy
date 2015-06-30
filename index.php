@@ -7,6 +7,9 @@ include('config.php');
 
 function PhoxyStart()
 {
+  if (phoxy_conf()["api_xss_prevent"] && getallheaders()['X-Lain'] !== 'Wake up')
+    die("Requiest aborted due API direct XSS warning");
+
   global $_GET;
   $get_param = phoxy_conf()["get_api_param"];  
   $file = $_GET[$get_param];

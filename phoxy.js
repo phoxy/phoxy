@@ -577,6 +577,7 @@ phoxy._ApiSubsystem =
       {
         x = new(window.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
         x.open(data ? 'POST' : 'GET', url, 1);
+        x.setRequestHeader('X-Lain', 'Wake up');
         x.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         x.onreadystatechange = function () {
