@@ -110,7 +110,7 @@ class api
   protected $addons;
   public $json;
 
-  public function __construct()
+  public function phoxy_api_init()
   {
     $this->json = true;
     

@@ -57,6 +57,7 @@ function IncludeModule( $dir, $module )
 
     $reflection = new ReflectionClass($module);
     $obj = $reflection->newInstanceArgs($args);
+    $obj->phoxy_api_init();
 
     if (!isset($_phoxy_loaded_classes[$dir]))
       $_phoxy_loaded_classes[$dir] = [];
