@@ -594,14 +594,7 @@ phoxy._ApiSubsystem =
   ,
   AJAX : function( url, callback, params )
     {
-      if (Array.isArray(url))
-        if (url.length < 2)
-          url = url.shift();
-        else
-        {
-          var tmp = url.shift();
-          url = tmp + '(' + phoxy.Serialize(url) + ')';
-        }
+      url = phoxy.ConstructURL(url);
 
       var current_ajax_id = phoxy.state.ajax.active_id++;
       phoxy.state.ajax.active[current_ajax_id] = arguments;
@@ -646,6 +639,18 @@ phoxy._ApiSubsystem =
       return EscapeReserved(send_string, "()?#\\");
     }
   ,
+  ConstructURL : function(arr)
+  {
+    if (typeof arr == 'string')
+      return arr;
+
+    arr = arr.slice(0);
+    var url = arr.shift();
+    if (arr.length > 0)
+      url += '(' + phoxy.Serialize(arr) + ')';
+    return url;
+  }
+  ,
   ApiRequest : function( url, callback )
     {
       if (arguments.length == 3
@@ -662,12 +667,7 @@ phoxy._ApiSubsystem =
         return arguments.callee.call(this, url, arguments[2]);
       }
 
-      args = url.slice(0);
-      if (typeof url != 'string')
-      {
-        url = args.shift();
-        url += "(" + phoxy.Serialize(args) + ")";
-      }
+      url = phoxy.ConstructURL(url);
 
       phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
     }
