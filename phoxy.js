@@ -1015,7 +1015,8 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
       that.CheckIsCompleted.call(that.across);
     }
 
-    return phoxy.DeferRender(ejs, data, CBHook, tag);
+    that.Append(phoxy.DeferRender(ejs, data, CBHook, tag));
+    return "<!-- <%= %> IS OBSOLETE -->";
   }
 
   var OriginDefer = EJS.Canvas.across.prototype.Defer;
