@@ -1,6 +1,5 @@
-phoxy._EarlyStage.Require = function()
+phoxy._EarlyStage.LoadConfig = function()
 {
-  debugger;
   phoxy._ApiSubsystem.ajax(phoxy.prestart.config || "api/phoxy", function(response)
   {
     data = JSON.parse(response);
@@ -18,24 +17,6 @@ phoxy._EarlyStage.Require = function()
     phoxy.state.conf_loaded = true;
   })
 }
-
-phoxy._EarlyStage.CriticalRequire = function()
-{
-  require
-  (
-    phoxy._EarlyStage.sync_require,
-    function()
-    {
-      phoxy._EarlyStage.DependenciesLoaded();
-    }
-  );
-
-  require
-  (
-    phoxy._EarlyStage.async_require,
-    function() {}
-  );
-};
 
 phoxy._EarlyStage.DependenciesLoaded = function()
 {

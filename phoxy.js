@@ -57,7 +57,6 @@ phoxy._EarlyStage =
   ,
   Prepare: function()
   {
-    debugger;
     if (typeof requirejs == 'undefined')
       return setTimeout(arguments.callee, 10);
 
@@ -66,7 +65,11 @@ phoxy._EarlyStage =
       waitSeconds: 60
     });
 
-    phoxy._EarlyStage.Ready();
+    if (!phoxy.prestart.wait)
+      phoxy._EarlyStage.EntryPoint();
+    else
+      if (typeof phoxy.prestart.OnWaiting == 'function')
+        phoxy.prestart.OnWaiting();
   }
   ,
   EntryPoint: function()
@@ -77,20 +80,42 @@ phoxy._EarlyStage =
     for (var k in phoxy._EarlyStage.systems)
       require_systems.push(dir + "/" + k);
 
-    require(require_systems, function()
-    {
-      phoxy._EarlyStage.CriticalRequire();
-      phoxy._EarlyStage.Require();
-    });
+    phoxy._EarlyStage.CriticalRequire(require_systems);
   }
   ,
   Ready: function()
   {
-    if (!phoxy.prestart.wait)
-      phoxy._EarlyStage.EntryPoint();
-    else
-      if (typeof phoxy.prestart.OnWaiting == 'function')
-        phoxy.prestart.OnWaiting();
+    if (typeof phoxy._EarlyStage.DependenciesLoaded == 'undefined')
+      return setTimeout(arguments.callee, 10);
+
+    phoxy._EarlyStage.DependenciesLoaded();
+  }
+  ,
+  CriticalRequire : function(require_systems)
+  {
+    require
+    (
+      require_systems,
+      function()
+      {
+        phoxy._EarlyStage.LoadConfig();
+      }
+    );
+
+    require
+    (
+      phoxy._EarlyStage.sync_require,
+      function()
+      {
+        phoxy._EarlyStage.Ready();
+      }
+    );
+
+    require
+    (
+      phoxy._EarlyStage.async_require,
+      function() {}
+    );
   }
 }
 
