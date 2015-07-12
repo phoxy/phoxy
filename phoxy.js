@@ -150,13 +150,15 @@ phoxy._RenderSubsystem =
   DeferRender : function (ejs, data, rendered_callback, tag)
     {
       phoxy.Log(4, "phoxy.DeferRender", arguments);
-      if (tag == undefined)
+      if (tag === undefined)
         tag = '<defer_render>';
       var canvas = phoxy.PrepareCanvas(tag);
       var id = canvas.id;
       
       phoxy.RenderReplace(id, ejs, data, rendered_callback);
 
+      if (tag === null)
+        return canvas;
       return canvas.html;
     }
   ,
