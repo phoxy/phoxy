@@ -17,23 +17,6 @@ phoxy._EarlyStage.Require = function()
 
     phoxy.state.conf_loaded = true;
   })
-
-  function NextStep()
-  {
-    if (typeof requirejs == 'undefined')
-      if (phoxy.state.compiled)
-        return phoxy.Defer(arguments.callee, 10);
-      else
-        return phoxy._TimeSubsystem.Defer(arguments.callee, 10);
-
-    requirejs.config(
-    {
-      waitSeconds: 60
-    });
-
-    phoxy._EarlyStage.CriticalRequire();
-  }
-  NextStep();
 }
 
 phoxy._EarlyStage.CriticalRequire = function()

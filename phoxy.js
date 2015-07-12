@@ -55,7 +55,21 @@ phoxy._EarlyStage =
     [
     ]
   ,
-  Entry: function()
+  Prepare: function()
+  {
+    debugger;
+    if (typeof requirejs == 'undefined')
+      return setTimeout(arguments.callee, 10);
+
+    requirejs.config(
+    {
+      waitSeconds: 60
+    });
+
+    phoxy._EarlyStage.Ready();
+  }
+  ,
+  EntryPoint: function()
   {
     var dir = phoxy.prestart.subsystem_dir || phoxy._EarlyStage.subsystem_dir;
     var require_systems = [];
@@ -65,33 +79,19 @@ phoxy._EarlyStage =
 
     require(require_systems, function()
     {
-      phoxy._EarlyStage.Require()
+      phoxy._EarlyStage.CriticalRequire();
+      phoxy._EarlyStage.Require();
     });
   }
   ,
-  EntryPoint: function()
+  Ready: function()
   {
-    debugger;
-    function NextStep()
-    {
-      if (typeof requirejs == 'undefined')
-        return setTimeout(arguments.callee, 10);
-
-      requirejs.config(
-      {
-        waitSeconds: 60
-      });
-
-      phoxy._EarlyStage.Entry();
-    }
-    NextStep();
-
+    if (!phoxy.prestart.wait)
+      phoxy._EarlyStage.EntryPoint();
+    else
+      if (typeof phoxy.prestart.OnWaiting == 'function')
+        phoxy.prestart.OnWaiting();
   }
 }
-if (!phoxy.prestart.wait)
-  phoxy._EarlyStage.EntryPoint();
-else
-{
-  if (typeof phoxy.prestart.OnWaiting == 'function')
-    phoxy.prestart.OnWaiting();
-}
+
+phoxy._EarlyStage.Prepare();
