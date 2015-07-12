@@ -19,6 +19,15 @@ var phoxy =
       active : [],
     },
     verbose : typeof phoxy.verbose == 'undefined' ? 10 : phoxy.verbose,
+    early:
+    {
+      require: 0,
+      loaded: 0,
+      optional:
+      {
+        initial: 0,
+      }
+    }
   },
   plugin : {},
   prestart: phoxy,
@@ -93,6 +102,11 @@ phoxy._EarlyStage =
   ,
   CriticalRequire : function(require_systems)
   {
+    requirejs.onResourceLoad = function()
+    {
+      phoxy.state.early.loaded++;
+    }
+
     require
     (
       require_systems,
@@ -117,6 +131,34 @@ phoxy._EarlyStage =
       function() {}
     );
   }
+  ,
+  LoadingPercentage : function()
+    {
+      var phoxy_itself = 1;
+      var config_load = 1;
+      var system_count = Object.keys(phoxy._EarlyStage.systems).length;
+      var sync_count = phoxy._EarlyStage.sync_require.length;
+      var async_count = phoxy._EarlyStage.async_require.length;
+
+      var optional_count = 0;
+
+      for (var k in phoxy.state.early.optional)
+        optional_count += phoxy.state.early.optional[k];
+
+      phoxy.state.early.require = 
+        phoxy_itself
+          + config_load
+          + system_count
+          + sync_count
+          + async_count
+          + optional_count;
+
+      var percent = 100 * phoxy.state.early.loaded / phoxy.state.early.require;
+      if (percent > 100)
+        percent = 100;
+
+      return percent;
+    }
 }
 
 phoxy._EarlyStage.Prepare();

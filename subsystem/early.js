@@ -2,6 +2,7 @@ phoxy._EarlyStage.LoadConfig = function()
 {
   phoxy._ApiSubsystem.ajax(phoxy.prestart.config || "api/phoxy", function(response)
   {
+    phoxy.state.early.loaded++;
     data = JSON.parse(response);
     phoxy.config = data;
     if (typeof phoxy.prestart.OnBeforeCompile == 'function')
