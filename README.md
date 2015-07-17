@@ -121,6 +121,11 @@ Any 'public' or 'private' invoker is trusted. Its server local php code. Current
 
 All your raw sql response is translated to valid, unified json object. All your manual constructed json result peeling when requested localy(at server). Once again. `return 4;` virtually become `{data: {function_name: 4}}` when called from outsorce. And any `['scrupt' => 'login', 'data' => ['name' => 'Me', 'id' => 4]]` translated to `'name' => 'Me', 'id' => 4]`. So you able simple combine protected and public methods with cross-module references.
 
+## Insects
+
+What if your plans changed. Or you made bug? You should fix same issue at every file that contains similar code.
+And you dublicate your code. With phoxy one snipped is reused wholesite, and it ether work or not. Everywhere. Controlled from one file.
+
 
 ## Get started
 
