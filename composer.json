@@ -4,6 +4,7 @@
   "type": "library",
   "license": "Apache-2.0",
   "minimal-stability": "dev",
+  "include-path": ["/../"],
   "require" :
   {
     "php": "~5.5",
