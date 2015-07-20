@@ -1,0 +1,18 @@
+{
+  "require" :
+  {
+    "php": "~5.5",
+    "phoxy/enjs": "^2.1.2",
+  },
+  "suggest" :
+  {
+    "ext-xdebug": "Gives your better readable on php internal errors. Such as fatal errors.",
+  },
+  "repositories":
+  [
+    {
+      "type": "vcs",
+      "url": "https://github.com/phoxy/enjs"
+    }
+  ]
+}
