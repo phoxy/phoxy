@@ -1,20 +1,30 @@
+phoxy._EarlyStageajax : function (url, callback, data, x)
+{  // https://gist.github.com/Xeoncross/7663273
+  try
+  {
+    x = new(window.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
+    x.open(data ? 'POST' : 'GET', url, 1);
+    x.setRequestHeader('X-Lain', 'Wake up');
+    x.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    x.onreadystatechange = function () {
+      x.readyState > 3 && callback && callback(x.responseText, x);
+    };
+    x.send(data)
+  } catch (e)
+  {
+    window.console && console.log(e);
+  }
+};
+
+
 phoxy._EarlyStage.LoadConfig = function()
 {
-  phoxy._ApiSubsystem.ajax(phoxy.prestart.config || "api/phoxy", function(response)
+  phoxy._EarlyStage.ajax(phoxy.prestart.config || "api/phoxy", function(response)
   {
     phoxy.state.early.loaded++;
     data = JSON.parse(response);
     phoxy.config = data;
-    if (typeof phoxy.prestart.OnBeforeCompile == 'function')
-      phoxy.prestart.OnBeforeCompile();
-
-    phoxy._EarlyStage.Compile();
-    if (typeof phoxy.config.verbose != 'undefined')
-      phoxy.state.verbose = phoxy.config.verbose;
-
-    if (typeof phoxy.prestart.OnAfterCompile == 'function')
-      phoxy.prestart.OnAfterCompile();
-
     phoxy.state.conf_loaded = true;
   })
 }
@@ -23,6 +33,17 @@ phoxy._EarlyStage.DependenciesLoaded = function()
 {
   if (!phoxy.state.conf_loaded) // wait until phoxy configuration loaded
     return setTimeout(arguments.callee, 10);
+
+  if (typeof phoxy.prestart.OnBeforeCompile == 'function')
+    phoxy.prestart.OnBeforeCompile();
+
+  phoxy._EarlyStage.Compile();
+  if (typeof phoxy.config.verbose != 'undefined')
+    phoxy.state.verbose = phoxy.config.verbose;
+
+  if (typeof phoxy.prestart.OnAfterCompile == 'function')
+    phoxy.prestart.OnAfterCompile();
+
 
   phoxy.OverloadEJSCanvas();
   requirejs.config({baseUrl: phoxy.Config()['js_dir']});

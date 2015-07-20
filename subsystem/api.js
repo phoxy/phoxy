@@ -133,25 +133,6 @@ phoxy._ApiSubsystem =
       return false;
     }
   , // vanilla.js ajax
-  ajax : function (url, callback, data, x)
-    {  // https://gist.github.com/Xeoncross/7663273
-      try
-      {
-        x = new(window.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
-        x.open(data ? 'POST' : 'GET', url, 1);
-        x.setRequestHeader('X-Lain', 'Wake up');
-        x.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-        x.onreadystatechange = function () {
-          x.readyState > 3 && callback && callback(x.responseText, x);
-        };
-        x.send(data)
-      } catch (e)
-      {
-        window.console && console.log(e);
-      }
-    }
-  ,
   AJAX : function( url, callback, params )
     {
       url = phoxy.ConstructURL(url);
