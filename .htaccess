@@ -26,6 +26,9 @@ ErrorDocument 404 load.html
 # Begin rewrite magic
 RewriteEngine On
 
+# ENJS now serving with composer. So rewrite every request to dynamic loader
+RewriteRule ^enjs$ phoxy/enjs.php [END,PT,QSA]
+
 #
 # DO NOT FORGET about google crawl bot
 #

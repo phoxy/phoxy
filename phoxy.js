@@ -55,9 +55,9 @@ phoxy._EarlyStage =
       'enjs.js': undefined,
     }
   ,
-  sync_require: 
+  sync_require:
     [
-      "libs/EJS/ejs.js",
+      "enjs", // composer now IS required
     ]
   ,
   async_require:
