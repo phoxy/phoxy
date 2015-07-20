@@ -10,6 +10,15 @@ var phoxy =
   config : false,
   state :
   {
+    runlevel: 0,
+    /* Runlevels description:
+      0 - phoxy ready for instancing but currently not active
+      1 - phoxy early stage code ready
+      2 - ready for compilation
+      3 - compilation finished, configuration fetched
+      4 - initial client code executed
+      Other levels optional
+    */
     loaded : false,
     hash : false,
     ajax :
@@ -68,6 +77,7 @@ phoxy._EarlyStage =
   {
     if (typeof requirejs == 'undefined')
       return setTimeout(arguments.callee, 10);
+    phoxy.state.runlevel = 0.5;
 
     requirejs.config(
     {
@@ -83,6 +93,7 @@ phoxy._EarlyStage =
   ,
   EntryPoint: function()
   {
+    phoxy.state.runlevel = 1;
     var dir = phoxy.prestart.subsystem_dir || phoxy._EarlyStage.subsystem_dir;
     var require_systems = [];
 
@@ -102,6 +113,7 @@ phoxy._EarlyStage =
   ,
   CriticalRequire : function(require_systems)
   {
+    // Summary move us to runlevel 2, ready for compilation
     requirejs.onResourceLoad = function()
     {
       phoxy.state.early.loaded++;
@@ -112,6 +124,7 @@ phoxy._EarlyStage =
       require_systems,
       function()
       {
+        phoxy.state.runlevel += 0.5;
         phoxy._EarlyStage.LoadConfig();
       }
     );
@@ -121,6 +134,7 @@ phoxy._EarlyStage =
       phoxy._EarlyStage.sync_require,
       function()
       {
+        phoxy.state.runlevel += 0.5;
         phoxy._EarlyStage.Ready();
       }
     );

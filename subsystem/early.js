@@ -31,8 +31,11 @@ phoxy._EarlyStage.LoadConfig = function()
 
 phoxy._EarlyStage.DependenciesLoaded = function()
 {
+  if (phoxy.state.runlevel < 2)
+    return setTimeout(arguments.callee, 10);
   if (!phoxy.state.conf_loaded) // wait until phoxy configuration loaded
     return setTimeout(arguments.callee, 10);
+  phoxy.state.runlevel += 0.5; // because config downloaded
 
   if (typeof phoxy.prestart.OnBeforeCompile == 'function')
     phoxy.prestart.OnBeforeCompile();
@@ -47,6 +50,9 @@ phoxy._EarlyStage.DependenciesLoaded = function()
 
   phoxy.OverloadEJSCanvas();
   requirejs.config({baseUrl: phoxy.Config()['js_dir']});
+
+  // Entering runlevel 3, compilation finished
+  phoxy.state.runlevel += 0.5;
 
   var initial_client_code = 0;
 
@@ -64,6 +70,7 @@ phoxy._EarlyStage.DependenciesLoaded = function()
         scripts[i].getAttribute('phoxy'),
         function()
         {
+          phoxy.state.runlevel += 1 / total_amount;
           phoxy.Defer(function()
           { // Be sure that zero reached only once
             if (--initial_client_code)
@@ -73,6 +80,8 @@ phoxy._EarlyStage.DependenciesLoaded = function()
           });
         });
     }
+
+   var total_amount = initial_client_code;
 };
 
 phoxy._EarlyStage.Compile = function()
