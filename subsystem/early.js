@@ -1,4 +1,4 @@
-phoxy._EarlyStageajax : function (url, callback, data, x)
+phoxy._EarlyStage.ajax = function (url, callback, data, x)
 {  // https://gist.github.com/Xeoncross/7663273
   try
   {

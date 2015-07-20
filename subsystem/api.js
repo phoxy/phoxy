@@ -133,6 +133,12 @@ phoxy._ApiSubsystem =
       return false;
     }
   , // vanilla.js ajax
+  ajax : function ()
+    {
+      phoxy.ajax = phoxy._EarlyStage.ajax;
+      phoxy.ajax.apply(this, arguments);
+    }
+  ,
   AJAX : function( url, callback, params )
     {
       url = phoxy.ConstructURL(url);
