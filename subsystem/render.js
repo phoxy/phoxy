@@ -1,5 +1,24 @@
 phoxy._RenderSubsystem =
 {
+  DeferRender : function (ejs, data, rendered_callback, tag)
+    {
+      phoxy.Log(4, "phoxy.DeferRender", arguments);
+      if (tag === undefined)
+        tag = '<defer_render>';
+      var canvas = phoxy._render.PrepareCanvas(tag);
+      var id = canvas.id;
+
+      phoxy._render.RenderReplace(id, ejs, data, rendered_callback);
+
+      if (tag === null)
+        return canvas;
+      return canvas.html;
+    }
+  ,
+};
+
+phoxy._RenderSubsystem._render =
+{
   PrepareCanvas : function(tag)
     {
       if (tag === undefined)
@@ -14,24 +33,9 @@ phoxy._RenderSubsystem =
       return { id: id, obj: obj, html: div };
     }
   ,
-  DeferRender : function (ejs, data, rendered_callback, tag)
-    {
-      phoxy.Log(4, "phoxy.DeferRender", arguments);
-      if (tag === undefined)
-        tag = '<defer_render>';
-      var canvas = phoxy.PrepareCanvas(tag);
-      var id = canvas.id;
-
-      phoxy.RenderReplace(id, ejs, data, rendered_callback);
-
-      if (tag === null)
-        return canvas;
-      return canvas.html;
-    }
-  ,
   AsyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
     { // AsyncRender strategy: for production
-      phoxy.Fancy(ejs, data, function(obj, ejs, data)
+      phoxy._render.Fancy(ejs, data, function(obj, ejs, data)
       {
         if (typeof obj === 'undefined')
         {
@@ -60,7 +64,7 @@ phoxy._RenderSubsystem =
     { // SyncRender strategy: for debug/develop purposes
       phoxy._time.Appeared(target, function()
       {
-        phoxy.Fancy(ejs, data, function(obj, ejs, data)
+        phoxy._render.Fancy(ejs, data, function(obj, ejs, data)
         {
           if (typeof obj === 'undefined')
           {
@@ -88,7 +92,7 @@ phoxy._RenderSubsystem =
       {
         document.getElementById(target).innerHTMl = html;
       });
-      phoxy.RenderStrategy.apply(this, args);
+      phoxy._render.RenderStrategy.apply(this, args);
     }
   ,
   RenderReplace : function (target, ejs, data, rendered_callback)
@@ -100,7 +104,7 @@ phoxy._RenderSubsystem =
         that.insertAdjacentHTML("afterEnd", html);
         that.parentNode.removeChild(that);
       });
-      phoxy.RenderStrategy.apply(this, args);
+      phoxy._render.RenderStrategy.apply(this, args);
     }
   ,
   Render : function (design, data, callback, is_phoxy_internal_call)
@@ -138,7 +142,7 @@ phoxy._RenderSubsystem =
         if (Array.isArray(args[i]))
         {
           args[i] = phoxy.ConstructURL(args[i]);
-          return phoxy.Fancy.apply(this, args);
+          return phoxy._render.Fancy.apply(this, args);
         }
 
       phoxy.Log(6, "phoxy.Fancy", arguments);
@@ -190,7 +194,7 @@ phoxy._RenderSubsystem =
           var rpc = args[0];
           FancyServerRequest(rpc, function(obj)
           {
-            phoxy.Fancy(obj, args[1], args[2], args[3]);
+            phoxy._render.Fancy(obj, args[1], args[2], args[3]);
           });
           return;
         }
@@ -206,7 +210,7 @@ phoxy._RenderSubsystem =
 
         HandleServerAnswerAndInvokeCallback(obj, function()
         {
-          phoxy.Fancy(design, data, callback, args[3]);
+          phoxy._render.Fancy(design, data, callback, args[3]);
         })
 
         return;
@@ -229,7 +233,7 @@ phoxy._RenderSubsystem =
       function DataLoadedCallback(data)
       {
         data = data || {};
-        phoxy.Fancy(args[0], data, args[2], args[3]);
+        phoxy._render.Fancy(args[0], data, args[2], args[3]);
       }
 
       if (typeof(args[1]) === 'function')
@@ -283,7 +287,7 @@ phoxy._RenderSubsystem =
 // [c2] ////////
         function DetermineAsync(design)
         {
-          phoxy.Fancy(design, data, args[2], args[3]);
+          phoxy._render.Fancy(design, data, args[2], args[3]);
         }
 
         design = design(data, DetermineAsync);
@@ -292,10 +296,11 @@ phoxy._RenderSubsystem =
       }
 
       var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
-      html = phoxy.Render(ejs_location, data, undefined, true);
+      html = phoxy._render.Render(ejs_location, data, undefined, true);
 
       if (!raw_output)
         html = html.html;
       callback(html, design, data);
     }
+  ,
 };

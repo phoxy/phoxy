@@ -103,12 +103,12 @@ phoxy._EarlyStage.Compile = function()
   if (phoxy.prestart.sync_cascade)
   {
     phoxy.state.sync_cascade = true;
-    phoxy.RenderStrategy = phoxy.SyncRender_Strategy;
+    phoxy._render.RenderStrategy = phoxy._render.SyncRender_Strategy;
   }
   else
   {
     phoxy.state.sync_cascade = false;
-    phoxy.RenderStrategy = phoxy.AsyncRender_Strategy;
+    phoxy._render.RenderStrategy = phoxy._render.AsyncRender_Strategy;
   }
 
   phoxy.state.compiled = true;
