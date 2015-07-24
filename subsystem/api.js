@@ -2,12 +2,6 @@ phoxy._ApiSubsystem =
 {
   ApiAnswer : function( answer, callback )
     {
-      if (answer.hash !== undefined)
-      {
-        if (answer.hash === null)
-          answer.hash = "";
-        phoxy.ChangeHash(answer.hash);
-      }
       if (answer.error)
       {
         alert(answer.error);
@@ -235,7 +229,7 @@ phoxy._ApiSubsystem =
         return arguments.callee.call(this, url, arguments[2]);
       }
 
-      phoxy.ChangeHash(url);
+      phoxy.ChangeURL('/' + url);
       phoxy.ApiRequest(url, callback);
     }
 }
