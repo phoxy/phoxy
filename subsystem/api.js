@@ -194,19 +194,8 @@ phoxy._ApiSubsystem =
   ,
   ApiRequest : function( url, callback )
     {
-      if (arguments.length === 3
-            ||
-            (typeof callback !== 'function'
-              && typeof callback !== 'undefined')
-          )
-      {
-        phoxy.Log(1, "Object optional IS deprecated. Look at #91");
-        if (typeof url !== 'string')
-          return phoxy.Log(0, "Failed to soft translate call");
-        if (typeof arguments[1] !== 'undefined')
-          url = [url].concat(arguments[1]);
-        return arguments.callee.call(this, url, arguments[2]);
-      }
+      if (phoxy._deprecated.IsObjectOptionalDetected.apply(this, arguments))
+        phoxy._deprecated.ObjectOptional(phoxy.MenuCall, arguments);
 
       url = phoxy.ConstructURL(url);
 
@@ -215,19 +204,8 @@ phoxy._ApiSubsystem =
   ,
   MenuCall : function( url, callback )
     {
-      if (arguments.length === 3
-            ||
-            (typeof callback !== 'function'
-              && typeof callback !== 'undefined')
-          )
-      {
-        phoxy.Log(1, "Object optional IS deprecated. Look at #91");
-        if (typeof url !== 'string')
-          return phoxy.Log(0, "Failed to soft translate call");
-        if (typeof arguments[1] !== 'undefined')
-          url = [url].concat(arguments[1]);
-        return arguments.callee.call(this, url, arguments[2]);
-      }
+      if (phoxy._deprecated.IsObjectOptionalDetected.apply(this, arguments))
+        phoxy._deprecated.ObjectOptional(phoxy.MenuCall, arguments);
 
       phoxy.ChangeURL('/' + url);
       phoxy.ApiRequest(url, callback);

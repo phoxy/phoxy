@@ -11,12 +11,6 @@ phoxy._InternalCode =
       //  phoxy.ApiRequest(hash);
     }
   ,
-  ChangeHash : function(hash)
-  {
-    phoxy.Log(2, "phoxy.ChangeHash is deprecated since v1.4.1, please use phoxy.ChangeURL");
-    phoxy.ChangeURL(hash);
-  }
-  ,
   ChangeURL : function (url)
     {
       url = phoxy.ConstructURL(url);

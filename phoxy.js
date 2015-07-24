@@ -62,6 +62,7 @@ phoxy._EarlyStage =
       'api.js': '_ApiSubsystem',
       'internal.js': '_InternalCode',
       'click.js': '_ClickHook',
+      'legacy.js': '_LegacyLand',
       'enjs.js': undefined,
     }
   ,
