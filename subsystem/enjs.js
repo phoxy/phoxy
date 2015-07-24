@@ -3,11 +3,33 @@
  ***/
 
 
-phoxy.OverloadEJSCanvas = function()
+phoxy._OverrideENJS =
 {
-  delete phoxy.OverloadEJSCanvas; // Only one-time execution is allowed
-  var origin_RenderCompleted = EJS.Canvas.prototype.RenderCompleted;
-  EJS.Canvas.prototype.RenderCompleted = function()
+  OverloadENJSCanvas: function()
+  {
+    delete phoxy.OverloadEJSCanvas; // Only one-time execution is allowed
+    var origin_RenderCompleted = EJS.Canvas.prototype.RenderCompleted;
+    EJS.Canvas.prototype.RenderCompleted = phoxy._enjs.RenderCompleted;
+
+    EJS.Canvas.prototype.CheckIsCompleted = phoxy._enjs.CheckIsCompleted;
+
+    EJS.Canvas.prototype.hook_first = phoxy._enjs.hook_first;
+
+    EJS.Canvas.prototype.recursive = 0;
+    phoxy.RenderCalls = 0;
+
+    EJS.Canvas.across.prototype.DeferRender = phoxy._enjs.DeferRender;
+
+    var OriginDefer = EJS.Canvas.across.prototype.Defer;
+    EJS.Canvas.across.prototype.Defer = phoxy._enjs.Defer;
+
+    EJS.Canvas.across.prototype.DeferCascade = phoxy._enjs.DeferCascade;
+  }
+};
+
+phoxy._OverrideENJS._enjs =
+{
+  RenderCompleted: function()
   {
     origin_RenderCompleted.apply(this);
 
@@ -27,8 +49,8 @@ phoxy.OverloadEJSCanvas = function()
     phoxy.RenderCalls++;
     this.across.Defer(this.CheckIsCompleted);
   }
-
-  EJS.Canvas.prototype.CheckIsCompleted = function()
+  ,
+  CheckIsCompleted: function()
   {
     var escape = this.escape();
     if (--escape.recursive === 0)
@@ -42,8 +64,8 @@ phoxy.OverloadEJSCanvas = function()
         escape.on_complete();
     }
   }
-
-  EJS.Canvas.prototype.hook_first = function(result)
+  ,
+  hook_first: function(result)
   {
     while (true)
     {
@@ -64,12 +86,9 @@ phoxy.OverloadEJSCanvas = function()
         break;
     }
     return root;
-  };
-
-  EJS.Canvas.prototype.recursive = 0;
-  phoxy.RenderCalls = 0;
-
-  EJS.Canvas.across.prototype.DeferRender = function(ejs, data, callback, tag)
+  }
+  ,
+  DeferRender: function(ejs, data, callback, tag)
   {
     var that = this.escape();
     if (that.fired_up)
@@ -95,9 +114,8 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
     that.Append(phoxy.DeferRender(ejs, data, CBHook, tag));
     return "<!-- <%= %> IS OBSOLETE. Refactor " + that.name + " -->";
   }
-
-  var OriginDefer = EJS.Canvas.across.prototype.Defer;
-  EJS.Canvas.across.prototype.Defer = function(callback, time)
+  ,
+  Defer: function(callback, time)
   {
     var that = this.escape();
     that.recursive++;
@@ -130,8 +148,8 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
       return OriginDefer(CBHook, time);
     })
   }
-
-  EJS.Canvas.across.prototype.DeferCascade = function(callback)
+  ,
+  DeferCascade: function(callback)
   {
     var that = this.escape();
     if (that.fired_up)
@@ -148,4 +166,4 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
 
     that.cascade.push(callback);
   }
-}
+};

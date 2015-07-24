@@ -63,7 +63,7 @@ phoxy._EarlyStage =
       'internal.js': '_InternalCode',
       'click.js': '_ClickHook',
       'legacy.js': '_LegacyLand',
-      'enjs.js': undefined,
+      'enjs.js': '_OverrideENJS',
     }
   ,
   sync_require:
