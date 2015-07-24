@@ -77,4 +77,10 @@ phoxy._InternalCode._internal =
       return ret;
     }
   ,
+  Override : function(object, method_name, new_method)
+  {
+    var origin = object[method_name];
+    object[method_name] = new_method;
+    object[method_name].origin = origin;
+  }
 };

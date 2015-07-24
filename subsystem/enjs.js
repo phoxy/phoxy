@@ -8,22 +8,18 @@ phoxy._OverrideENJS =
   OverloadENJSCanvas: function()
   {
     delete phoxy.OverloadEJSCanvas; // Only one-time execution is allowed
-    var origin_RenderCompleted = EJS.Canvas.prototype.RenderCompleted;
-    EJS.Canvas.prototype.RenderCompleted = phoxy._enjs.RenderCompleted;
-
-    EJS.Canvas.prototype.CheckIsCompleted = phoxy._enjs.CheckIsCompleted;
-
-    EJS.Canvas.prototype.hook_first = phoxy._enjs.hook_first;
 
     EJS.Canvas.prototype.recursive = 0;
     phoxy.RenderCalls = 0;
 
-    EJS.Canvas.across.prototype.DeferRender = phoxy._enjs.DeferRender;
+    phoxy._internal.Override(EJS.Canvas.prototype, 'RenderCompleted', phoxy._enjs.RenderCompleted);
+    phoxy._internal.Override(EJS.Canvas.prototype, 'Defer', phoxy._enjs.Defer);
+    phoxy._internal.Override(EJS.Canvas.prototype, 'CheckIsCompleted', phoxy._enjs.CheckIsCompleted);
+    phoxy._internal.Override(EJS.Canvas.prototype, 'hook_first', phoxy._enjs.hook_first);
 
-    var OriginDefer = EJS.Canvas.across.prototype.Defer;
-    EJS.Canvas.across.prototype.Defer = phoxy._enjs.Defer;
+    phoxy._internal.Override(EJS.Canvas.across.prototype, 'DeferRender', phoxy._enjs.DeferRender);
+    phoxy._internal.Override(EJS.Canvas.across.prototype, 'DeferCascade', phoxy._enjs.DeferCascade);
 
-    EJS.Canvas.across.prototype.DeferCascade = phoxy._enjs.DeferCascade;
   }
 };
 
@@ -31,7 +27,7 @@ phoxy._OverrideENJS._enjs =
 {
   RenderCompleted: function()
   {
-    origin_RenderCompleted.apply(this);
+    arguments.callee.origin.apply(this);
 
     // In case of recursive rendering, forbid later using
     // If you losed context from this, and access it with __context
@@ -143,6 +139,7 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
     if (typeof time === 'undefined')
       return that.defer.push(CBHook);
 
+    var OriginDefer = arguments.callee.origin;
     that.defer.push(function()
     {
       return OriginDefer(CBHook, time);
