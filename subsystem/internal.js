@@ -4,33 +4,27 @@ phoxy._InternalCode =
     {
       delete phoxy.Load; // Cause this is only one time execution
       phoxy.state.loaded = true;
-      var hash = location.hash.substring(1);
-      if (!phoxy.prestart.skip_initiation)
-        phoxy.ApiRequest(hash);
-      phoxy.state.hash = hash;
 
-      function PhoxyHashChangeCallback()
-      {
-        if (phoxy.ChangeHash(location.hash))
-          phoxy.ApiRequest(phoxy.state.hash);
-      }
-
-      window.addEventListener('hashchange', PhoxyHashChangeCallback);
+      //if (!phoxy.prestart.skip_initiation)
+      //  phoxy.ApiRequest(hash);
     }
   ,
-  ChangeHash : function (hash)
+  ChangeHash : function(hash)
+  {
+    phoxy.Log(2, "phoxy.ChangeHash is deprecated since v1.4.1, please use phoxy.ChangeURL");
+    phoxy.ChangeURL(hash);
+  }
+  ,
+  ChangeURL : function (url)
     {
-      var t;
-      t = hash.split(location.origin)[1];
-      if (t !== undefined)
-        hash = t;
-      var t = hash.split('#')[1];
-      if (t !== undefined)
-        hash = t;
-      var ret = phoxy.state.hash != hash;
-      phoxy.state.hash = hash;
-      location.hash = hash;
-      return ret;
+      url = phoxy.ConstructURL(url);
+
+      phoxy.Log(4, "History push", url);
+      if (url[0] != '/')
+        url = '/' + url;
+      history.pushState({}, document.title, url);
+
+      return false;
     }
   ,
   GenerateUniqueID : function()
