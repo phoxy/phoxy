@@ -64,7 +64,7 @@ phoxy._ApiSubsystem =
         if (answer.replace === undefined)
           if (answer.result === undefined)
             document.getElementsByTagName('body')[0].appendChild(canvas.obj);
-          else if (typeof answer.result == 'string')
+          else if (typeof answer.result === 'string')
             document.getElementById(answer.result).innerHTML = element;
           else
             for (var k in answer.result)
@@ -87,21 +87,21 @@ phoxy._ApiSubsystem =
   ,
   FindRouteline : function( routeline )
   {
-    if (typeof routeline == 'undefined')
+    if (typeof routeline === 'undefined')
       return function() {};
-    if (typeof window[routeline] == 'function')
+    if (typeof window[routeline] === 'function')
       return window[routeline];
     var arr = routeline.split(".");
     var method = arr.pop();
 
     var obj = window;
     for (var k in arr)
-      if (typeof obj[arr[k]] == 'undefined')
+      if (typeof obj[arr[k]] === 'undefined')
         throw "Routeline context locate failed";
       else
         obj = obj[arr[k]];
 
-    if (typeof obj[method] != 'function')
+    if (typeof obj[method] !== 'function')
       throw "Routeline locate failed";
 
     return obj[method];
@@ -118,13 +118,13 @@ phoxy._ApiSubsystem =
       function AddToLocalStorage(data)
       {
         storage[url] = data;
-        if (typeof(callback_or_true_for_return) == 'function')
+        if (typeof(callback_or_true_for_return) === 'function')
           callback_or_true_for_return(data);
       }
 
       if (storage[url] != undefined)
       {
-        if (typeof(callback_or_true_for_return) == 'function')
+        if (typeof(callback_or_true_for_return) === 'function')
           callback_or_true_for_return(storage[url]);
         return true;
       }
@@ -147,7 +147,7 @@ phoxy._ApiSubsystem =
       phoxy.state.ajax.active[current_ajax_id] = arguments;
 
       if (!phoxy.state.ajax.nesting_level++)
-        if (typeof phoxy.prestart.OnAjaxBegin == 'function')
+        if (typeof phoxy.prestart.OnAjaxBegin === 'function')
           phoxy.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
 
       phoxy.ajax(phoxy.Config()['api_dir'] + "/" + url, function(response)
@@ -159,7 +159,7 @@ phoxy._ApiSubsystem =
           callback.apply(this, params);
 
           if (!--phoxy.state.ajax.nesting_level)
-            if (typeof phoxy.prestart.OnAjaxEnd == 'function')
+            if (typeof phoxy.prestart.OnAjaxEnd === 'function')
               phoxy.prestart.OnAjaxEnd(phoxy.state.ajax.active[current_ajax_id]);
           delete phoxy.state.ajax.active[current_ajax_id];
         });
@@ -188,7 +188,7 @@ phoxy._ApiSubsystem =
   ,
   ConstructURL : function(arr)
   {
-    if (typeof arr == 'string')
+    if (typeof arr === 'string')
       return arr;
 
     arr = arr.slice(0);
@@ -200,16 +200,16 @@ phoxy._ApiSubsystem =
   ,
   ApiRequest : function( url, callback )
     {
-      if (arguments.length == 3
+      if (arguments.length === 3
             ||
-            (typeof callback != 'function'
-              && typeof callback != 'undefined')
+            (typeof callback !== 'function'
+              && typeof callback !== 'undefined')
           )
       {
         phoxy.Log(1, "Object optional IS deprecated. Look at #91");
-        if (typeof url != 'string')
+        if (typeof url !== 'string')
           return phoxy.Log(0, "Failed to soft translate call");
-        if (typeof arguments[1] != 'undefined')
+        if (typeof arguments[1] !== 'undefined')
           url = [url].concat(arguments[1]);
         return arguments.callee.call(this, url, arguments[2]);
       }
@@ -221,16 +221,16 @@ phoxy._ApiSubsystem =
   ,
   MenuCall : function( url, callback )
     {
-      if (arguments.length == 3
+      if (arguments.length === 3
             ||
-            (typeof callback != 'function'
-              && typeof callback != 'undefined')
+            (typeof callback !== 'function'
+              && typeof callback !== 'undefined')
           )
       {
         phoxy.Log(1, "Object optional IS deprecated. Look at #91");
-        if (typeof url != 'string')
+        if (typeof url !== 'string')
           return phoxy.Log(0, "Failed to soft translate call");
-        if (typeof arguments[1] != 'undefined')
+        if (typeof arguments[1] !== 'undefined')
           url = [url].concat(arguments[1]);
         return arguments.callee.call(this, url, arguments[2]);
       }

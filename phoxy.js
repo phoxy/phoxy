@@ -1,4 +1,4 @@
-if (typeof phoxy == 'undefined')
+if (typeof phoxy === 'undefined')
   phoxy = {};
 if (typeof phoxy.state !== 'undefined')
   if (phoxy.state.loaded == true)
@@ -27,7 +27,7 @@ var phoxy =
       active_id : 0,
       active : [],
     },
-    verbose : typeof phoxy.verbose == 'undefined' ? 10 : phoxy.verbose,
+    verbose : typeof phoxy.verbose === 'undefined' ? 10 : phoxy.verbose,
     early:
     {
       require: 0,
@@ -75,7 +75,7 @@ phoxy._EarlyStage =
   ,
   Prepare: function()
   {
-    if (typeof requirejs == 'undefined')
+    if (typeof requirejs === 'undefined')
       return setTimeout(arguments.callee, 10);
     phoxy.state.runlevel = 0.5;
 
@@ -87,7 +87,7 @@ phoxy._EarlyStage =
     if (!phoxy.prestart.wait)
       phoxy._EarlyStage.EntryPoint();
     else
-      if (typeof phoxy.prestart.OnWaiting == 'function')
+      if (typeof phoxy.prestart.OnWaiting === 'function')
         phoxy.prestart.OnWaiting();
   }
   ,
@@ -105,7 +105,7 @@ phoxy._EarlyStage =
   ,
   Ready: function()
   {
-    if (typeof phoxy._EarlyStage.DependenciesLoaded == 'undefined')
+    if (typeof phoxy._EarlyStage.DependenciesLoaded === 'undefined')
       return setTimeout(arguments.callee, 10);
 
     phoxy._EarlyStage.DependenciesLoaded();

@@ -56,12 +56,12 @@ phoxy._EarlyStage.DependenciesLoaded = function()
 
   var initial_client_code = 0;
 
-  if (typeof phoxy.prestart.OnBeforeFirstApiCall == 'function')
+  if (typeof phoxy.prestart.OnBeforeFirstApiCall === 'function')
     phoxy.prestart.OnBeforeFirstApiCall();
   // Invoke client code
   var scripts = document.getElementsByTagName('script');
   for (var i = 0; i < scripts.length; i++)
-    if (scripts[i].getAttribute('phoxy') == null)
+    if (scripts[i].getAttribute('phoxy') === null)
       continue;
     else
     {
@@ -75,7 +75,7 @@ phoxy._EarlyStage.DependenciesLoaded = function()
           { // Be sure that zero reached only once
             if (--initial_client_code)
               return;
-            if (typeof phoxy.prestart.OnInitialClientCodeComplete == 'function')
+            if (typeof phoxy.prestart.OnInitialClientCodeComplete === 'function')
               phoxy.prestart.OnInitialClientCodeComplete();
           });
         });
@@ -93,7 +93,7 @@ phoxy._EarlyStage.Compile = function()
       continue; // skip compilation
 
     for (var func in phoxy[system_name])
-      if (typeof phoxy[func] != 'undefined')
+      if (typeof phoxy[func] !== 'undefined')
         throw "Phoxy method mapping failed on '" + func + '. Already exsists.';
       else
         phoxy[func] = phoxy[system_name][func];

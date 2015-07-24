@@ -4,7 +4,7 @@ phoxy._TimeSubsystem =
   {
     if (time == undefined)
       time = 0;
-    if (typeof callback != 'function')
+    if (typeof callback !== 'function')
       return phoxy.Log(0, "phoxy.Defer: Callback not a function", callback);
 
     var func = callback;

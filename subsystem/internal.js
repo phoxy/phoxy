@@ -46,10 +46,10 @@ phoxy._InternalCode =
   ,
     Reset : function (url)
     {      
-      if ((url || true) == true)
+      if ((url || true) === true)
         location.reload();
       var parts = url.split('#');
-      if (parts[1] == undefined)
+      if (parts[1] === undefined)
         phoxy.ChangeHash('');
       else
         phoxy.ChangeHash("#" + parts[1]);
@@ -83,9 +83,9 @@ phoxy._InternalCode =
       var method;
       if (level < 2)
         method = "error";
-      else if (level == 2)
+      else if (level === 2)
         method = "warn";
-      else if (level == 3)
+      else if (level === 3)
         method = "info";
       else
         method = "debug";

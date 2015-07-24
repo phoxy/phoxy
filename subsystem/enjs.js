@@ -31,14 +31,14 @@ phoxy.OverloadEJSCanvas = function()
   EJS.Canvas.prototype.CheckIsCompleted = function()
   {
     var escape = this.escape();
-    if (--escape.recursive == 0)
+    if (--escape.recursive === 0)
     {
       phoxy.Log(9, "phoxy.FireUp", [escape.name, escape]);
       escape.fired_up = true;
       for (var k in escape.cascade)
-        if (typeof (escape.cascade[k]) == 'function')
+        if (typeof (escape.cascade[k]) === 'function')
             escape.cascade[k].apply(this);
-      if (typeof(escape.on_complete) == 'function')
+      if (typeof(escape.on_complete) === 'function')
         escape.on_complete();
     }
   }
@@ -47,7 +47,7 @@ phoxy.OverloadEJSCanvas = function()
   {
     while (true)
     {
-      if (typeof root == 'undefined')
+      if (typeof root === 'undefined')
         var root = result;
       else
         root = root.nextSibling;
@@ -58,9 +58,9 @@ phoxy.OverloadEJSCanvas = function()
         continue;
 
       if (
-        ['defer_render','render'].indexOf(root.tagName) == -1 &&
-        root.classList.contains('phoxy_ignore') == false &&
-        root.classList.contains('ejs_ancor') == false)
+        ['defer_render','render'].indexOf(root.tagName) === -1 &&
+        root.classList.contains('phoxy_ignore') === false &&
+        root.classList.contains('ejs_ancor') === false)
         break;
     }
     return root;
@@ -85,7 +85,7 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
 
     function CBHook()
     {
-      if (typeof callback == 'function')
+      if (typeof callback === 'function')
         callback.call(this); // Local fancy context
       phoxy.RenderCalls--;
 
@@ -113,16 +113,16 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
 
     function CBHook()
     {
-      if (typeof callback == 'function')
+      if (typeof callback === 'function')
         callback.call(that.across);
       that.CheckIsCompleted.call(that.across);
     }
 
     if (phoxy.state.sync_cascade)
       return OriginDefer.call(this, CBHook, time);
-    if (typeof that.defer == 'undefined')
+    if (typeof that.defer === 'undefined')
       that.defer = [];
-    if (typeof time == 'undefined')
+    if (typeof time === 'undefined')
       return that.defer.push(CBHook);
 
     that.defer.push(function()
@@ -143,7 +143,7 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
       debugger; // already finished
     }
 
-    if (typeof that.cascade == 'undefined')
+    if (typeof that.cascade === 'undefined')
       that.cascade = [];
 
     that.cascade.push(callback);

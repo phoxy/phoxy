@@ -2,7 +2,7 @@ phoxy._RenderSubsystem =
 {
   PrepareCanvas : function(tag)
     {
-      if (tag == undefined)
+      if (tag === undefined)
         tag = '<div>';
       var vanilla_tag = tag.substring(1, tag.length - 1);
 
@@ -33,7 +33,7 @@ phoxy._RenderSubsystem =
     { // AsyncRender strategy: for production
       phoxy.Fancy(ejs, data, function(obj, ejs, data)
       {
-        if (typeof obj == 'undefined')
+        if (typeof obj === 'undefined')
         {
           phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
           return; // And break dependencies execution
@@ -50,7 +50,7 @@ phoxy._RenderSubsystem =
 
         obj.on_complete = function()
         {
-          if (typeof(rendered_callback) != 'undefined')
+          if (typeof(rendered_callback) !== 'undefined')
             rendered_callback.call(obj.across, ejs, data, obj.html);
         };
       }, true);
@@ -62,7 +62,7 @@ phoxy._RenderSubsystem =
       {
         phoxy.Fancy(ejs, data, function(obj, ejs, data)
         {
-          if (typeof obj == 'undefined')
+          if (typeof obj === 'undefined')
           {
             phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
             return; // And break dependencies execution
@@ -72,7 +72,7 @@ phoxy._RenderSubsystem =
 
           obj.on_complete = function()
           {
-            if (typeof(rendered_callback) != 'undefined')
+            if (typeof(rendered_callback) !== 'undefined')
               rendered_callback.call(obj.across, ejs, data, obj.html);
           };
         }, true);
@@ -110,7 +110,7 @@ phoxy._RenderSubsystem =
 
       phoxy.Log(5, "phoxy.Render", arguments);
       var html;
-      if (design.indexOf(".ejs") == -1)
+      if (design.indexOf(".ejs") === -1)
         design += ".ejs";
       var ejs;
       //if (!phoxy.ForwardDownload(design))
@@ -123,7 +123,7 @@ phoxy._RenderSubsystem =
       ejs.execute(obj);
       html = obj.html;
 
-      if (typeof phoxy == 'undefined' || typeof phoxy.state == 'undefined')
+      if (typeof phoxy === 'undefined' || typeof phoxy.state === 'undefined')
         throw "EJS render failed. Phoxy is missing. Is .ejs file exsists? Is your .htacess right? Check last AJAX request.";
 
       if (is_phoxy_internal_call)
@@ -144,7 +144,7 @@ phoxy._RenderSubsystem =
       phoxy.Log(6, "phoxy.Fancy", arguments);
 
       var callback = args[2];
-      if (typeof(callback) == 'undefined')
+      if (typeof(callback) === 'undefined')
         callback = function (){};
 
       function HandleServerAnswerAndInvokeCallback(answer, cb)
@@ -179,12 +179,12 @@ phoxy._RenderSubsystem =
        * * Then params already constructed with object
        * * NOTICE: All keywoards ARE interprenting
        */
-      if (typeof(args[1]) == 'undefined')
+      if (typeof(args[1]) === 'undefined')
       {
-        if (typeof(args[0]) == 'undefined')
+        if (typeof(args[0]) === 'undefined')
           return callback(undefined, undefined, undefined);
         
-        if (typeof(args[0]) == 'string')
+        if (typeof(args[0]) === 'string')
         {
 // [a0] ////////
           var rpc = args[0];
@@ -195,7 +195,7 @@ phoxy._RenderSubsystem =
           return;
         }
 
-        if (typeof(args[0]) != 'object')
+        if (typeof(args[0]) !== 'object')
           throw "Failed phoxy.Fancy object recognize";
 
 // [a1] ////////
@@ -232,15 +232,15 @@ phoxy._RenderSubsystem =
         phoxy.Fancy(args[0], data, args[2], args[3]);
       }
       
-      if (typeof(args[1]) == 'function')
+      if (typeof(args[1]) === 'function')
       {
 // [b0] ////////
         var data_load_functor = args[1];
         data = data_load_functor(DataLoadedCallback);
-        if (typeof(data) != 'object')
+        if (typeof(data) !== 'object')
           return; // data will be returned async
       }
-      else if (typeof(args[1]) == 'string')
+      else if (typeof(args[1]) === 'string')
       {
 // [b1] ////////
         var rpc_url = args[1];
@@ -250,7 +250,7 @@ phoxy._RenderSubsystem =
         });
         return;
       }
-      else if (typeof(args[1]) != 'object')
+      else if (typeof(args[1]) !== 'object')
         throw "Failed phoxy.Fancy data receive";
       else
 // [b2] ////////
@@ -271,14 +271,14 @@ phoxy._RenderSubsystem =
        * * Just same as [b0] for data preparing do.
        */
 
-      if (typeof(args[0]) == 'undefined')
+      if (typeof(args[0]) === 'undefined')
 // [c0] ////////
         return callback(html, design, data);
 
-      if (typeof(args[0]) == 'string')
+      if (typeof(args[0]) === 'string')
 // [c1] ////////
         design = args[0];
-      else if (typeof(args[0]) == 'function')
+      else if (typeof(args[0]) === 'function')
       {
 // [c2] ////////
         function DetermineAsync(design)
@@ -287,7 +287,7 @@ phoxy._RenderSubsystem =
         }
 
         design = design(data, DetermineAsync);
-        if (typeof(design) != 'string')
+        if (typeof(design) !== 'string')
           return; // Will be rendered later (async design determine)
       }
 
