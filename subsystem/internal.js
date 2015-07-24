@@ -52,6 +52,11 @@ phoxy._InternalCode =
       if (level == 0)
         debugger;
     }
+  ,
+    Override: function(method_name, new_method)
+    {
+      return phoxy._internal.Override(phoxy, method_name, new_method);
+    }
 };
 
 phoxy._InternalCode._internal =
