@@ -41,7 +41,7 @@ phoxy._RenderSubsystem =
 
         // Potential cascade memleak
         // Should clear listeners with callback
-        phoxy.Appeared(target, function()
+        phoxy._time.Appeared(target, function()
         {
           difference.call(phoxy, target, obj.html, arguments);
           for (var k in obj.defer)
@@ -58,7 +58,7 @@ phoxy._RenderSubsystem =
   ,
   SyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
     { // SyncRender strategy: for debug/develop purposes
-      phoxy.Appeared(target, function()
+      phoxy._time.Appeared(target, function()
       {
         phoxy.Fancy(ejs, data, function(obj, ejs, data)
         {
