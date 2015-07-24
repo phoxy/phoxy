@@ -2,12 +2,6 @@ phoxy._ApiSubsystem =
 {
   ApiAnswer : function( answer, callback )
     {
-      if (answer.hash !== undefined)
-      {
-        if (answer.hash === null)
-          answer.hash = "";
-        phoxy.ChangeHash(answer.hash);
-      }
       if (answer.error)
       {
         alert(answer.error);
