@@ -44,16 +44,7 @@ phoxy._InternalCode =
     {
       if ((url || true) === true)
         location.reload();
-      var parts = url.split('#');
-      if (parts[1] === undefined)
-        phoxy.ChangeHash('');
-      else
-        phoxy.ChangeHash("#" + parts[1]);
-      var host = parts[0];
-      if (host.length)
-        location = host;
-      else
-        location.reload(parts[0]);
+      location.reload(url);
     }
   ,
     Config : function()

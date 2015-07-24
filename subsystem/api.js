@@ -235,7 +235,7 @@ phoxy._ApiSubsystem =
         return arguments.callee.call(this, url, arguments[2]);
       }
 
-      phoxy.ChangeHash(url);
+      phoxy.ChangeURL('/' + url);
       phoxy.ApiRequest(url, callback);
     }
 }

@@ -18,10 +18,6 @@ phoxy =
   },
   OnAfterCompile: function()
   {
-    phoxy.ChangeHash = function()
-    {
-      return false;
-    }
     requirejs.config({baseUrl: phoxy.Config()['js_dir']});
     console.log("Phoxy ready. Starting");
   },
