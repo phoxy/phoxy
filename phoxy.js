@@ -61,6 +61,7 @@ phoxy._EarlyStage =
       'render.js': '_RenderSubsystem',
       'api.js': '_ApiSubsystem',
       'internal.js': '_InternalCode',
+      'click.js': '_ClickHook',
       'enjs.js': undefined,
     }
   ,

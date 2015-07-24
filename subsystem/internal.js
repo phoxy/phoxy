@@ -5,6 +5,8 @@ phoxy._InternalCode =
       delete phoxy.Load; // Cause this is only one time execution
       phoxy.state.loaded = true;
 
+      phoxy.InitClickHook();
+
       //if (!phoxy.prestart.skip_initiation)
       //  phoxy.ApiRequest(hash);
     }
