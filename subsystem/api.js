@@ -104,7 +104,7 @@ phoxy._ApiSubsystem._api =
       if (answer.design === undefined)
         return ScriptsFiresUp();
 
-      var canvas = phoxy.PrepareCanvas('<render>');
+      var canvas = phoxy._render.PrepareCanvas('<render>');
       var id = canvas.id;
       var render_id = id;
 
@@ -129,7 +129,7 @@ phoxy._ApiSubsystem._api =
         else
           render_id = answer.replace;
 
-        phoxy.RenderReplace(
+        phoxy._render.RenderReplace(
           render_id,
           answer.design,
           answer.data || {},
