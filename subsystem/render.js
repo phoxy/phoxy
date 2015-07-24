@@ -6,7 +6,7 @@ phoxy._RenderSubsystem =
         tag = '<div>';
       var vanilla_tag = tag.substring(1, tag.length - 1);
 
-      var id =  phoxy.GenerateUniqueID();
+      var id =  phoxy._internal.GenerateUniqueID();
       var obj = document.createElement(vanilla_tag);
       obj.setAttribute('id', id);
       var div = obj.outerHTML;

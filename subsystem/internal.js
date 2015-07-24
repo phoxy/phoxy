@@ -1,16 +1,5 @@
 phoxy._InternalCode =
 {
-  Load : function( )
-    {
-      delete phoxy.Load; // Cause this is only one time execution
-      phoxy.state.loaded = true;
-
-      phoxy.InitClickHook();
-
-      //if (!phoxy.prestart.skip_initiation)
-      //  phoxy.ApiRequest(hash);
-    }
-  ,
   ChangeURL : function (url)
     {
       url = phoxy.ConstructURL(url);
@@ -21,17 +10,6 @@ phoxy._InternalCode =
       history.pushState({}, document.title, url);
 
       return false;
-    }
-  ,
-  GenerateUniqueID : function()
-    {
-      var ret = "";
-      var dictonary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-      for (var i = 0; i < 10; i++)
-        ret += dictonary.charAt(Math.floor(Math.random() * dictonary.length));
-
-      return ret;
     }
   ,
     Reset : function (url)
@@ -74,4 +52,29 @@ phoxy._InternalCode =
       if (level == 0)
         debugger;
     }
+};
+
+phoxy._InternalCode._internal =
+{
+  Load : function( )
+    {
+      phoxy.state.loaded = true;
+
+      phoxy.InitClickHook();
+
+      //if (!phoxy.prestart.skip_initiation)
+      //  phoxy.ApiRequest(hash);
+    }
+  ,
+  GenerateUniqueID : function()
+    {
+      var ret = "";
+      var dictonary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+      for (var i = 0; i < 10; i++)
+        ret += dictonary.charAt(Math.floor(Math.random() * dictonary.length));
+
+      return ret;
+    }
+  ,
 };

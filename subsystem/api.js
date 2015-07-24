@@ -41,7 +41,7 @@ phoxy._ApiSubsystem =
         if (callback)
           callback(answer);
         if (!phoxy.state.loaded)
-          phoxy.Load();
+          phoxy._internal.Load();
       }
       if (answer.design === undefined)
         return ScriptsFiresUp();
