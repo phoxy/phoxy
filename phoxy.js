@@ -40,14 +40,6 @@ var phoxy =
   },
   plugin : {},
   prestart: phoxy,
-  error_names :
-  [
-    "FATAL",
-    "ERROR",
-    "WARNING",
-    "INFO",
-    "DEBUG",
-  ],
 };
 
 phoxy._EarlyStage =

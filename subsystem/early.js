@@ -111,5 +111,8 @@ phoxy._EarlyStage.Compile = function()
     phoxy._render.RenderStrategy = phoxy._render.AsyncRender_Strategy;
   }
 
+  // Move bootstrapped ajax into his place
+  phoxy._internal.ajax = phoxy._EarlyStage.ajax;
+
   phoxy.state.compiled = true;
 };

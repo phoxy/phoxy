@@ -181,14 +181,13 @@ phoxy._ApiSubsystem._api =
         return true;
       }
 
-      phoxy.ajax(url, AddToLocalStorage);
+      phoxy._internal.ajax(url, AddToLocalStorage);
       return false;
     }
   ,
   ajax : function ()
     {
-      phoxy.ajax = phoxy._EarlyStage.ajax;
-      phoxy.ajax.apply(this, arguments);
+      phoxy._internal.ajax.apply(this, arguments);
     }
   ,
   Serialize : function(obj, nested_mode)

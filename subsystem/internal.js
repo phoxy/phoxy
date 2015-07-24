@@ -29,7 +29,7 @@ phoxy._InternalCode =
       if (phoxy.state.verbose < level)
         return;
 
-      var error_names = phoxy.error_names;
+      var error_names = phoxy._internal.error_names;
       var errorname = error_names[level < error_names.length ? level : error_names.length - 1];
 
       var skipfirst = true;
@@ -88,4 +88,13 @@ phoxy._InternalCode._internal =
     object[method_name] = new_method;
     object[method_name].origin = origin;
   }
+  ,
+  error_names :
+  [
+    "FATAL",
+    "ERROR",
+    "WARNING",
+    "INFO",
+    "DEBUG",
+  ],
 };
