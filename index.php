@@ -12,13 +12,13 @@ function PhoxyStart()
     die("Requiest aborted due API direct XSS warning");
 
   global $_GET;
-  $get_param = phoxy_conf()["get_api_param"];  
+  $get_param = phoxy_conf()["get_api_param"];
   $file = $_GET[$get_param];
   unset($_GET[$get_param]);
 
   if ($file == 'htaccess')
     exit('Rewrite engine work SUCCESS');
-    
+
   include_once('rpc_string_parser.php');
   $parser = new \phoxy\rpc_string_parser();
 

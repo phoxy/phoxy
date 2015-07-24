@@ -29,12 +29,12 @@ phoxy._TimeSubsystem =
       var
         check_timeout = 60, // 1 minute for render to complete
         check_delay = 500; // check every 500ms
-      
+
       if (timeout != undefined)
         check_timeout = timeout;
       if (check_every != undefined)
         check_delay = check_every;
-      
+
       var func = function()
       {
         if (!callback_condition())
@@ -86,7 +86,7 @@ phoxy._TimeSubsystem =
       {
         return document.getElementById(jquery_selector) == null;
       }
-    
+
       phoxy.Defer(function()
       {
         phoxy.WaitFor(IsDivDisappeared, function()

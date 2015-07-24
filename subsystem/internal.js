@@ -45,7 +45,7 @@ phoxy._InternalCode =
     }
   ,
     Reset : function (url)
-    {      
+    {
       if ((url || true) === true)
         location.reload();
       var parts = url.split('#');

@@ -1,5 +1,5 @@
 <?php
-  
+
 function phoxy_default_conf()
 {
   return array(

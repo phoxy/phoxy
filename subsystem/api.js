@@ -7,7 +7,7 @@ phoxy._ApiSubsystem =
         if (answer.hash === null)
           answer.hash = "";
         phoxy.ChangeHash(answer.hash);
-      }      
+      }
       if (answer.error)
       {
         alert(answer.error);
@@ -26,7 +26,7 @@ phoxy._ApiSubsystem =
             answer = _answer;
           phoxy.ScriptsLoaded(answer, callback);
         }
-        
+
         if (answer.before === undefined)
           return AfterBefore();
 
@@ -48,7 +48,7 @@ phoxy._ApiSubsystem =
           callback(answer);
         if (!phoxy.state.loaded)
           phoxy.Load();
-      }   
+      }
       if (answer.design === undefined)
         return ScriptsFiresUp();
 
@@ -111,9 +111,9 @@ phoxy._ApiSubsystem =
     {
       if (typeof(storage) === "undefined")
         storage = {};
-        
+
       if (callback_or_true_for_return === true)
-        return storage[url];      
+        return storage[url];
 
       function AddToLocalStorage(data)
       {
@@ -166,7 +166,7 @@ phoxy._ApiSubsystem =
     }
   ,
   Serialize : function(obj, nested_mode)
-    { 
+    {
       json_encoded = JSON.stringify(obj);
       send_string = json_encoded.substring(1, json_encoded.length - 1);
 
@@ -176,13 +176,13 @@ phoxy._ApiSubsystem =
         search_string = "\\" + reserved_characters.join("|\\");
         var regexp = new RegExp(search_string, "gi");
 
-        return str.replace(regexp, 
+        return str.replace(regexp,
           function(matched)
           {
             return escape(escape(matched));
           });
       }
- 
+
       return EscapeReserved(send_string, "()?#\\");
     }
   ,

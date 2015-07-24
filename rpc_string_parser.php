@@ -48,7 +48,7 @@ class rpc_string_parser
     if (is_string($last))
     {
       $callee[] = $last;
-      $callee[] = "Reserve";  
+      $callee[] = "Reserve";
     }
     else
     {

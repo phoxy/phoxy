@@ -1,4 +1,4 @@
-phoxy._RenderSubsystem = 
+phoxy._RenderSubsystem =
 {
   PrepareCanvas : function(tag)
     {
@@ -10,7 +10,7 @@ phoxy._RenderSubsystem =
       var obj = document.createElement(vanilla_tag);
       obj.setAttribute('id', id);
       var div = obj.outerHTML;
-      
+
       return { id: id, obj: obj, html: div };
     }
   ,
@@ -21,7 +21,7 @@ phoxy._RenderSubsystem =
         tag = '<defer_render>';
       var canvas = phoxy.PrepareCanvas(tag);
       var id = canvas.id;
-      
+
       phoxy.RenderReplace(id, ejs, data, rendered_callback);
 
       if (tag === null)
@@ -82,7 +82,7 @@ phoxy._RenderSubsystem =
   RenderStrategy : "Will be replaced by selected strategy after compilation."
   ,
   RenderInto : function (target, ejs, data, rendered_callback)
-    { 
+    {
       var args = Array.prototype.slice.call(arguments);
       args.push(function(target, html)
       {
@@ -170,11 +170,11 @@ phoxy._RenderSubsystem =
         });
       }
 
-      /* 
+      /*
        * [a0] phoxy.Fancy(string, undefined, anytype)
        * * Then it full RPC call, with fixed render place
        * * (result/replace keywords ignoring)
-       * 
+       *
        * [a1] phoxy.Fancy(object, undefined, anytype)
        * * Then params already constructed with object
        * * NOTICE: All keywoards ARE interprenting
@@ -183,7 +183,7 @@ phoxy._RenderSubsystem =
       {
         if (typeof(args[0]) === 'undefined')
           return callback(undefined, undefined, undefined);
-        
+
         if (typeof(args[0]) === 'string')
         {
 // [a0] ////////
@@ -217,11 +217,11 @@ phoxy._RenderSubsystem =
        * * Generating data through function
        * * Data could be returned directly (object only)
        * *  or could be returned asynchronously with callback, as soon as it will be ready.
-       * 
+       *
        * [b1] phoxy.Fancy(anytype, string, anytype)
        * * Requesting data with RPC
        * * NOTICE: Every keywoards except data ARE ignored.
-       * 
+       *
        * [b2] phoxy.Fancy(anytype, object, anytype)
        * * Serving with constructed object. Ready to render!
        */
@@ -231,7 +231,7 @@ phoxy._RenderSubsystem =
         data = data || {};
         phoxy.Fancy(args[0], data, args[2], args[3]);
       }
-      
+
       if (typeof(args[1]) === 'function')
       {
 // [b0] ////////
@@ -262,10 +262,10 @@ phoxy._RenderSubsystem =
        * [c0] phoxy.Fancy(undefined, NOT undefined, anytype)
        * * Only invoking callback with prepared data
        * * Used when design determining dynamically
-       * 
+       *
        * [c1] phoxy.Fancy(string, NOT undefined, anytype)
        * * First parameter is EJS string, same as in 'design' keyword
-       * 
+       *
        * [c2] phoxy.Fancy(function, NOT undefined, anytype)
        * * First paremeter if method which determine design in runtime
        * * Just same as [b0] for data preparing do.

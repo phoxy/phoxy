@@ -57,7 +57,7 @@ phoxy._EarlyStage =
   systems:
     {
       'early.js': undefined,
-      'time.js': '_TimeSubsystem', 
+      'time.js': '_TimeSubsystem',
       'render.js': '_RenderSubsystem',
       'api.js': '_ApiSubsystem',
       'internal.js': '_InternalCode',
@@ -159,7 +159,7 @@ phoxy._EarlyStage =
       for (var k in phoxy.state.early.optional)
         optional_count += phoxy.state.early.optional[k];
 
-      phoxy.state.early.require = 
+      phoxy.state.early.require =
         phoxy_itself
           + config_load
           + system_count
