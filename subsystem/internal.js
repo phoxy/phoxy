@@ -29,7 +29,7 @@ phoxy._InternalCode =
       if (phoxy.state.verbose < level)
         return;
 
-      var error_names = phoxy._internal.error_names;
+      var error_names = phoxy._.internal.error_names;
       var errorname = error_names[level < error_names.length ? level : error_names.length - 1];
 
       var skipfirst = true;
@@ -55,17 +55,18 @@ phoxy._InternalCode =
   ,
     Override: function(method_name, new_method)
     {
-      return phoxy._internal.Override(phoxy, method_name, new_method);
+      return phoxy._.internal.Override(phoxy, method_name, new_method);
     }
 };
 
-phoxy._InternalCode._internal =
+phoxy._InternalCode._ = {};
+phoxy._InternalCode._.internal =
 {
   Load : function( )
     {
       phoxy.state.loaded = true;
 
-      phoxy._click.InitClickHook();
+      phoxy._.click.InitClickHook();
 
       //if (!phoxy.prestart.skip_initiation)
       //  phoxy.ApiRequest(hash);

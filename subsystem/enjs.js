@@ -12,18 +12,19 @@ phoxy._OverrideENJS =
     EJS.Canvas.prototype.recursive = 0;
     phoxy.RenderCalls = 0;
 
-    phoxy._internal.Override(EJS.Canvas.prototype, 'RenderCompleted', phoxy._enjs.RenderCompleted);
-    phoxy._internal.Override(EJS.Canvas.prototype, 'Defer', phoxy._enjs.Defer);
-    phoxy._internal.Override(EJS.Canvas.prototype, 'CheckIsCompleted', phoxy._enjs.CheckIsCompleted);
-    phoxy._internal.Override(EJS.Canvas.prototype, 'hook_first', phoxy._enjs.hook_first);
+    phoxy._.internal.Override(EJS.Canvas.prototype, 'RenderCompleted', phoxy._.enjs.RenderCompleted);
+    phoxy._.internal.Override(EJS.Canvas.prototype, 'Defer', phoxy._.enjs.Defer);
+    phoxy._.internal.Override(EJS.Canvas.prototype, 'CheckIsCompleted', phoxy._.enjs.CheckIsCompleted);
+    phoxy._.internal.Override(EJS.Canvas.prototype, 'hook_first', phoxy._.enjs.hook_first);
 
-    phoxy._internal.Override(EJS.Canvas.across.prototype, 'DeferRender', phoxy._enjs.DeferRender);
-    phoxy._internal.Override(EJS.Canvas.across.prototype, 'DeferCascade', phoxy._enjs.DeferCascade);
+    phoxy._.internal.Override(EJS.Canvas.across.prototype, 'DeferRender', phoxy._.enjs.DeferRender);
+    phoxy._.internal.Override(EJS.Canvas.across.prototype, 'DeferCascade', phoxy._.enjs.DeferCascade);
 
   }
 };
 
-phoxy._OverrideENJS._enjs =
+phoxy._OverrideENJS._ = {};
+phoxy._OverrideENJS._.enjs =
 {
   RenderCompleted: function()
   {

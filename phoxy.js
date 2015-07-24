@@ -40,6 +40,7 @@ var phoxy =
   },
   plugin : {},
   prestart: phoxy,
+  _: {}, // for internal code
 };
 
 phoxy._EarlyStage =

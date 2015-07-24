@@ -18,13 +18,13 @@ phoxy._ApiSubsystem =
         {
           if (_answer !== undefined)
             answer = _answer;
-          phoxy._api.ScriptsLoaded(answer, callback);
+          phoxy._.api.ScriptsLoaded(answer, callback);
         }
 
         if (answer.before === undefined)
           return AfterBefore();
 
-        phoxy._api.FindRouteline(answer.before)(AfterBefore, answer);
+        phoxy._.api.FindRouteline(answer.before)(AfterBefore, answer);
       }
 
       if (answer.script)
@@ -44,7 +44,7 @@ phoxy._ApiSubsystem =
         if (typeof phoxy.prestart.OnAjaxBegin === 'function')
           phoxy.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
 
-      phoxy._api.ajax(phoxy.Config()['api_dir'] + "/" + url, function(response)
+      phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function(response)
         {
           data = JSON.parse(response);
           if (params == undefined)
@@ -67,51 +67,52 @@ phoxy._ApiSubsystem =
     arr = arr.slice(0);
     var url = arr.shift();
     if (arr.length > 0)
-      url += '(' + phoxy._api.Serialize(arr) + ')';
+      url += '(' + phoxy._.api.Serialize(arr) + ')';
     return url;
   }
   ,
   ApiRequest : function( url, callback )
     {
-      if (phoxy._deprecated.IsObjectOptionalDetected.apply(this, arguments))
-        phoxy._deprecated.ObjectOptional(phoxy.MenuCall, arguments);
+      if (phoxy._.deprecated.IsObjectOptionalDetected.apply(this, arguments))
+        phoxy._.deprecated.ObjectOptional(phoxy.MenuCall, arguments);
 
       phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
     }
   ,
   MenuCall : function( url, callback )
     {
-      if (phoxy._deprecated.IsObjectOptionalDetected.apply(this, arguments))
-        phoxy._deprecated.ObjectOptional(phoxy.MenuCall, arguments);
+      if (phoxy._.deprecated.IsObjectOptionalDetected.apply(this, arguments))
+        phoxy._.deprecated.ObjectOptional(phoxy.MenuCall, arguments);
 
       phoxy.ChangeURL(url);
       phoxy.ApiRequest(url, callback);
     }
 }
 
-phoxy._ApiSubsystem._api =
+phoxy._ApiSubsystem._ = {};
+phoxy._ApiSubsystem._.api =
 {
   ScriptsLoaded : function( answer, callback )
     {
       function ScriptsFiresUp()
       {
-        phoxy._api.FindRouteline(answer.routeline, answer)();
+        phoxy._.api.FindRouteline(answer.routeline, answer)();
         if (callback)
           callback(answer);
         if (!phoxy.state.loaded)
-          phoxy._internal.Load();
+          phoxy._.internal.Load();
       }
       if (answer.design === undefined)
         return ScriptsFiresUp();
 
-      var canvas = phoxy._render.PrepareCanvas('<render>');
+      var canvas = phoxy._.render.PrepareCanvas('<render>');
       var id = canvas.id;
       var render_id = id;
 
       var element = canvas.html;
 
       var url = phoxy.Config()['ejs_dir'] + "/" + answer.design;
-      phoxy._api.ForwardDownload(url + ".ejs", function()
+      phoxy._.api.ForwardDownload(url + ".ejs", function()
       {
         if (answer.replace === undefined)
           if (answer.result === undefined)
@@ -129,7 +130,7 @@ phoxy._ApiSubsystem._api =
         else
           render_id = answer.replace;
 
-        phoxy._render.RenderReplace(
+        phoxy._.render.RenderReplace(
           render_id,
           answer.design,
           answer.data || {},
@@ -181,13 +182,13 @@ phoxy._ApiSubsystem._api =
         return true;
       }
 
-      phoxy._internal.ajax(url, AddToLocalStorage);
+      phoxy._.internal.ajax(url, AddToLocalStorage);
       return false;
     }
   ,
   ajax : function ()
     {
-      phoxy._internal.ajax.apply(this, arguments);
+      phoxy._.internal.ajax.apply(this, arguments);
     }
   ,
   Serialize : function(obj, nested_mode)

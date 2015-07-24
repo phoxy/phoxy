@@ -25,7 +25,8 @@ phoxy._TimeSubsystem =
   }
 };
 
-phoxy._TimeSubsystem._time =
+phoxy._TimeSubsystem._ = {};
+phoxy._TimeSubsystem._.time =
 {
   WaitFor : function(callback_condition, callback, timeout, check_every)
     {
@@ -76,7 +77,7 @@ phoxy._TimeSubsystem._time =
 
       phoxy.Defer(function()
       {
-        phoxy._time.WaitFor(IsDivAppeared, function()
+        phoxy._.time.WaitFor(IsDivAppeared, function()
         {
           phoxy.DDefer.call(Div(), callback, call_delay);
         }, timeout)
@@ -92,7 +93,7 @@ phoxy._TimeSubsystem._time =
 
       phoxy.Defer(function()
       {
-        phoxy._time.WaitFor(IsDivDisappeared, function()
+        phoxy._.time.WaitFor(IsDivDisappeared, function()
         {
           phoxy.DDefer(callback, call_delay);
         }, timeout);

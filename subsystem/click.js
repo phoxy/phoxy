@@ -1,5 +1,6 @@
 phoxy._ClickHook = {};
-phoxy._ClickHook._click =
+phoxy._ClickHook._ = {};
+phoxy._ClickHook._.click =
 {
   InitClickHook: function()
   {
@@ -20,13 +21,13 @@ phoxy._ClickHook._click =
       if (url === undefined || target.hasAttribute('not-phoxy'))
         return;
 
-      if (phoxy._click.OnClick(url, false))
+      if (phoxy._.click.OnClick(url, false))
         return;
 
       event.preventDefault()
     }, true);
 
-    window.onpopstate = phoxy._click.OnPopState;
+    window.onpopstate = phoxy._.click.OnPopState;
   }
   ,
   OnClick: function (url, not_push)
@@ -46,6 +47,6 @@ phoxy._ClickHook._click =
     var path = e.target.location.pathname;
     var hash = e.target.location.hash;
 
-    phoxy._click.OnClick(path, true);
+    phoxy._.click.OnClick(path, true);
   }
 };

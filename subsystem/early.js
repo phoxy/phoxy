@@ -92,6 +92,13 @@ phoxy._EarlyStage.Compile = function()
     if (system_name === undefined)
       continue; // skip compilation
 
+    if (typeof phoxy[system_name]['_'] !== 'undefined')
+    {
+      for (var subsytem in phoxy[system_name]['_'])
+        phoxy._[subsytem] = phoxy[system_name]._[subsytem];
+      delete phoxy[system_name]['_'];
+    }
+
     for (var func in phoxy[system_name])
       if (typeof phoxy[func] !== 'undefined')
         throw "Phoxy method mapping failed on '" + func + '. Already exsists.';
@@ -103,16 +110,16 @@ phoxy._EarlyStage.Compile = function()
   if (phoxy.prestart.sync_cascade)
   {
     phoxy.state.sync_cascade = true;
-    phoxy._render.RenderStrategy = phoxy._render.SyncRender_Strategy;
+    phoxy._.render.RenderStrategy = phoxy._.render.SyncRender_Strategy;
   }
   else
   {
     phoxy.state.sync_cascade = false;
-    phoxy._render.RenderStrategy = phoxy._render.AsyncRender_Strategy;
+    phoxy._.render.RenderStrategy = phoxy._.render.AsyncRender_Strategy;
   }
 
   // Move bootstrapped ajax into his place
-  phoxy._internal.ajax = phoxy._EarlyStage.ajax;
+  phoxy._.internal.ajax = phoxy._EarlyStage.ajax;
 
   phoxy.state.compiled = true;
 };
