@@ -60,7 +60,7 @@ phoxy._InternalCode._internal =
     {
       phoxy.state.loaded = true;
 
-      phoxy.InitClickHook();
+      phoxy._click.InitClickHook();
 
       //if (!phoxy.prestart.skip_initiation)
       //  phoxy.ApiRequest(hash);
