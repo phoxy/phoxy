@@ -1,28 +1,28 @@
 phoxy._TimeSubsystem =
 {
   Defer : function(callback, time)
-  {
-    if (time == undefined)
-      time = 0;
-    if (typeof callback !== 'function')
-      return phoxy.Log(0, "phoxy.Defer: Callback not a function", callback);
+    {
+      if (time == undefined)
+        time = 0;
+      if (typeof callback !== 'function')
+        return phoxy.Log(0, "phoxy.Defer: Callback not a function", callback);
 
-    var func = callback;
-    func.bind(this);
+      var func = callback;
+      func.bind(this);
 
-    if (time == -1)
-      func();
-    else
-      setTimeout(func, time);
-  }
+      if (time == -1)
+        func();
+      else
+        setTimeout(func, time);
+    }
   ,
   DDefer : function(callback, time)
-  {
-    phoxy.Defer.call(this, function()
     {
-      phoxy.Defer.call(this, callback);
-    }, time);
-  }
+      phoxy.Defer.call(this, function()
+      {
+        phoxy.Defer.call(this, callback);
+      }, time);
+    }
 };
 
 phoxy._TimeSubsystem._ = {};

@@ -71,77 +71,77 @@ phoxy._.EarlyStage =
     ]
   ,
   Prepare: function()
-  {
-    if (typeof requirejs === 'undefined')
-      return setTimeout(arguments.callee, 10);
-    phoxy.state.runlevel = 0.5;
-
-    requirejs.config(
     {
-      waitSeconds: 60
-    });
+      if (typeof requirejs === 'undefined')
+        return setTimeout(arguments.callee, 10);
+      phoxy.state.runlevel = 0.5;
 
-    if (!phoxy._.prestart.wait)
-      phoxy._.EarlyStage.EntryPoint();
-    else
-      if (typeof phoxy._.prestart.OnWaiting === 'function')
-        phoxy._.prestart.OnWaiting();
-  }
+      requirejs.config(
+      {
+        waitSeconds: 60
+      });
+
+      if (!phoxy._.prestart.wait)
+        phoxy._.EarlyStage.EntryPoint();
+      else
+        if (typeof phoxy._.prestart.OnWaiting === 'function')
+          phoxy._.prestart.OnWaiting();
+    }
   ,
   EntryPoint: function()
-  {
-    phoxy.state.runlevel = 1;
-    var dir = phoxy._.prestart.subsystem_dir || phoxy._.EarlyStage.subsystem_dir;
-    var require_systems = [];
+    {
+      phoxy.state.runlevel = 1;
+      var dir = phoxy._.prestart.subsystem_dir || phoxy._.EarlyStage.subsystem_dir;
+      var require_systems = [];
 
-    for (var k in phoxy._.EarlyStage.systems)
-      require_systems.push(dir + "/" + k);
+      for (var k in phoxy._.EarlyStage.systems)
+        require_systems.push(dir + "/" + k);
 
-    phoxy._.EarlyStage.CriticalRequire(require_systems);
-  }
+      phoxy._.EarlyStage.CriticalRequire(require_systems);
+    }
   ,
   Ready: function()
-  {
-    if (typeof phoxy._.EarlyStage.DependenciesLoaded === 'undefined')
-      return setTimeout(arguments.callee, 10);
+    {
+      if (typeof phoxy._.EarlyStage.DependenciesLoaded === 'undefined')
+        return setTimeout(arguments.callee, 10);
 
-    phoxy._.EarlyStage.DependenciesLoaded();
-  }
+      phoxy._.EarlyStage.DependenciesLoaded();
+    }
   ,
   CriticalRequire : function(require_systems)
-  {
-    // Summary move us to runlevel 2, ready for compilation
-    requirejs.onResourceLoad = function()
     {
-      phoxy.state.early.loaded++;
+      // Summary move us to runlevel 2, ready for compilation
+      requirejs.onResourceLoad = function()
+      {
+        phoxy.state.early.loaded++;
+      }
+
+      require
+      (
+        require_systems,
+        function()
+        {
+          phoxy.state.runlevel += 0.5;
+          phoxy._.EarlyStage.LoadConfig();
+        }
+      );
+
+      require
+      (
+        phoxy._.EarlyStage.sync_require,
+        function()
+        {
+          phoxy.state.runlevel += 0.5;
+          phoxy._.EarlyStage.Ready();
+        }
+      );
+
+      require
+      (
+        phoxy._.EarlyStage.async_require,
+        function() {}
+      );
     }
-
-    require
-    (
-      require_systems,
-      function()
-      {
-        phoxy.state.runlevel += 0.5;
-        phoxy._.EarlyStage.LoadConfig();
-      }
-    );
-
-    require
-    (
-      phoxy._.EarlyStage.sync_require,
-      function()
-      {
-        phoxy.state.runlevel += 0.5;
-        phoxy._.EarlyStage.Ready();
-      }
-    );
-
-    require
-    (
-      phoxy._.EarlyStage.async_require,
-      function() {}
-    );
-  }
   ,
   LoadingPercentage : function()
     {

@@ -60,16 +60,16 @@ phoxy._ApiSubsystem =
     }
   ,
   ConstructURL : function(arr)
-  {
-    if (typeof arr === 'string')
-      return arr;
+    {
+      if (typeof arr === 'string')
+        return arr;
 
-    arr = arr.slice(0);
-    var url = arr.shift();
-    if (arr.length > 0)
-      url += '(' + phoxy._.api.Serialize(arr) + ')';
-    return url;
-  }
+      arr = arr.slice(0);
+      var url = arr.shift();
+      if (arr.length > 0)
+        url += '(' + phoxy._.api.Serialize(arr) + ')';
+      return url;
+    }
   ,
   ApiRequest : function( url, callback )
     {
@@ -139,26 +139,26 @@ phoxy._ApiSubsystem._.api =
     }
   ,
   FindRouteline : function( routeline )
-  {
-    if (typeof routeline === 'undefined')
-      return function() {};
-    if (typeof window[routeline] === 'function')
-      return window[routeline];
-    var arr = routeline.split(".");
-    var method = arr.pop();
+    {
+      if (typeof routeline === 'undefined')
+        return function() {};
+      if (typeof window[routeline] === 'function')
+        return window[routeline];
+      var arr = routeline.split(".");
+      var method = arr.pop();
 
-    var obj = window;
-    for (var k in arr)
-      if (typeof obj[arr[k]] === 'undefined')
-        throw "Routeline context locate failed";
-      else
-        obj = obj[arr[k]];
+      var obj = window;
+      for (var k in arr)
+        if (typeof obj[arr[k]] === 'undefined')
+          throw "Routeline context locate failed";
+        else
+          obj = obj[arr[k]];
 
-    if (typeof obj[method] !== 'function')
-      throw "Routeline locate failed";
+      if (typeof obj[method] !== 'function')
+        throw "Routeline locate failed";
 
-    return obj[method];
-  }
+      return obj[method];
+    }
   ,
   ForwardDownload : function( url, callback_or_true_for_return )
     {

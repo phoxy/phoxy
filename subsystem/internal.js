@@ -12,19 +12,19 @@ phoxy._InternalCode =
       return false;
     }
   ,
-    Reset : function (url)
+  Reset : function (url)
     {
       if ((url || true) === true)
         location.reload();
       location.reload(url);
     }
   ,
-    Config : function()
+  Config : function()
     {
       return phoxy._.config;
     }
   ,
-    Log : function(level)
+  Log : function(level)
     {
       if (phoxy.state.verbose < level)
         return;
@@ -53,7 +53,7 @@ phoxy._InternalCode =
         debugger;
     }
   ,
-    Override: function(method_name, new_method)
+  Override: function(method_name, new_method)
     {
       return phoxy._.internal.Override(phoxy, method_name, new_method);
     }
@@ -84,11 +84,11 @@ phoxy._InternalCode._.internal =
     }
   ,
   Override : function(object, method_name, new_method)
-  {
-    var origin = object[method_name];
-    object[method_name] = new_method;
-    object[method_name].origin = origin;
-  }
+    {
+      var origin = object[method_name];
+      object[method_name] = new_method;
+      object[method_name].origin = origin;
+    }
   ,
   error_names :
   [
