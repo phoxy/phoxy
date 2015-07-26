@@ -21,7 +21,7 @@ phoxy._InternalCode =
   ,
     Config : function()
     {
-      return phoxy.config;
+      return phoxy._.config;
     }
   ,
     Log : function(level)

@@ -24,7 +24,7 @@ phoxy._.EarlyStage.LoadConfig = function()
   {
     phoxy.state.early.loaded++;
     data = JSON.parse(response);
-    phoxy.config = data;
+    phoxy._.config = data;
     phoxy.state.conf_loaded = true;
   })
 }
@@ -33,7 +33,7 @@ phoxy._.EarlyStage.DependenciesLoaded = function()
 {
   if (phoxy.state.runlevel < 2)
     return setTimeout(arguments.callee, 10);
-  if (!phoxy.state.conf_loaded) // wait until phoxy configuration loaded
+  if (!phoxy.state.conf_loaded) // wait until phoxy.Config()uration loaded
     return setTimeout(arguments.callee, 10);
   phoxy.state.runlevel += 0.5; // because config downloaded
 
@@ -41,8 +41,8 @@ phoxy._.EarlyStage.DependenciesLoaded = function()
     phoxy._.prestart.OnBeforeCompile();
 
   phoxy._.EarlyStage.Compile();
-  if (typeof phoxy.config.verbose != 'undefined')
-    phoxy.state.verbose = phoxy.config.verbose;
+  if (typeof phoxy.Config().verbose != 'undefined')
+    phoxy.state.verbose = phoxy.Config().verbose;
 
   if (typeof phoxy._.prestart.OnAfterCompile == 'function')
     phoxy._.prestart.OnAfterCompile();
