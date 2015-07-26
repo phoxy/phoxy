@@ -1,6 +1,6 @@
 phoxy._ApiSubsystem =
 {
-  ApiAnswer : function( answer, callback )
+  ApiAnswer : function(answer, callback)
     {
       if (answer.error)
       {
@@ -33,7 +33,7 @@ phoxy._ApiSubsystem =
         Before();
     }
   ,
-  AJAX : function( url, callback, params )
+  AJAX : function(url, callback, params)
     {
       url = phoxy.ConstructURL(url);
 
@@ -71,7 +71,7 @@ phoxy._ApiSubsystem =
       return url;
     }
   ,
-  ApiRequest : function( url, callback )
+  ApiRequest : function(url, callback)
     {
       if (phoxy._.deprecated.IsObjectOptionalDetected.apply(this, arguments))
         phoxy._.deprecated.ObjectOptional(phoxy.MenuCall, arguments);
@@ -79,7 +79,7 @@ phoxy._ApiSubsystem =
       phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
     }
   ,
-  MenuCall : function( url, callback )
+  MenuCall : function(url, callback)
     {
       if (phoxy._.deprecated.IsObjectOptionalDetected.apply(this, arguments))
         phoxy._.deprecated.ObjectOptional(phoxy.MenuCall, arguments);
@@ -92,7 +92,7 @@ phoxy._ApiSubsystem =
 phoxy._ApiSubsystem._ = {};
 phoxy._ApiSubsystem._.api =
 {
-  ScriptsLoaded : function( answer, callback )
+  ScriptsLoaded : function(answer, callback)
     {
       function ScriptsFiresUp()
       {
@@ -138,7 +138,7 @@ phoxy._ApiSubsystem._.api =
       });
     }
   ,
-  FindRouteline : function( routeline )
+  FindRouteline : function(routeline)
     {
       if (typeof routeline === 'undefined')
         return function() {};
@@ -160,7 +160,7 @@ phoxy._ApiSubsystem._.api =
       return obj[method];
     }
   ,
-  ForwardDownload : function( url, callback_or_true_for_return )
+  ForwardDownload : function(url, callback_or_true_for_return)
     {
       if (typeof(storage) === "undefined")
         storage = {};
