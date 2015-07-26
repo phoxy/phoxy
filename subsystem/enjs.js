@@ -10,7 +10,7 @@ phoxy._OverrideENJS =
     delete phoxy.OverloadEJSCanvas; // Only one-time execution is allowed
 
     EJS.Canvas.prototype.recursive = 0;
-    phoxy.RenderCalls = 0;
+    phoxy.state.RenderCalls = 0;
 
     phoxy._.internal.Override(EJS.Canvas.prototype, 'RenderCompleted', phoxy._.enjs.RenderCompleted);
     phoxy._.internal.Override(EJS.Canvas.prototype, 'Defer', phoxy._.enjs.Defer);
@@ -43,7 +43,7 @@ phoxy._OverrideENJS._.enjs =
     // but Canvas.on_completed not prepared
     // So render plan is plain, and we attach CheckIsCompleted in this.Defer queue
     this.recursive++;
-    phoxy.RenderCalls++;
+    phoxy.state.RenderCalls++;
     this.across.Defer(this.CheckIsCompleted);
   }
   ,
@@ -97,13 +97,13 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
       debugger; // already finished
     }
     that.recursive++;
-    phoxy.RenderCalls++;
+    phoxy.state.RenderCalls++;
 
     function CBHook()
     {
       if (typeof callback === 'function')
         callback.call(this); // Local fancy context
-      phoxy.RenderCalls--;
+      phoxy.state.RenderCalls--;
 
       that.CheckIsCompleted.call(that.across);
     }
