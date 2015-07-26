@@ -5,10 +5,13 @@
 
 phoxy._OverrideENJS =
 {
+  _: {},
+};
+
+phoxy._OverrideENJS._.enjs =
+{
   OverloadENJSCanvas: function()
   {
-    delete phoxy.OverloadEJSCanvas; // Only one-time execution is allowed
-
     EJS.Canvas.prototype.recursive = 0;
     phoxy.state.RenderCalls = 0;
 
@@ -19,13 +22,8 @@ phoxy._OverrideENJS =
 
     phoxy._.internal.Override(EJS.Canvas.across.prototype, 'DeferRender', phoxy._.enjs.DeferRender);
     phoxy._.internal.Override(EJS.Canvas.across.prototype, 'DeferCascade', phoxy._.enjs.DeferCascade);
-
   }
-};
-
-phoxy._OverrideENJS._ = {};
-phoxy._OverrideENJS._.enjs =
-{
+  ,
   RenderCompleted: function()
   {
     arguments.callee.origin.apply(this);

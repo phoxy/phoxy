@@ -48,7 +48,7 @@ phoxy._.EarlyStage.DependenciesLoaded = function()
     phoxy._.prestart.OnAfterCompile();
 
 
-  phoxy.OverloadENJSCanvas();
+  phoxy._.enjs.OverloadENJSCanvas();
   requirejs.config({baseUrl: phoxy.Config()['js_dir']});
 
   // Entering runlevel 3, compilation finished
