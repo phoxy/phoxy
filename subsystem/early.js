@@ -1,4 +1,4 @@
-phoxy._EarlyStage.ajax = function (url, callback, data, x)
+phoxy._.EarlyStage.ajax = function (url, callback, data, x)
 {  // https://gist.github.com/Xeoncross/7663273
   try
   {
@@ -18,9 +18,9 @@ phoxy._EarlyStage.ajax = function (url, callback, data, x)
 };
 
 
-phoxy._EarlyStage.LoadConfig = function()
+phoxy._.EarlyStage.LoadConfig = function()
 {
-  phoxy._EarlyStage.ajax(phoxy._.prestart.config || "api/phoxy", function(response)
+  phoxy._.EarlyStage.ajax(phoxy._.prestart.config || "api/phoxy", function(response)
   {
     phoxy.state.early.loaded++;
     data = JSON.parse(response);
@@ -29,7 +29,7 @@ phoxy._EarlyStage.LoadConfig = function()
   })
 }
 
-phoxy._EarlyStage.DependenciesLoaded = function()
+phoxy._.EarlyStage.DependenciesLoaded = function()
 {
   if (phoxy.state.runlevel < 2)
     return setTimeout(arguments.callee, 10);
@@ -40,7 +40,7 @@ phoxy._EarlyStage.DependenciesLoaded = function()
   if (typeof phoxy._.prestart.OnBeforeCompile == 'function')
     phoxy._.prestart.OnBeforeCompile();
 
-  phoxy._EarlyStage.Compile();
+  phoxy._.EarlyStage.Compile();
   if (typeof phoxy.config.verbose != 'undefined')
     phoxy.state.verbose = phoxy.config.verbose;
 
@@ -84,11 +84,11 @@ phoxy._EarlyStage.DependenciesLoaded = function()
    var total_amount = initial_client_code;
 };
 
-phoxy._EarlyStage.Compile = function()
+phoxy._.EarlyStage.Compile = function()
 {
-  for (var k in phoxy._EarlyStage.systems)
+  for (var k in phoxy._.EarlyStage.systems)
   {
-    var system_name = phoxy._EarlyStage.systems[k];
+    var system_name = phoxy._.EarlyStage.systems[k];
     if (system_name === undefined)
       continue; // skip compilation
 
@@ -119,7 +119,7 @@ phoxy._EarlyStage.Compile = function()
   }
 
   // Move bootstrapped ajax into his place
-  phoxy._.internal.ajax = phoxy._EarlyStage.ajax;
+  phoxy._.internal.ajax = phoxy._.EarlyStage.ajax;
 
   phoxy.state.compiled = true;
 };

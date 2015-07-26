@@ -45,7 +45,7 @@ var phoxy =
   }, // for internal code
 };
 
-phoxy._EarlyStage =
+phoxy._.EarlyStage =
 {
   subsystem_dir: '/phoxy/subsystem'
   ,
@@ -82,7 +82,7 @@ phoxy._EarlyStage =
     });
 
     if (!phoxy._.prestart.wait)
-      phoxy._EarlyStage.EntryPoint();
+      phoxy._.EarlyStage.EntryPoint();
     else
       if (typeof phoxy._.prestart.OnWaiting === 'function')
         phoxy._.prestart.OnWaiting();
@@ -91,21 +91,21 @@ phoxy._EarlyStage =
   EntryPoint: function()
   {
     phoxy.state.runlevel = 1;
-    var dir = phoxy._.prestart.subsystem_dir || phoxy._EarlyStage.subsystem_dir;
+    var dir = phoxy._.prestart.subsystem_dir || phoxy._.EarlyStage.subsystem_dir;
     var require_systems = [];
 
-    for (var k in phoxy._EarlyStage.systems)
+    for (var k in phoxy._.EarlyStage.systems)
       require_systems.push(dir + "/" + k);
 
-    phoxy._EarlyStage.CriticalRequire(require_systems);
+    phoxy._.EarlyStage.CriticalRequire(require_systems);
   }
   ,
   Ready: function()
   {
-    if (typeof phoxy._EarlyStage.DependenciesLoaded === 'undefined')
+    if (typeof phoxy._.EarlyStage.DependenciesLoaded === 'undefined')
       return setTimeout(arguments.callee, 10);
 
-    phoxy._EarlyStage.DependenciesLoaded();
+    phoxy._.EarlyStage.DependenciesLoaded();
   }
   ,
   CriticalRequire : function(require_systems)
@@ -122,23 +122,23 @@ phoxy._EarlyStage =
       function()
       {
         phoxy.state.runlevel += 0.5;
-        phoxy._EarlyStage.LoadConfig();
+        phoxy._.EarlyStage.LoadConfig();
       }
     );
 
     require
     (
-      phoxy._EarlyStage.sync_require,
+      phoxy._.EarlyStage.sync_require,
       function()
       {
         phoxy.state.runlevel += 0.5;
-        phoxy._EarlyStage.Ready();
+        phoxy._.EarlyStage.Ready();
       }
     );
 
     require
     (
-      phoxy._EarlyStage.async_require,
+      phoxy._.EarlyStage.async_require,
       function() {}
     );
   }
@@ -147,9 +147,9 @@ phoxy._EarlyStage =
     {
       var phoxy_itself = 1;
       var config_load = 1;
-      var system_count = Object.keys(phoxy._EarlyStage.systems).length;
-      var sync_count = phoxy._EarlyStage.sync_require.length;
-      var async_count = phoxy._EarlyStage.async_require.length;
+      var system_count = Object.keys(phoxy._.EarlyStage.systems).length;
+      var sync_count = phoxy._.EarlyStage.sync_require.length;
+      var async_count = phoxy._.EarlyStage.async_require.length;
 
       var optional_count = 0;
 
@@ -172,4 +172,4 @@ phoxy._EarlyStage =
     }
 }
 
-phoxy._EarlyStage.Prepare();
+phoxy._.EarlyStage.Prepare();
