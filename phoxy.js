@@ -38,9 +38,11 @@ var phoxy =
       }
     }
   },
-  plugin : {},
-  prestart: phoxy,
-  _: {}, // for internal code
+  _:
+  {
+    plugin : {},
+    prestart: phoxy,
+  }, // for internal code
 };
 
 phoxy._EarlyStage =
@@ -79,17 +81,17 @@ phoxy._EarlyStage =
       waitSeconds: 60
     });
 
-    if (!phoxy.prestart.wait)
+    if (!phoxy._.prestart.wait)
       phoxy._EarlyStage.EntryPoint();
     else
-      if (typeof phoxy.prestart.OnWaiting === 'function')
-        phoxy.prestart.OnWaiting();
+      if (typeof phoxy._.prestart.OnWaiting === 'function')
+        phoxy._.prestart.OnWaiting();
   }
   ,
   EntryPoint: function()
   {
     phoxy.state.runlevel = 1;
-    var dir = phoxy.prestart.subsystem_dir || phoxy._EarlyStage.subsystem_dir;
+    var dir = phoxy._.prestart.subsystem_dir || phoxy._EarlyStage.subsystem_dir;
     var require_systems = [];
 
     for (var k in phoxy._EarlyStage.systems)

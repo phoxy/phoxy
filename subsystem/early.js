@@ -20,7 +20,7 @@ phoxy._EarlyStage.ajax = function (url, callback, data, x)
 
 phoxy._EarlyStage.LoadConfig = function()
 {
-  phoxy._EarlyStage.ajax(phoxy.prestart.config || "api/phoxy", function(response)
+  phoxy._EarlyStage.ajax(phoxy._.prestart.config || "api/phoxy", function(response)
   {
     phoxy.state.early.loaded++;
     data = JSON.parse(response);
@@ -37,15 +37,15 @@ phoxy._EarlyStage.DependenciesLoaded = function()
     return setTimeout(arguments.callee, 10);
   phoxy.state.runlevel += 0.5; // because config downloaded
 
-  if (typeof phoxy.prestart.OnBeforeCompile == 'function')
-    phoxy.prestart.OnBeforeCompile();
+  if (typeof phoxy._.prestart.OnBeforeCompile == 'function')
+    phoxy._.prestart.OnBeforeCompile();
 
   phoxy._EarlyStage.Compile();
   if (typeof phoxy.config.verbose != 'undefined')
     phoxy.state.verbose = phoxy.config.verbose;
 
-  if (typeof phoxy.prestart.OnAfterCompile == 'function')
-    phoxy.prestart.OnAfterCompile();
+  if (typeof phoxy._.prestart.OnAfterCompile == 'function')
+    phoxy._.prestart.OnAfterCompile();
 
 
   phoxy.OverloadENJSCanvas();
@@ -56,8 +56,8 @@ phoxy._EarlyStage.DependenciesLoaded = function()
 
   var initial_client_code = 0;
 
-  if (typeof phoxy.prestart.OnBeforeFirstApiCall === 'function')
-    phoxy.prestart.OnBeforeFirstApiCall();
+  if (typeof phoxy._.prestart.OnBeforeFirstApiCall === 'function')
+    phoxy._.prestart.OnBeforeFirstApiCall();
   // Invoke client code
   var scripts = document.getElementsByTagName('script');
   for (var i = 0; i < scripts.length; i++)
@@ -75,8 +75,8 @@ phoxy._EarlyStage.DependenciesLoaded = function()
           { // Be sure that zero reached only once
             if (--initial_client_code)
               return;
-            if (typeof phoxy.prestart.OnInitialClientCodeComplete === 'function')
-              phoxy.prestart.OnInitialClientCodeComplete();
+            if (typeof phoxy._.prestart.OnInitialClientCodeComplete === 'function')
+              phoxy._.prestart.OnInitialClientCodeComplete();
           });
         });
     }
@@ -107,7 +107,7 @@ phoxy._EarlyStage.Compile = function()
     delete phoxy[system_name];
   }
 
-  if (phoxy.prestart.sync_cascade)
+  if (phoxy._.prestart.sync_cascade)
   {
     phoxy.state.sync_cascade = true;
     phoxy._.render.RenderStrategy = phoxy._.render.SyncRender_Strategy;

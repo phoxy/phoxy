@@ -41,8 +41,8 @@ phoxy._ApiSubsystem =
       phoxy.state.ajax.active[current_ajax_id] = arguments;
 
       if (!phoxy.state.ajax.nesting_level++)
-        if (typeof phoxy.prestart.OnAjaxBegin === 'function')
-          phoxy.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
+        if (typeof phoxy._.prestart.OnAjaxBegin === 'function')
+          phoxy._.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
 
       phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function(response)
         {
@@ -53,8 +53,8 @@ phoxy._ApiSubsystem =
           callback.apply(this, params);
 
           if (!--phoxy.state.ajax.nesting_level)
-            if (typeof phoxy.prestart.OnAjaxEnd === 'function')
-              phoxy.prestart.OnAjaxEnd(phoxy.state.ajax.active[current_ajax_id]);
+            if (typeof phoxy._.prestart.OnAjaxEnd === 'function')
+              phoxy._.prestart.OnAjaxEnd(phoxy.state.ajax.active[current_ajax_id]);
           delete phoxy.state.ajax.active[current_ajax_id];
         });
     }

@@ -68,7 +68,7 @@ phoxy._InternalCode._.internal =
 
       phoxy._.click.InitClickHook();
 
-      //if (!phoxy.prestart.skip_initiation)
+      //if (!phoxy._.prestart.skip_initiation)
       //  phoxy.ApiRequest(hash);
     }
   ,
