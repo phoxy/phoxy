@@ -8,15 +8,12 @@ phoxy._ApiSubsystem =
       if (answer.reset !== undefined)
         return phoxy._.api.keyword.reset(answer, callback);
 
-      function Ready()
+      function ReadyForDesignRender()
       {
-        if (answer.before === undefined)
-          phoxy._.api.ScriptsLoaded(answer, callback);
-        else
-          phoxy._.api.keyword.before(answer, callback, phoxy._.api.ScriptsLoaded);
+        phoxy._.api.IfKeyword(answer, callback, "before", phoxy._.api.ScriptsLoaded);
       }
 
-      phoxy._.api.IfKeyword(answer, callback, "script", Ready);
+      phoxy._.api.IfKeyword(answer, callback, "script", ReadyForDesignRender);
     }
   ,
   AJAX : function(url, callback, params)
