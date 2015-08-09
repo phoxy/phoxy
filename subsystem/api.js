@@ -2,35 +2,18 @@ phoxy._ApiSubsystem =
 {
   ApiAnswer : function(answer, callback)
     {
-      if (answer.error)
-      {
-        alert(answer.error);
-        if (answer.reset !== undefined)
-          phoxy.Reset(answer.reset);
-        return;
-      }
+      if (answer.error !== undefined)
+        return phoxy._.api.keyword.error(answer, callback);
+
       if (answer.reset !== undefined)
-        phoxy.Reset(answer.reset);
+        return phoxy._.api.keyword.reset(answer, callback);
 
-      function Before()
+      function ReadyForDesignRender()
       {
-        function AfterBefore(_answer)
-        {
-          if (_answer !== undefined)
-            answer = _answer;
-          phoxy._.api.ScriptsLoaded(answer, callback);
-        }
-
-        if (answer.before === undefined)
-          return AfterBefore();
-
-        phoxy._.api.FindRouteline(answer.before)(AfterBefore, answer);
+        phoxy._.api.IfKeyword(answer, callback, "before", phoxy._.api.ScriptsLoaded);
       }
 
-      if (answer.script)
-        require(answer.script, Before);
-      else
-        Before();
+      phoxy._.api.IfKeyword(answer, callback, "script", ReadyForDesignRender);
     }
   ,
   AJAX : function(url, callback, params)
@@ -92,50 +75,26 @@ phoxy._ApiSubsystem =
 phoxy._ApiSubsystem._ = {};
 phoxy._ApiSubsystem._.api =
 {
+  IfKeyword : function(answer, callback, keyword, next)
+    {
+      if (answer[keyword] !== undefined)
+        phoxy._.api.keyword[keyword](answer, callback, next);
+      else if (next !== undefined)
+        next(answer, callback);
+    }
+  ,
   ScriptsLoaded : function(answer, callback)
     {
       function ScriptsFiresUp()
       {
-        phoxy._.api.FindRouteline(answer.routeline, answer)();
+        phoxy._.api.keyword.routeline(answer, callback);
         if (callback)
           callback(answer);
         if (!phoxy.state.loaded)
           phoxy._.internal.Load();
       }
-      if (answer.design === undefined)
-        return ScriptsFiresUp();
 
-      var canvas = phoxy._.render.PrepareCanvas('<render>');
-      var id = canvas.id;
-      var render_id = id;
-
-      var element = canvas.html;
-
-      var url = phoxy.Config()['ejs_dir'] + "/" + answer.design;
-      phoxy._.api.ForwardDownload(url + ".ejs", function()
-      {
-        if (answer.replace === undefined)
-          if (answer.result === undefined)
-            document.getElementsByTagName('body')[0].appendChild(canvas.obj);
-          else if (typeof answer.result === 'string')
-            document.getElementById(answer.result).innerHTML = element;
-          else
-            for (var k in answer.result)
-            {
-              var v = document.getElementById(answer.result[k]);
-              if (v != null)
-                v.innerHTML = element;
-            }
-
-        else
-          render_id = answer.replace;
-
-        phoxy._.render.RenderReplace(
-          render_id,
-          answer.design,
-          answer.data || {},
-          ScriptsFiresUp);
-      });
+      phoxy._.api.IfKeyword(answer, callback, "design", ScriptsFiresUp);
     }
   ,
   FindRouteline : function(routeline)
@@ -212,4 +171,83 @@ phoxy._ApiSubsystem._.api =
       return EscapeReserved(send_string, "()?#\\");
     }
   ,
+};
+
+phoxy._ApiSubsystem._.api.keyword =
+{
+  error: function(answer, callback)
+    {
+      alert(answer.error);
+      if (answer.reset !== undefined)
+        phoxy.Reset(answer.reset);
+    }
+  ,
+  reset: function(answer, callback)
+    {
+      phoxy.Reset(answer.reset);
+    }
+  ,
+  script: function(answer, callback, next)
+    {
+      require(answer.script, next);
+    }
+  ,
+  before: function(answer, callback, next)
+    {
+      function AfterBefore(_answer)
+      {
+        if (_answer !== undefined)
+          answer = _answer;
+        next(answer, callback);
+      }
+
+      phoxy._.api.FindRouteline(answer.before)(AfterBefore, answer);
+    }
+  ,
+  routeline: function(answer, callback)
+    {
+      phoxy._.api.FindRouteline(answer.routeline, answer)();
+    }
+  ,
+  design: function(answer, callback, next)
+    {
+      var canvas = phoxy._.render.PrepareCanvas('<render>');
+
+      var url = phoxy.Config()['ejs_dir'] + "/" + answer.design + ".ejs";
+      phoxy._.api.ForwardDownload(url, function()
+      {
+        if (answer.replace !== undefined)
+          phoxy._.api.keyword.replace(answer, callback, canvas);
+        else if (answer.result !== undefined)
+          phoxy._.api.keyword.result(answer, callback, canvas);
+        else
+          document.getElementsByTagName('body')[0].appendChild(canvas.obj);
+
+        phoxy._.render.RenderReplace(
+          canvas.id,
+          answer.design,
+          answer.data || {},
+          next);
+      });
+
+      return canvas;
+    }
+  ,
+  replace: function(answer, callback, canvas)
+    {
+      canvas.id = answer.replace;
+    }
+  ,
+  result: function(answer, callback, canvas)
+    {
+      if (typeof answer.result === 'string')
+        return document.getElementById(answer.result).innerHTML = canvas.html;
+
+      for (var k in answer.result)
+      {
+        var v = document.getElementById(answer.result[k]);
+        if (v != null)
+          v.innerHTML = canvas.html;
+      }
+    }
 };
