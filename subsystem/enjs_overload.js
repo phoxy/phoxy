@@ -86,14 +86,7 @@ phoxy._OverrideENJS._.enjs =
   DeferRender: function(ejs, data, callback, tag)
     {
       var that = this.escape();
-      if (that.fired_up)
-      {
-        phoxy.Log(1, "You can't invoke this.Defer... methods after rendering finished.\
-Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
-Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
-In that case use phoxy.Defer methods directly. They context-dependence free.");
-        debugger; // already finished
-      }
+      phoxy._.enjs.AlreadyFiredUp(that);
       that.recursive++;
       phoxy.state.RenderCalls++;
 
@@ -114,14 +107,7 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
     {
       var that = this.escape();
       that.recursive++;
-      if (that.fired_up)
-      {
-      phoxy.Log(1, "You can't invoke this.Defer... methods after rendering finished.\
-Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
-Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
-In that case use phoxy.Defer methods directly. They context-dependence free.");
-        debugger; // already finished
-      }
+      phoxy._.enjs.AlreadyFiredUp(that);
 
 
       function CBHook()
@@ -148,18 +134,23 @@ In that case use phoxy.Defer methods directly. They context-dependence free.");
   DeferCascade: function(callback)
     {
       var that = this.escape();
-      if (that.fired_up)
-      {
-        phoxy.Log("You can't invoke this.Defer... methods after rendering finished.\
-Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
-Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
-In that case use phoxy.Defer methods directly. They context-dependence free.");
-        debugger; // already finished
-      }
+      phoxy._.enjs.AlreadyFiredUp(that);
 
       if (typeof that.cascade === 'undefined')
         that.cascade = [];
 
       that.cascade.push(callback);
     }
+  ,
+  AlreadyFiredUp: function(that)
+  {
+    if (that.fired_up)
+    {
+      phoxy.Log("You can't invoke this.Defer... methods after rendering finished.\
+Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
+Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
+In that case use phoxy.Defer methods directly. They context-dependence free.");
+      debugger; // already finished
+    }
+  }
 };
