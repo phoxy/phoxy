@@ -39,7 +39,7 @@ var phoxy =
     },
     exception:
     {
-      handler: {},
+      handlers: {},
     },
   },
   _:
