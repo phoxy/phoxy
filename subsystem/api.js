@@ -2,6 +2,9 @@ phoxy._ApiSubsystem =
 {
   ApiAnswer : function(answer, callback)
     {
+      if (answer.exception !== undefined)
+        return phoxy._.api.keyword.exception(answer, callback);
+
       if (answer.error !== undefined)
         return phoxy._.api.keyword.error(answer, callback);
 
@@ -75,14 +78,6 @@ phoxy._ApiSubsystem =
 phoxy._ApiSubsystem._ = {};
 phoxy._ApiSubsystem._.api =
 {
-  IfKeyword : function(answer, callback, keyword, next)
-    {
-      if (answer[keyword] !== undefined)
-        phoxy._.api.keyword[keyword](answer, callback, next);
-      else if (next !== undefined)
-        next(answer, callback);
-    }
-  ,
   ScriptsLoaded : function(answer, callback)
     {
       function ScriptsFiresUp()
@@ -171,6 +166,26 @@ phoxy._ApiSubsystem._.api =
       return EscapeReserved(send_string, "()?#\\");
     }
   ,
+  IfKeyword : function(answer, callback, keyword, next)
+    {
+      if (answer[keyword] !== undefined)
+        phoxy._.api.keyword[keyword](answer, callback, next);
+      else if (next !== undefined)
+        next(answer, callback);
+    }
+  ,
+  PlugInKeyword : function(answer, callback)
+  {
+    var keyword = arguments.callee.name;
+    var args = arguments;
+
+    require([phoxy._.EarlyStage.subsystem_dir + keyword + ".js"], function()
+    {
+      if (phoxy._.api.keyword[keyword] === undefined)
+        Log(0, "Keyword handler for '" + keyword + "' is missing");
+      phoxy._.api.keyword[keyword].apply(phoxy._.api.keyword, args);
+    });
+  }
 };
 
 phoxy._ApiSubsystem._.api.keyword =
@@ -250,4 +265,7 @@ phoxy._ApiSubsystem._.api.keyword =
           v.innerHTML = canvas.html;
       }
     }
+  ,
+  exception: phoxy._ApiSubsystem._.api.PlugInKeyword
+  ,
 };
