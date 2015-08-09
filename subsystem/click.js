@@ -35,6 +35,10 @@ phoxy._ClickHook._.click =
   ,
   OnClick: function (url, not_push)
     {
+      // Element without url
+      if (url === undefined)
+        return true;
+
       if (url.indexOf('#') !== -1)
         return true;
 
