@@ -1,0 +1,24 @@
+{
+  "name": "phoxy/phoxy",
+  "description": "Making hard web development easy",
+  "type": "library",
+  "license": "Apache-2.0",
+  "minimal-stability": "dev",
+  "include-path": ["/../"],
+  "require" :
+  {
+    "php": "~5.5",
+    "phoxy/enjs": "~2.1.2"
+  },
+  "suggest" :
+  {
+    "ext-xdebug": "Gives your better readable on php internal errors. Such as fatal errors."
+  },
+  "repositories":
+  [
+    {
+      "type": "vcs",
+      "url": "https://github.com/phoxy/enjs"
+    }
+  ]
+}

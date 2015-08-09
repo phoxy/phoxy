@@ -1,4 +1,4 @@
-if (typeof phoxy == 'undefined')
+if (typeof phoxy === 'undefined')
   phoxy = {};
 if (typeof phoxy.state !== 'undefined')
   if (phoxy.state.loaded == true)
@@ -10,6 +10,15 @@ var phoxy =
   config : false,
   state :
   {
+    runlevel: 0,
+    /* Runlevels description:
+      0 - phoxy ready for instancing but currently not active
+      1 - phoxy early stage code ready
+      2 - ready for compilation
+      3 - compilation finished, configuration fetched
+      4 - initial client code executed
+      Other levels optional
+    */
     loaded : false,
     hash : false,
     ajax :
@@ -18,1065 +27,154 @@ var phoxy =
       active_id : 0,
       active : [],
     },
-    verbose : typeof phoxy.verbose == 'undefined' ? 10 : phoxy.verbose,
+    verbose : typeof phoxy.verbose === 'undefined' ? 10 : phoxy.verbose,
+    early:
+    {
+      require: 0,
+      loaded: 0,
+      optional:
+      {
+        initial: 0,
+      }
+    },
+    exception:
+    {
+      cases: {},
+      handlers: {},
+    },
   },
-  plugin : {},
-  prestart: phoxy,
-  error_names :
-  [
-    "FATAL",
-    "ERROR",
-    "WARNING",
-    "INFO",
-    "DEBUG",
-  ],
-};
-
-phoxy._TimeSubsystem =
-{
-  Defer : function(callback, time)
+  _:
   {
-    if (time == undefined)
-      time = 0;
-    if (typeof callback != 'function')
-      return phoxy.Log(0, "phoxy.Defer: Callback not a function", callback);
-
-    var func = callback;
-    func.bind(this);
-
-    if (time == -1)
-      func();
-    else
-      setTimeout(func, time);
-  }
-  ,
-  DDefer : function(callback, time)
-  {
-    phoxy.Defer.call(this, function()
-    {
-      phoxy.Defer.call(this, callback);
-    }, time);
-  }
-  ,
-  WaitFor : function(callback_condition, callback, timeout, check_every)
-    {
-      var
-        check_timeout = 60, // 1 minute for render to complete
-        check_delay = 500; // check every 500ms
-      
-      if (timeout != undefined)
-        check_timeout = timeout;
-      if (check_every != undefined)
-        check_delay = check_every;
-      
-      var func = function()
-      {
-        if (!callback_condition())
-          return;
-        callback();
-      }
-      if (callback_condition())
-        return func();
-
-      function WaitAndCallCountDown( i )
-      {
-        if (i <= 0)
-          return func();
-
-        phoxy.Defer(function()
-        {
-          if (callback_condition())
-            i = 0;
-          WaitAndCallCountDown(i - 1);
-        }, check_delay);
-      }
-
-      WaitAndCallCountDown(check_timeout * 1000 / check_delay);
-    }
-  ,
-  Appeared : function(jquery_selector, callback, timeout, call_delay)
-    {
-      function Div()
-      {
-        return document.getElementById(jquery_selector);
-      }
-      function IsDivAppeared()
-      {
-        return Div() != null;
-      }
-
-      phoxy.Defer(function()
-      {
-        phoxy.WaitFor(IsDivAppeared, function()
-        {
-          phoxy.DDefer.call(Div(), callback, call_delay);
-        }, timeout)
-      });
-    }
-  ,
-  Disappeared : function(jquery_selector, callback, timeout, call_delay)
-    {
-      function IsDivDisappeared()
-      {
-        return document.getElementById(jquery_selector) == null;
-      }
-    
-      phoxy.Defer(function()
-      {
-        phoxy.WaitFor(IsDivDisappeared, function()
-        {
-          phoxy.DDefer(callback, call_delay);
-        }, timeout);
-      });
-    }
+    plugin : {},
+    prestart: phoxy,
+  }, // for internal code
 };
 
-phoxy._RenderSubsystem = 
+phoxy._.EarlyStage =
 {
-  PrepareCanvas : function(tag)
+  subsystem_dir: '/phoxy/subsystem'
+  ,
+  systems:
     {
-      if (tag == undefined)
-        tag = '<div>';
-      var vanilla_tag = tag.substring(1, tag.length - 1);
-
-      var id =  phoxy.GenerateUniqueID();
-      var obj = document.createElement(vanilla_tag);
-      obj.setAttribute('id', id);
-      var div = obj.outerHTML;
-      
-      return { id: id, obj: obj, html: div };
+      'early.js': undefined,
+      'time.js': '_TimeSubsystem',
+      'render.js': '_RenderSubsystem',
+      'api.js': '_ApiSubsystem',
+      'internal.js': '_InternalCode',
+      'click.js': '_ClickHook',
+      'legacy.js': '_LegacyLand',
+      'enjs_overload.js': '_OverrideENJS',
     }
   ,
-  DeferRender : function (ejs, data, rendered_callback, tag)
-    {
-      phoxy.Log(4, "phoxy.DeferRender", arguments);
-      if (tag == undefined)
-        tag = '<defer_render>';
-      var canvas = phoxy.PrepareCanvas(tag);
-      var id = canvas.id;
-      
-      phoxy.RenderReplace(id, ejs, data, rendered_callback);
-
-      return canvas.html;
-    }
-  ,
-  AsyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
-    { // AsyncRender strategy: for production
-      phoxy.Fancy(ejs, data, function(obj, ejs, data)
-      {
-        if (typeof obj == 'undefined')
-        {
-          phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
-          return; // And break dependencies execution
-        }
-
-        // Potential cascade memleak
-        // Should clear listeners with callback
-        phoxy.Appeared(target, function()
-        {
-          difference.call(phoxy, target, obj.html, arguments);
-          for (var k in obj.defer)
-              obj.defer[k]();
-        }, undefined, -1);
-
-        obj.on_complete = function()
-        {
-          if (typeof(rendered_callback) != 'undefined')
-            rendered_callback.call(obj.across, ejs, data, obj.html);
-        };
-      }, true);
-    }
-  ,
-  SyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
-    { // SyncRender strategy: for debug/develop purposes
-      phoxy.Appeared(target, function()
-      {
-        phoxy.Fancy(ejs, data, function(obj, ejs, data)
-        {
-          if (typeof obj == 'undefined')
-          {
-            phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
-            return; // And break dependencies execution
-          }
-
-          difference.call(phoxy, target, obj.html, arguments);
-
-          obj.on_complete = function()
-          {
-            if (typeof(rendered_callback) != 'undefined')
-              rendered_callback.call(obj.across, ejs, data, obj.html);
-          };
-        }, true);
-      }, undefined, -1);
-    }
-  ,
-  RenderStrategy : "Will be replaced by selected strategy after compilation."
-  ,
-  RenderInto : function (target, ejs, data, rendered_callback)
-    { 
-      var args = Array.prototype.slice.call(arguments);
-      args.push(function(target, html)
-      {
-        document.getElementById(target).innerHTMl = html;
-      });
-      phoxy.RenderStrategy.apply(this, args);
-    }
-  ,
-  RenderReplace : function (target, ejs, data, rendered_callback)
-    {
-      var args = Array.prototype.slice.call(arguments);
-      args.push(function(target, html)
-      {
-        var that = document.getElementById(target);
-        that.insertAdjacentHTML("afterEnd", html);
-        that.parentNode.removeChild(that);
-      });
-      phoxy.RenderStrategy.apply(this, args);
-    }
-  ,
-  Render : function (design, data, callback, is_phoxy_internal_call)
-    {
-      if (data === undefined)
-        data = {};
-
-      phoxy.Log(5, "phoxy.Render", arguments);
-      var html;
-      if (design.indexOf(".ejs") == -1)
-        design += ".ejs";
-      var ejs;
-      //if (!phoxy.ForwardDownload(design))
-        ejs = new EJS({'url' : design});
-      //else
-//        ejs = new EJS({'text' : phoxy.ForwardDownload(design), 'name' : design});
-
-      var obj = ejs.prepare(data);
-      obj.on_complete = callback;
-      ejs.execute(obj);
-      html = obj.html;
-
-      if (typeof phoxy == 'undefined' || typeof phoxy.state == 'undefined')
-        throw "EJS render failed. Phoxy is missing. Is .ejs file exsists? Is your .htacess right? Check last AJAX request.";
-
-      if (is_phoxy_internal_call)
-        return obj;
-      return html;
-    }
-  ,
-  Fancy : function(design, data, callback, raw_output)
-    {
-      var args = arguments;
-      for (var i = 0; i < 2; i++)
-        if (Array.isArray(args[i]))
-        {
-          var array = args[i];
-          var url = array.shift();
-          if (array.length > 0)
-            url += '(' + phoxy.Serialize(array) + ')';
-          args[i] = url;
-          phoxy.Fancy.apply(this, args);
-          return;
-        }
-
-      phoxy.Log(6, "phoxy.Fancy", arguments);
-
-      var callback = args[2];
-      if (typeof(callback) == 'undefined')
-        callback = function (){};
-
-      function HandleServerAnswerAndInvokeCallback(answer, cb)
-      {
-        var obj = EJS.IsolateContext(answer);
-
-        // Those removed because we dont need to render anything
-        delete obj.design;
-        // Those ignored since it phoxy.Fancy.(low level rendering) Place to render already choosed
-        delete obj.result;
-        delete obj.replace;
-        phoxy.ApiAnswer(obj, function()
-        {
-          cb(answer);
-        });
-      }
-
-      function FancyServerRequest(url, cb)
-      {
-        phoxy.AJAX(url, function(obj)
-        {
-          HandleServerAnswerAndInvokeCallback(obj, cb);
-        });
-      }
-
-      /* 
-       * [a0] phoxy.Fancy(string, undefined, anytype)
-       * * Then it full RPC call, with fixed render place
-       * * (result/replace keywords ignoring)
-       * 
-       * [a1] phoxy.Fancy(object, undefined, anytype)
-       * * Then params already constructed with object
-       * * NOTICE: All keywoards ARE interprenting
-       */
-      if (typeof(args[1]) == 'undefined')
-      {
-        if (typeof(args[0]) == 'undefined')
-          return callback(undefined, undefined, undefined);
-        
-        if (typeof(args[0]) == 'string')
-        {
-// [a0] ////////
-          var rpc = args[0];
-          FancyServerRequest(rpc, function(obj)
-          {
-            phoxy.Fancy(obj, args[1], args[2], args[3]);
-          });
-          return;
-        }
-
-        if (typeof(args[0]) != 'object')
-          throw "Failed phoxy.Fancy object recognize";
-
-// [a1] ////////
-        var obj = args[0];
-        // Maybe its wrong. Maybe i should ignore other params
-        var design = obj.design;
-        var data = obj.data || {};
-
-        HandleServerAnswerAndInvokeCallback(obj, function()
-        {
-          phoxy.Fancy(design, data, callback, args[3]);
-        })
-
-        return;
-      }
-
-      /* Data preparing
-       * [b0] phoxy.Fancy(anytype, function, anytype)
-       * * Generating data through function
-       * * Data could be returned directly (object only)
-       * *  or could be returned asynchronously with callback, as soon as it will be ready.
-       * 
-       * [b1] phoxy.Fancy(anytype, string, anytype)
-       * * Requesting data with RPC
-       * * NOTICE: Every keywoards except data ARE ignored.
-       * 
-       * [b2] phoxy.Fancy(anytype, object, anytype)
-       * * Serving with constructed object. Ready to render!
-       */
-
-      function DataLoadedCallback(data)
-      {
-        data = data || {};
-        phoxy.Fancy(args[0], data, args[2], args[3]);
-      }
-      
-      if (typeof(args[1]) == 'function')
-      {
-// [b0] ////////
-        var data_load_functor = args[1];
-        data = data_load_functor(DataLoadedCallback);
-        if (typeof(data) != 'object')
-          return; // data will be returned async
-      }
-      else if (typeof(args[1]) == 'string')
-      {
-// [b1] ////////
-        var rpc_url = args[1];
-        FancyServerRequest(rpc_url, function(json)
-        {
-          DataLoadedCallback(json.data);
-        });
-        return;
-      }
-      else if (typeof(args[1]) != 'object')
-        throw "Failed phoxy.Fancy data receive";
-      else
-// [b2] ////////
-        data = args[1];
-
-      var html;
-
-      /* Rendering
-       * [c0] phoxy.Fancy(undefined, NOT undefined, anytype)
-       * * Only invoking callback with prepared data
-       * * Used when design determining dynamically
-       * 
-       * [c1] phoxy.Fancy(string, NOT undefined, anytype)
-       * * First parameter is EJS string, same as in 'design' keyword
-       * 
-       * [c2] phoxy.Fancy(function, NOT undefined, anytype)
-       * * First paremeter if method which determine design in runtime
-       * * Just same as [b0] for data preparing do.
-       */
-
-      if (typeof(args[0]) == 'undefined')
-// [c0] ////////
-        return callback(html, design, data);
-
-      if (typeof(args[0]) == 'string')
-// [c1] ////////
-        design = args[0];
-      else if (typeof(args[0]) == 'function')
-      {
-// [c2] ////////
-        function DetermineAsync(design)
-        {
-          phoxy.Fancy(design, data, args[2], args[3]);
-        }
-
-        design = design(data, DetermineAsync);
-        if (typeof(design) != 'string')
-          return; // Will be rendered later (async design determine)
-      }
-
-      var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
-      html = phoxy.Render(ejs_location, data, undefined, true);
-
-      if (!raw_output)
-        html = html.html;
-      callback(html, design, data);
-    }
-};
-
-phoxy._ApiSubsystem =
-{
-  ApiAnswer : function( answer, callback )
-    {
-      if (answer.hash !== undefined)
-      {
-        if (answer.hash === null)
-          answer.hash = "";
-        phoxy.ChangeHash(answer.hash);
-      }      
-      if (answer.error)
-      {
-        alert(answer.error);
-        if (answer.reset !== undefined)
-          phoxy.Reset(answer.reset);
-        return;
-      }
-      if (answer.reset !== undefined)
-        phoxy.Reset(answer.reset);
-
-      function Before()
-      {
-        function AfterBefore(_answer)
-        {
-          if (_answer !== undefined)
-            answer = _answer;
-          phoxy.ScriptsLoaded(answer, callback);
-        }
-        
-        if (answer.before === undefined)
-          return AfterBefore();
-
-        phoxy.FindRouteline(answer.before)(AfterBefore, answer);
-      }
-
-      if (answer.script)
-        require(answer.script, Before);
-      else
-        Before();
-    }
-  ,
-  ScriptsLoaded : function( answer, callback )
-    {
-      function ScriptsFiresUp()
-      {
-        phoxy.FindRouteline(answer.routeline, answer)();
-        if (callback)
-          callback(answer);
-        if (!phoxy.state.loaded)
-          phoxy.Load();
-      }   
-      if (answer.design === undefined)
-        return ScriptsFiresUp();
-
-      var canvas = phoxy.PrepareCanvas('<render>');
-      var id = canvas.id;
-      var render_id = id;
-
-      var element = canvas.html;
-
-      var url = phoxy.Config()['ejs_dir'] + "/" + answer.design;
-      phoxy.ForwardDownload(url + ".ejs", function()
-      {
-        if (answer.replace === undefined)
-          if (answer.result === undefined)
-            document.getElementsByTagName('body')[0].appendChild(canvas.obj);
-          else if (typeof answer.result == 'string')
-            document.getElementById(answer.result).innerHTML = element;
-          else
-            for (var k in answer.result)
-            {
-              var v = document.getElementById(answer.result[k]);
-              if (v != null)
-                v.innerHTML = element;
-            }
-
-        else
-          render_id = answer.replace;
-
-        phoxy.RenderReplace(
-          render_id,
-          answer.design,
-          answer.data || {},
-          ScriptsFiresUp);
-      });
-    }
-  ,
-  FindRouteline : function( routeline )
-  {
-    if (typeof routeline == 'undefined')
-      return function() {};
-    if (typeof window[routeline] == 'function')
-      return window[routeline];
-    var arr = routeline.split(".");
-    var method = arr.pop();
-
-    var obj = window;
-    for (var k in arr)
-      if (typeof obj[arr[k]] == 'undefined')
-        throw "Routeline context locate failed";
-      else
-        obj = obj[arr[k]];
-
-    if (typeof obj[method] != 'function')
-      throw "Routeline locate failed";
-
-    return obj[method];
-  }
-  ,
-  ForwardDownload : function( url, callback_or_true_for_return )
-    {
-      if (typeof(storage) === "undefined")
-        storage = {};
-        
-      if (callback_or_true_for_return === true)
-        return storage[url];      
-
-      function AddToLocalStorage(data)
-      {
-        storage[url] = data;
-        if (typeof(callback_or_true_for_return) == 'function')
-          callback_or_true_for_return(data);
-      }
-
-      if (storage[url] != undefined)
-      {
-        if (typeof(callback_or_true_for_return) == 'function')
-          callback_or_true_for_return(storage[url]);
-        return true;
-      }
-
-      phoxy.ajax(url, AddToLocalStorage);
-      return false;
-    }
-  , // vanilla.js ajax
-  ajax : function (url, callback, data, x)
-    {  // https://gist.github.com/Xeoncross/7663273
-      try
-      {
-        x = new(window.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
-        x.open(data ? 'POST' : 'GET', url, 1);
-        x.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-        x.onreadystatechange = function () {
-          x.readyState > 3 && callback && callback(x.responseText, x);
-        };
-        x.send(data)
-      } catch (e)
-      {
-        window.console && console.log(e);
-      }
-    }
-  ,
-  AJAX : function( url, callback, params )
-    {
-      if (Array.isArray(url))
-        if (url.length < 2)
-          url = url.shift();
-        else
-        {
-          var tmp = url.shift();
-          url = tmp + '(' + phoxy.Serialize(url) + ')';
-        }
-
-      var current_ajax_id = phoxy.state.ajax.active_id++;
-      phoxy.state.ajax.active[current_ajax_id] = arguments;
-
-      if (!phoxy.state.ajax.nesting_level++)
-        if (typeof phoxy.prestart.OnAjaxBegin == 'function')
-          phoxy.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
-
-      phoxy.ajax(phoxy.Config()['api_dir'] + "/" + url, function(response)
-        {
-          data = JSON.parse(response);
-          if (params == undefined)
-            params = [];
-          params.unshift(data);
-          callback.apply(this, params);
-
-          if (!--phoxy.state.ajax.nesting_level)
-            if (typeof phoxy.prestart.OnAjaxEnd == 'function')
-              phoxy.prestart.OnAjaxEnd(phoxy.state.ajax.active[current_ajax_id]);
-          delete phoxy.state.ajax.active[current_ajax_id];
-        });
-    }
-  ,
-  Serialize : function(obj, nested_mode)
-    { 
-      json_encoded = JSON.stringify(obj);
-      send_string = json_encoded.substring(1, json_encoded.length - 1);
-
-      function EscapeReserved(str, reserved)
-      {
-        reserved_characters = reserved.split('');
-        search_string = "\\" + reserved_characters.join("|\\");
-        var regexp = new RegExp(search_string, "gi");
-
-        return str.replace(regexp, 
-          function(matched)
-          {
-            return escape(escape(matched));
-          });
-      }
- 
-      return EscapeReserved(send_string, "()");
-    }
-  ,
-  ApiRequest : function( url, callback )
-    {
-      if (arguments.length == 3
-            ||
-            (typeof callback != 'function'
-              && typeof callback != 'undefined')
-          )
-      {
-        phoxy.Log(1, "Object optional IS deprecated. Look at #91");
-        if (typeof url != 'string')
-          return phoxy.Log(0, "Failed to soft translate call");
-        if (typeof arguments[1] != 'undefined')
-          url = [url].concat(arguments[1]);
-        return arguments.callee.call(this, url, arguments[2]);
-      }
-
-      args = url.slice(0);
-      if (typeof url != 'string')
-      {
-        url = args.shift();
-        url += "(" + phoxy.Serialize(args) + ")";
-      }
-
-      phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
-    }
-  ,
-  MenuCall : function( url, callback )
-    {
-      if (arguments.length == 3
-            ||
-            (typeof callback != 'function'
-              && typeof callback != 'undefined')
-          )
-      {
-        phoxy.Log(1, "Object optional IS deprecated. Look at #91");
-        if (typeof url != 'string')
-          return phoxy.Log(0, "Failed to soft translate call");
-        if (typeof arguments[1] != 'undefined')
-          url = [url].concat(arguments[1]);
-        return arguments.callee.call(this, url, arguments[2]);
-      }
-
-      phoxy.ApiRequest(url, function(data)
-      {
-        phoxy.ChangeHash(url);
-        if (typeof callback == 'function')
-          callback(data);
-      });
-    }
-}
-
-phoxy._InternalCode =
-{
-  Load : function( )
-    {
-      delete phoxy.Load; // Cause this is only one time execution
-      phoxy.state.loaded = true;
-      var hash = location.hash.substring(1);
-      if (!phoxy.prestart.skip_initiation)
-        phoxy.ApiRequest(hash);
-      phoxy.state.hash = hash;
-
-      function PhoxyHashChangeCallback()
-      {
-        if (phoxy.ChangeHash(location.hash))
-          phoxy.ApiRequest(phoxy.state.hash);
-      }
-
-      window.addEventListener('hashchange', PhoxyHashChangeCallback);
-    }
-  ,
-  ChangeHash : function (hash)
-    {
-      var t;
-      t = hash.split(location.origin)[1];
-      if (t !== undefined)
-        hash = t;
-      var t = hash.split('#')[1];
-      if (t !== undefined)
-        hash = t;
-      var ret = phoxy.state.hash != hash;
-      phoxy.state.hash = hash;
-      location.hash = hash;
-      return ret;
-    }
-  ,
-  GenerateUniqueID : function()
-    {
-      var ret = "";
-      var dictonary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-      for (var i = 0; i < 10; i++)
-        ret += dictonary.charAt(Math.floor(Math.random() * dictonary.length));
-
-      return ret;
-    }
-  ,
-    Reset : function (url)
-    {      
-      if ((url || true) == true)
-        location.reload();
-      var parts = url.split('#');
-      if (parts[1] == undefined)
-        phoxy.ChangeHash('');
-      else
-        phoxy.ChangeHash("#" + parts[1]);
-      var host = parts[0];
-      if (host.length)
-        location = host;
-      else
-        location.reload(parts[0]);
-    }
-  ,
-    Config : function()
-    {
-      return phoxy.config;
-    }
-  ,
-    Log : function(level)
-    {
-      if (phoxy.state.verbose < level)
-        return;
-
-      var error_names = phoxy.error_names;
-      var errorname = error_names[level < error_names.length ? level : error_names.length - 1];
-
-      var skipfirst = true;
-      var args = [errorname];
-      for (var v in arguments)
-        if (skipfirst)
-          skipfirst = false;
-        else
-          args.push(arguments[v]);
-      var method;
-      if (level < 2)
-        method = "error";
-      else if (level == 2)
-        method = "warn";
-      else if (level == 3)
-        method = "info";
-      else
-        method = "debug";
-      console[method].apply(console, args);
-      if (level == 0)
-        debugger;
-    }
-};
-
-phoxy._EarlyStage =
-{
-  sync_require: 
+  sync_require:
     [
-      "libs/EJS/ejs.js",
+      "enjs", // composer now IS required
     ]
   ,
   async_require:
     [
     ]
   ,
-  EntryPoint: function()
+  Prepare: function()
     {
-      phoxy._ApiSubsystem.ajax(phoxy.prestart.config || "api/phoxy", function(response)
+      if (typeof requirejs === 'undefined')
+        return setTimeout(arguments.callee, 10);
+      phoxy.state.runlevel = 0.5;
+
+      requirejs.config(
       {
-        data = JSON.parse(response);
-        phoxy.config = data;
-        if (typeof phoxy.prestart.OnBeforeCompile == 'function')
-          phoxy.prestart.OnBeforeCompile();
+        waitSeconds: 60
+      });
 
-        phoxy._EarlyStage.Compile();
-        if (typeof phoxy.config.verbose != 'undefined')
-          phoxy.state.verbose = phoxy.config.verbose;
-
-        if (typeof phoxy.prestart.OnAfterCompile == 'function')
-          phoxy.prestart.OnAfterCompile();
-
-        phoxy.state.conf_loaded = true;
-      })
-
-      function NextStep()
-      {
-        if (typeof requirejs == 'undefined')
-          if (phoxy.state.compiled)
-            return phoxy.Defer(arguments.callee, 10);
-          else
-            return phoxy._TimeSubsystem.Defer(arguments.callee, 10);
-
-        requirejs.config(
-        {
-          waitSeconds: 60
-        });
-
-        phoxy._EarlyStage.CriticalRequire();
-      }
-      NextStep();
+      if (!phoxy._.prestart.wait)
+        phoxy._.EarlyStage.EntryPoint();
+      else
+        if (typeof phoxy._.prestart.OnWaiting === 'function')
+          phoxy._.prestart.OnWaiting();
     }
   ,
-  CriticalRequire: function()
+  EntryPoint: function()
     {
+      phoxy.state.runlevel = 1;
+      var dir = phoxy._.prestart.subsystem_dir || phoxy._.EarlyStage.subsystem_dir;
+      var require_systems = [];
+
+      for (var k in phoxy._.EarlyStage.systems)
+        require_systems.push(dir + "/" + k);
+
+      phoxy._.EarlyStage.CriticalRequire(require_systems);
+    }
+  ,
+  Ready: function()
+    {
+      if (typeof phoxy._.EarlyStage.DependenciesLoaded === 'undefined')
+        return setTimeout(arguments.callee, 10);
+
+      phoxy._.EarlyStage.DependenciesLoaded();
+    }
+  ,
+  CriticalRequire : function(require_systems)
+    {
+      // Summary move us to runlevel 2, ready for compilation
+      requirejs.onResourceLoad = function()
+      {
+        phoxy.state.early.loaded++;
+      }
+
       require
       (
-        phoxy._EarlyStage.sync_require,
+        require_systems,
         function()
         {
-          phoxy._EarlyStage.DependenciesLoaded();
+          phoxy.state.runlevel += 0.5;
+          phoxy._.EarlyStage.LoadConfig();
         }
       );
 
       require
       (
-        phoxy._EarlyStage.async_require,
+        phoxy._.EarlyStage.sync_require,
+        function()
+        {
+          phoxy.state.runlevel += 0.5;
+          phoxy._.EarlyStage.Ready();
+        }
+      );
+
+      require
+      (
+        phoxy._.EarlyStage.async_require,
         function() {}
       );
     }
   ,
-  DependenciesLoaded: function()
+  LoadingPercentage : function()
     {
-      if (!phoxy.state.conf_loaded) // wait until phoxy configuration loaded
-        return setTimeout(arguments.callee, 10);
+      var phoxy_itself = 1;
+      var config_load = 1;
+      var system_count = Object.keys(phoxy._.EarlyStage.systems).length;
+      var sync_count = phoxy._.EarlyStage.sync_require.length;
+      var async_count = phoxy._.EarlyStage.async_require.length;
 
-      phoxy.OverloadEJSCanvas();
-      requirejs.config({baseUrl: phoxy.Config()['js_dir']});
+      var optional_count = 0;
 
-      var initial_client_code = 0;
+      for (var k in phoxy.state.early.optional)
+        optional_count += phoxy.state.early.optional[k];
 
-      if (typeof phoxy.prestart.OnBeforeFirstApiCall == 'function')
-        phoxy.prestart.OnBeforeFirstApiCall();
-      // Invoke client code
-      var scripts = document.getElementsByTagName('script');
-      for (var i = 0; i < scripts.length; i++)
-        if (scripts[i].getAttribute('phoxy') == null)
-          continue;
-        else
-        {
-          initial_client_code++;
-          phoxy.ApiRequest(
-            scripts[i].getAttribute('phoxy'),
-            function()
-            {
-              phoxy.Defer(function()
-              { // Be sure that zero reached only once
-                if (--initial_client_code)
-                  return;
-                if (typeof phoxy.prestart.OnInitialClientCodeComplete == 'function')
-                  phoxy.prestart.OnInitialClientCodeComplete();
-              });
-            });
-        }
+      phoxy.state.early.require =
+        phoxy_itself
+          + config_load
+          + system_count
+          + sync_count
+          + async_count
+          + optional_count;
+
+      var percent = 100 * phoxy.state.early.loaded / phoxy.state.early.require;
+      if (percent > 100)
+        percent = 100;
+
+      return percent;
     }
-  ,
-  Compile: function()
-    {
-      var systems = ['_TimeSubsystem', '_RenderSubsystem', '_ApiSubsystem', '_InternalCode'];
-
-      for (var k in systems)
-      {
-        var system_name = systems[k];
-        for (var func in phoxy[system_name])
-          if (typeof phoxy[func] != 'undefined')
-            throw "Phoxy method mapping failed on '" + func + '. Already exsists.';
-          else
-            phoxy[func] = phoxy[system_name][func];
-        delete phoxy[system_name];
-      }
-
-      if (phoxy.prestart.sync_cascade)
-      {
-        phoxy.state.sync_cascade = true;
-        phoxy.RenderStrategy = phoxy.SyncRender_Strategy;
-      }
-      else
-      {
-        phoxy.state.sync_cascade = false;
-        phoxy.RenderStrategy = phoxy.AsyncRender_Strategy;
-      }
-
-      phoxy.state.compiled = true;
-    }
-};
-
-/***
- * Overloading EJS method: this.DeferCascade, this.DeferRender etc.
- ***/
-
-
-phoxy.OverloadEJSCanvas = function()
-{
-  delete phoxy.OverloadEJSCanvas; // Only one-time execution is allowed
-  var origin_RenderCompleted = EJS.Canvas.prototype.RenderCompleted;
-  EJS.Canvas.prototype.RenderCompleted = function()
-  {
-    origin_RenderCompleted.apply(this);
-
-    // In case of recursive rendering, forbid later using
-    // If you losed context from this, and access it with __context
-    // Then probably its too late to use this methods:
-    delete this.across.Defer;
-    delete this.across.DeferRender;
-    delete this.across.DeferCascade;
-
-    if (this.recursive)
-      return;
-    // no one DeferRender was invoked
-    // but Canvas.on_completed not prepared
-    // So render plan is plain, and we attach CheckIsCompleted in this.Defer queue
-    this.recursive++;
-    phoxy.RenderCalls++;
-    this.across.Defer(this.CheckIsCompleted);
-  }
-
-  EJS.Canvas.prototype.CheckIsCompleted = function()
-  {
-    var escape = this.escape();
-    if (--escape.recursive == 0)
-    {
-      phoxy.Log(9, "phoxy.FireUp", [escape.name, escape]);
-      escape.fired_up = true;
-      for (var k in escape.cascade)
-        if (typeof (escape.cascade[k]) == 'function')
-            escape.cascade[k].apply(this);
-      if (typeof(escape.on_complete) == 'function')
-        escape.on_complete();
-    }
-  }
-
-  EJS.Canvas.prototype.hook_first = function(result)
-  {
-    while (true)
-    {
-      if (typeof root == 'undefined')
-        var root = result;
-      else
-        root = root.nextSibling;
-
-      if (!root)
-        break;
-      if (root.nodeType !== 1)
-        continue;
-
-      if (
-        ['defer_render','render'].indexOf(root.tagName) == -1 &&
-        root.classList.contains('phoxy_ignore') == false &&
-        root.classList.contains('ejs_ancor') == false)
-        break;
-    }
-    return root;
-  };
-
-  EJS.Canvas.prototype.recursive = 0;
-  phoxy.RenderCalls = 0;
-
-  EJS.Canvas.across.prototype.DeferRender = function(ejs, data, callback, tag)
-  {
-    var that = this.escape();
-    if (that.fired_up)
-    {
-      phoxy.Log(1, "You can't invoke this.Defer... methods after rendering finished.\
-Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
-Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
-In that case use phoxy.Defer methods directly. They context-dependence free.");
-      debugger; // already finished
-    }
-    that.recursive++;
-    phoxy.RenderCalls++;
-
-    function CBHook()
-    {
-      if (typeof callback == 'function')
-        callback.call(this); // Local fancy context
-      phoxy.RenderCalls--;
-
-      that.CheckIsCompleted.call(that.across);
-    }
-
-    return phoxy.DeferRender(ejs, data, CBHook, tag);
-  }
-
-  var OriginDefer = EJS.Canvas.across.prototype.Defer;
-  EJS.Canvas.across.prototype.Defer = function(callback, time)
-  {
-    var that = this.escape();
-    that.recursive++;
-    if (that.fired_up)
-    {
-      phoxy.Log(1, "You can't invoke this.Defer... methods after rendering finished.\
-Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
-Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
-In that case use phoxy.Defer methods directly. They context-dependence free.");
-      debugger; // already finished
-    }
-
-
-    function CBHook()
-    {
-      if (typeof callback == 'function')
-        callback.call(that.across);
-      that.CheckIsCompleted.call(that.across);
-    }
-
-    if (phoxy.state.sync_cascade)
-      return OriginDefer.call(this, CBHook, time);
-    if (typeof that.defer == 'undefined')
-      that.defer = [];
-    if (typeof time == 'undefined')
-      return that.defer.push(CBHook);
-
-    that.defer.push(function()
-    {
-      return OriginDefer(CBHook, time);
-    })
-  }
-
-  EJS.Canvas.across.prototype.DeferCascade = function(callback)
-  {
-    var that = this.escape();
-    if (that.fired_up)
-    {
-      phoxy.Log("You can't invoke this.Defer... methods after rendering finished.\
-Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
-Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
-In that case use phoxy.Defer methods directly. They context-dependence free.");
-      debugger; // already finished
-    }
-
-    if (typeof that.cascade == 'undefined')
-      that.cascade = [];
-
-    that.cascade.push(callback);
-  }
 }
 
-if (!phoxy.prestart.wait)
-  phoxy._EarlyStage.EntryPoint();
-else
-{
-  if (typeof phoxy.prestart.OnWaiting == 'function')
-    phoxy.prestart.OnWaiting();
-}
+phoxy._.EarlyStage.Prepare();

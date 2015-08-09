@@ -7,12 +7,12 @@ class phoxy_return_worker
   public $hooks = [];
   public static $add_hook_cb;
   private static $minimal_cache = [];
-  
+
   public function __construct( $obj )
   {
     $this->obj = $obj;
 
-    $func_list = 
+    $func_list =
     [
       "ScriptToArray",
       "JSPrefix",
@@ -21,7 +21,7 @@ class phoxy_return_worker
       "DefaultCacheTiming",
       "Cache"
     ];
-    
+
     foreach ($func_list as $func_name)
       $this->hooks[$func_name] = function($me) use ($func_name)
       {
@@ -31,21 +31,21 @@ class phoxy_return_worker
     if (isset(self::$add_hook_cb))
         call_user_func(self::$add_hook_cb, $this);
   }
-  
+
   private function Prepare()
   {
     foreach ($this->hooks as $hook)
         $hook($this);
     return $this->prepared = json_encode($this->obj, JSON_UNESCAPED_UNICODE);
-  }  
-  
+  }
+
   public function __toString()
   {
     if (!isset($this->prepared))
       $this->Prepare();
     return $this->prepared;
   }
-  
+
   private function ScriptToArray()
   {
     if (!isset($this->obj['script']))
@@ -55,7 +55,7 @@ class phoxy_return_worker
     assert(is_string($this->obj['script']));
     $this->obj['script'] = array($this->obj['script']);
   }
-  
+
   private function Prefix($a, $b) // sorry
   {
     if (!isset($this->obj[$a]) || !count($this->obj[$a]))
@@ -74,17 +74,17 @@ class phoxy_return_worker
   {
     $a = "{$b}{$a}";
   }
-  
+
   private function JSPrefix()
   {
     $this->Prefix('script', 'js_prefix');
   }
-  
+
   private function EJSPrefix()
   {
     $this->Prefix('design', 'ejs_prefix');
   }
-  
+
   private function DefaultCacheTiming()
   {
     $conf = phoxy_conf();
@@ -103,7 +103,7 @@ class phoxy_return_worker
         if (!isset($cache['no']) || !in_array($scope, $cache['no']))
           $this->obj['cache'][$scope] = $conf["cache_{$scope}"];
   }
-  
+
   private function NoCache()
   {
     if (!isset($this->obj['cache']))
@@ -113,7 +113,7 @@ class phoxy_return_worker
     $this->obj['cache'] = $cache = self::$minimal_cache;
 
     $cache = $this->obj['cache'];
-    
+
     $simple_mode = in_array("no", $cache);
     if (!$simple_mode && !isset($this->obj['cache']['no']))
       return;
@@ -139,7 +139,7 @@ class phoxy_return_worker
 
     $this->obj['cache']['no'] = $no;
   }
-  
+
   private function Cache()
   {
     $cache = $this->obj['cache'];
@@ -160,13 +160,13 @@ class phoxy_return_worker
     }
     // session, local, global
   }
-  
+
   static private function ParseCache( $str )
   {
     $str = trim($str);
     $arr = preg_split('/([0-9]+)([dhms]?)/', $str, -1, PREG_SPLIT_DELIM_CAPTURE);
     phoxy_protected_assert(count($arr) > 1, "Cache string parse error");
-    
+
     $base = 0;
     $ret = 0;
     while (true)
@@ -179,7 +179,7 @@ class phoxy_return_worker
       switch ($modifyer)
       {
       case 'd':
-        $mult *= 24;       
+        $mult *= 24;
       case 'h':
         $mult *= 60;
       case 'm':

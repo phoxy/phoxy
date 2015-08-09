@@ -46,7 +46,7 @@ class phoxy_sys_api
     $this->f = $force_raw;
     $this->expect_simple_result = $expect_simple_result;
   }
-  
+
   public function __call( $name, $arguments )
   {
     $ret = $this->Call($name, $arguments);
@@ -111,9 +111,14 @@ class api
   public $json;
 
   public function __construct()
+  { // Otherwise we will get php segfault
+
+  }
+
+  public function phoxy_api_init()
   {
     $this->json = true;
-    
+
     if (!is_array($this->addons))
       $this->addons = [];
 
@@ -122,7 +127,7 @@ class api
 
     $this->default_addons = array_merge_recursive($compiled, $this->addons);
   }
-  
+
   public function APICall( $name, $arguments )
   {
     return $this->__call($name, $arguments);
@@ -146,7 +151,7 @@ class api
 
     return new phoxy_return_worker($ret);
   }
-  
+
   private function Call( $name, $arguments )
   {
     if (!method_exists($this, $name))
@@ -154,7 +159,7 @@ class api
     $reflection = new ReflectionMethod($this, $name);
     if (!$reflection->isProtected())
       return ["error" => "Security violation (Module handler not protected)"];
-    $ret = call_user_func_array([$this, $name], $arguments);    
+    $ret = call_user_func_array([$this, $name], $arguments);
     return $ret;
   }
 
