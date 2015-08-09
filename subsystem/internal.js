@@ -15,8 +15,8 @@ phoxy._InternalCode =
   Reset : function (url)
     {
       if ((url || true) === true)
-        location.reload();
-      location.reload(url);
+        return location.reload();
+      location = url;
     }
   ,
   Config : function()
