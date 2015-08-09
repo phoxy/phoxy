@@ -9,7 +9,7 @@ phoxy._LegacyLand =
 
 phoxy._LegacyLand._ = {};
 phoxy._LegacyLand._.deprecated = {
-  IsObjectOptionalDetected(arguments)
+  IsObjectOptionalDetected : function(arguments)
     {
       if (arguments.length !== 3)
         return false;
