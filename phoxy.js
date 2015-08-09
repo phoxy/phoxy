@@ -36,7 +36,11 @@ var phoxy =
       {
         initial: 0,
       }
-    }
+    },
+    exception:
+    {
+      handler: {},
+    },
   },
   _:
   {

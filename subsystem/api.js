@@ -174,17 +174,22 @@ phoxy._ApiSubsystem._.api =
         next(answer, callback);
     }
   ,
-  PlugInKeyword : function(answer, callback)
+  PlugInKeyword : function(keyword, args)
   {
-    var keyword = arguments.callee.name;
-    var args = arguments;
-
-    require([phoxy._.EarlyStage.subsystem_dir + keyword + ".js"], function()
+    require([phoxy._.EarlyStage.subsystem_dir + "/" + keyword + ".js"], function()
     {
       if (phoxy._.api.keyword[keyword] === undefined)
         Log(0, "Keyword handler for '" + keyword + "' is missing");
       phoxy._.api.keyword[keyword].apply(phoxy._.api.keyword, args);
     });
+  }
+  ,
+  KeywordMissing : function(keyword)
+  {
+    return function()
+    {
+      return phoxy._.api.PlugInKeyword(keyword, arguments);
+    };
   }
 };
 
@@ -266,6 +271,6 @@ phoxy._ApiSubsystem._.api.keyword =
       }
     }
   ,
-  exception: phoxy._ApiSubsystem._.api.PlugInKeyword
+  exception: phoxy._ApiSubsystem._.api.KeywordMissing("exception")
   ,
 };
