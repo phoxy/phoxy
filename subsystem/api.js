@@ -4,33 +4,25 @@ phoxy._ApiSubsystem =
     {
       if (answer.error)
       {
-        alert(answer.error);
-        if (answer.reset !== undefined)
-          phoxy.Reset(answer.reset);
+        phoxy._.api.keyword.error(answer, callback);
         return;
       }
+
       if (answer.reset !== undefined)
-        phoxy.Reset(answer.reset);
+        phoxy._.api.keyword.reset(answer, callback);
 
-      function Before()
+      function Ready()
       {
-        function AfterBefore(_answer)
-        {
-          if (_answer !== undefined)
-            answer = _answer;
-          phoxy._.api.ScriptsLoaded(answer, callback);
-        }
-
         if (answer.before === undefined)
-          return AfterBefore();
-
-        phoxy._.api.FindRouteline(answer.before)(AfterBefore, answer);
+          phoxy._.api.ScriptsLoaded(answer, callback);
+        else
+          phoxy._.api.keyword.before(answer, callback, phoxy._.api.ScriptsLoaded);
       }
 
       if (answer.script)
-        require(answer.script, Before);
+        phoxy._.api.keyword.script(answer, callback, Ready);
       else
-        Before();
+        Ready();
     }
   ,
   AJAX : function(url, callback, params)
@@ -212,4 +204,36 @@ phoxy._ApiSubsystem._.api =
       return EscapeReserved(send_string, "()?#\\");
     }
   ,
+};
+
+phoxy._ApiSubsystem._.api.keyword =
+{
+  error: function(answer, callback)
+    {
+      alert(answer.error);
+      if (answer.reset !== undefined)
+        phoxy.Reset(answer.reset);
+    }
+  ,
+  reset: function(answer, callback)
+    {
+      phoxy.Reset(answer.reset);
+    }
+  ,
+  script: function(answer, callback, next)
+    {
+      require(answer.script, next);
+    }
+  ,
+  before: function(answer, callback, next)
+    {
+      function AfterBefore(_answer)
+      {
+        if (_answer !== undefined)
+          answer = _answer;
+        next(answer, callback);
+      }
+
+      phoxy._.api.FindRouteline(answer.before)(AfterBefore, answer);
+    }
 };
