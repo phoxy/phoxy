@@ -1,6 +1,6 @@
 phoxy._.api.keyword.exception = function(answer, callback)
 {
-  phoxy.Log(4, "Server thrown exception:", answer.exception);
+  phoxy.Log(3, "Server thrown exception:", answer.exception);
   var handler = phoxy.state.exception.handlers[answer.exception];
 
   if (handler === undefined)

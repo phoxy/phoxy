@@ -2,9 +2,6 @@ phoxy._ApiSubsystem =
 {
   ApiAnswer : function(answer, callback)
     {
-      if (answer.exception !== undefined)
-        return phoxy._.api.keyword.exception(answer, callback);
-
       if (answer.error !== undefined)
         return phoxy._.api.keyword.error(answer, callback);
 
@@ -88,6 +85,10 @@ phoxy._ApiSubsystem._.api =
         if (!phoxy.state.loaded)
           phoxy._.internal.Load();
       }
+
+      if (answer.exception !== undefined)
+        return phoxy._.api.keyword.exception(answer, ScriptsFiresUp);
+
 
       phoxy._.api.IfKeyword(answer, callback, "design", ScriptsFiresUp);
     }
