@@ -1,4 +1,4 @@
-phoxy._EarlyStage.ajax = function (url, callback, data, x)
+phoxy._.EarlyStage.ajax = function (url, callback, data, x)
 {  // https://gist.github.com/Xeoncross/7663273
   try
   {
@@ -18,37 +18,37 @@ phoxy._EarlyStage.ajax = function (url, callback, data, x)
 };
 
 
-phoxy._EarlyStage.LoadConfig = function()
+phoxy._.EarlyStage.LoadConfig = function()
 {
-  phoxy._EarlyStage.ajax(phoxy.prestart.config || "api/phoxy", function(response)
+  phoxy._.EarlyStage.ajax(phoxy._.prestart.config || "api/phoxy", function(response)
   {
     phoxy.state.early.loaded++;
     data = JSON.parse(response);
-    phoxy.config = data;
+    phoxy._.config = data;
     phoxy.state.conf_loaded = true;
   })
 }
 
-phoxy._EarlyStage.DependenciesLoaded = function()
+phoxy._.EarlyStage.DependenciesLoaded = function()
 {
   if (phoxy.state.runlevel < 2)
     return setTimeout(arguments.callee, 10);
-  if (!phoxy.state.conf_loaded) // wait until phoxy configuration loaded
+  if (!phoxy.state.conf_loaded) // wait until phoxy.Config()uration loaded
     return setTimeout(arguments.callee, 10);
   phoxy.state.runlevel += 0.5; // because config downloaded
 
-  if (typeof phoxy.prestart.OnBeforeCompile == 'function')
-    phoxy.prestart.OnBeforeCompile();
+  if (typeof phoxy._.prestart.OnBeforeCompile == 'function')
+    phoxy._.prestart.OnBeforeCompile();
 
-  phoxy._EarlyStage.Compile();
-  if (typeof phoxy.config.verbose != 'undefined')
-    phoxy.state.verbose = phoxy.config.verbose;
+  phoxy._.EarlyStage.Compile();
+  if (typeof phoxy.Config().verbose != 'undefined')
+    phoxy.state.verbose = phoxy.Config().verbose;
 
-  if (typeof phoxy.prestart.OnAfterCompile == 'function')
-    phoxy.prestart.OnAfterCompile();
+  if (typeof phoxy._.prestart.OnAfterCompile == 'function')
+    phoxy._.prestart.OnAfterCompile();
 
 
-  phoxy.OverloadEJSCanvas();
+  phoxy._.enjs.OverloadENJSCanvas();
   requirejs.config({baseUrl: phoxy.Config()['js_dir']});
 
   // Entering runlevel 3, compilation finished
@@ -56,8 +56,8 @@ phoxy._EarlyStage.DependenciesLoaded = function()
 
   var initial_client_code = 0;
 
-  if (typeof phoxy.prestart.OnBeforeFirstApiCall === 'function')
-    phoxy.prestart.OnBeforeFirstApiCall();
+  if (typeof phoxy._.prestart.OnBeforeFirstApiCall === 'function')
+    phoxy._.prestart.OnBeforeFirstApiCall();
   // Invoke client code
   var scripts = document.getElementsByTagName('script');
   for (var i = 0; i < scripts.length; i++)
@@ -75,8 +75,8 @@ phoxy._EarlyStage.DependenciesLoaded = function()
           { // Be sure that zero reached only once
             if (--initial_client_code)
               return;
-            if (typeof phoxy.prestart.OnInitialClientCodeComplete === 'function')
-              phoxy.prestart.OnInitialClientCodeComplete();
+            if (typeof phoxy._.prestart.OnInitialClientCodeComplete === 'function')
+              phoxy._.prestart.OnInitialClientCodeComplete();
           });
         });
     }
@@ -84,13 +84,20 @@ phoxy._EarlyStage.DependenciesLoaded = function()
    var total_amount = initial_client_code;
 };
 
-phoxy._EarlyStage.Compile = function()
+phoxy._.EarlyStage.Compile = function()
 {
-  for (var k in phoxy._EarlyStage.systems)
+  for (var k in phoxy._.EarlyStage.systems)
   {
-    var system_name = phoxy._EarlyStage.systems[k];
+    var system_name = phoxy._.EarlyStage.systems[k];
     if (system_name === undefined)
       continue; // skip compilation
+
+    if (typeof phoxy[system_name]['_'] !== 'undefined')
+    {
+      for (var subsytem in phoxy[system_name]['_'])
+        phoxy._[subsytem] = phoxy[system_name]._[subsytem];
+      delete phoxy[system_name]['_'];
+    }
 
     for (var func in phoxy[system_name])
       if (typeof phoxy[func] !== 'undefined')
@@ -100,16 +107,19 @@ phoxy._EarlyStage.Compile = function()
     delete phoxy[system_name];
   }
 
-  if (phoxy.prestart.sync_cascade)
+  if (phoxy._.prestart.sync_cascade)
   {
     phoxy.state.sync_cascade = true;
-    phoxy.RenderStrategy = phoxy.SyncRender_Strategy;
+    phoxy._.render.RenderStrategy = phoxy._.render.SyncRender_Strategy;
   }
   else
   {
     phoxy.state.sync_cascade = false;
-    phoxy.RenderStrategy = phoxy.AsyncRender_Strategy;
+    phoxy._.render.RenderStrategy = phoxy._.render.AsyncRender_Strategy;
   }
+
+  // Move bootstrapped ajax into his place
+  phoxy._.internal.ajax = phoxy._.EarlyStage.ajax;
 
   phoxy.state.compiled = true;
 };

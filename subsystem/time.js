@@ -1,29 +1,33 @@
 phoxy._TimeSubsystem =
 {
   Defer : function(callback, time)
-  {
-    if (time == undefined)
-      time = 0;
-    if (typeof callback !== 'function')
-      return phoxy.Log(0, "phoxy.Defer: Callback not a function", callback);
+    {
+      if (time == undefined)
+        time = 0;
+      if (typeof callback !== 'function')
+        return phoxy.Log(0, "phoxy.Defer: Callback not a function", callback);
 
-    var func = callback;
-    func.bind(this);
+      var func = callback;
+      func.bind(this);
 
-    if (time == -1)
-      func();
-    else
-      setTimeout(func, time);
-  }
+      if (time == -1)
+        func();
+      else
+        setTimeout(func, time);
+    }
   ,
   DDefer : function(callback, time)
-  {
-    phoxy.Defer.call(this, function()
     {
-      phoxy.Defer.call(this, callback);
-    }, time);
-  }
-  ,
+      phoxy.Defer.call(this, function()
+      {
+        phoxy.Defer.call(this, callback);
+      }, time);
+    }
+};
+
+phoxy._TimeSubsystem._ = {};
+phoxy._TimeSubsystem._.time =
+{
   WaitFor : function(callback_condition, callback, timeout, check_every)
     {
       var
@@ -73,7 +77,7 @@ phoxy._TimeSubsystem =
 
       phoxy.Defer(function()
       {
-        phoxy.WaitFor(IsDivAppeared, function()
+        phoxy._.time.WaitFor(IsDivAppeared, function()
         {
           phoxy.DDefer.call(Div(), callback, call_delay);
         }, timeout)
@@ -89,10 +93,10 @@ phoxy._TimeSubsystem =
 
       phoxy.Defer(function()
       {
-        phoxy.WaitFor(IsDivDisappeared, function()
+        phoxy._.time.WaitFor(IsDivDisappeared, function()
         {
           phoxy.DDefer(callback, call_delay);
         }, timeout);
       });
     }
-};
+}

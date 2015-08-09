@@ -38,19 +38,14 @@ var phoxy =
       }
     }
   },
-  plugin : {},
-  prestart: phoxy,
-  error_names :
-  [
-    "FATAL",
-    "ERROR",
-    "WARNING",
-    "INFO",
-    "DEBUG",
-  ],
+  _:
+  {
+    plugin : {},
+    prestart: phoxy,
+  }, // for internal code
 };
 
-phoxy._EarlyStage =
+phoxy._.EarlyStage =
 {
   subsystem_dir: '/phoxy/subsystem'
   ,
@@ -63,7 +58,7 @@ phoxy._EarlyStage =
       'internal.js': '_InternalCode',
       'click.js': '_ClickHook',
       'legacy.js': '_LegacyLand',
-      'enjs.js': undefined,
+      'enjs_overload.js': '_OverrideENJS',
     }
   ,
   sync_require:
@@ -76,85 +71,85 @@ phoxy._EarlyStage =
     ]
   ,
   Prepare: function()
-  {
-    if (typeof requirejs === 'undefined')
-      return setTimeout(arguments.callee, 10);
-    phoxy.state.runlevel = 0.5;
-
-    requirejs.config(
     {
-      waitSeconds: 60
-    });
+      if (typeof requirejs === 'undefined')
+        return setTimeout(arguments.callee, 10);
+      phoxy.state.runlevel = 0.5;
 
-    if (!phoxy.prestart.wait)
-      phoxy._EarlyStage.EntryPoint();
-    else
-      if (typeof phoxy.prestart.OnWaiting === 'function')
-        phoxy.prestart.OnWaiting();
-  }
+      requirejs.config(
+      {
+        waitSeconds: 60
+      });
+
+      if (!phoxy._.prestart.wait)
+        phoxy._.EarlyStage.EntryPoint();
+      else
+        if (typeof phoxy._.prestart.OnWaiting === 'function')
+          phoxy._.prestart.OnWaiting();
+    }
   ,
   EntryPoint: function()
-  {
-    phoxy.state.runlevel = 1;
-    var dir = phoxy.prestart.subsystem_dir || phoxy._EarlyStage.subsystem_dir;
-    var require_systems = [];
+    {
+      phoxy.state.runlevel = 1;
+      var dir = phoxy._.prestart.subsystem_dir || phoxy._.EarlyStage.subsystem_dir;
+      var require_systems = [];
 
-    for (var k in phoxy._EarlyStage.systems)
-      require_systems.push(dir + "/" + k);
+      for (var k in phoxy._.EarlyStage.systems)
+        require_systems.push(dir + "/" + k);
 
-    phoxy._EarlyStage.CriticalRequire(require_systems);
-  }
+      phoxy._.EarlyStage.CriticalRequire(require_systems);
+    }
   ,
   Ready: function()
-  {
-    if (typeof phoxy._EarlyStage.DependenciesLoaded === 'undefined')
-      return setTimeout(arguments.callee, 10);
+    {
+      if (typeof phoxy._.EarlyStage.DependenciesLoaded === 'undefined')
+        return setTimeout(arguments.callee, 10);
 
-    phoxy._EarlyStage.DependenciesLoaded();
-  }
+      phoxy._.EarlyStage.DependenciesLoaded();
+    }
   ,
   CriticalRequire : function(require_systems)
-  {
-    // Summary move us to runlevel 2, ready for compilation
-    requirejs.onResourceLoad = function()
     {
-      phoxy.state.early.loaded++;
+      // Summary move us to runlevel 2, ready for compilation
+      requirejs.onResourceLoad = function()
+      {
+        phoxy.state.early.loaded++;
+      }
+
+      require
+      (
+        require_systems,
+        function()
+        {
+          phoxy.state.runlevel += 0.5;
+          phoxy._.EarlyStage.LoadConfig();
+        }
+      );
+
+      require
+      (
+        phoxy._.EarlyStage.sync_require,
+        function()
+        {
+          phoxy.state.runlevel += 0.5;
+          phoxy._.EarlyStage.Ready();
+        }
+      );
+
+      require
+      (
+        phoxy._.EarlyStage.async_require,
+        function() {}
+      );
     }
-
-    require
-    (
-      require_systems,
-      function()
-      {
-        phoxy.state.runlevel += 0.5;
-        phoxy._EarlyStage.LoadConfig();
-      }
-    );
-
-    require
-    (
-      phoxy._EarlyStage.sync_require,
-      function()
-      {
-        phoxy.state.runlevel += 0.5;
-        phoxy._EarlyStage.Ready();
-      }
-    );
-
-    require
-    (
-      phoxy._EarlyStage.async_require,
-      function() {}
-    );
-  }
   ,
   LoadingPercentage : function()
     {
       var phoxy_itself = 1;
       var config_load = 1;
-      var system_count = Object.keys(phoxy._EarlyStage.systems).length;
-      var sync_count = phoxy._EarlyStage.sync_require.length;
-      var async_count = phoxy._EarlyStage.async_require.length;
+      var system_count = Object.keys(phoxy._.EarlyStage.systems).length;
+      var sync_count = phoxy._.EarlyStage.sync_require.length;
+      var async_count = phoxy._.EarlyStage.async_require.length;
 
       var optional_count = 0;
 
@@ -177,4 +172,4 @@ phoxy._EarlyStage =
     }
 }
 
-phoxy._EarlyStage.Prepare();
+phoxy._.EarlyStage.Prepare();

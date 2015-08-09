@@ -1,16 +1,5 @@
 phoxy._InternalCode =
 {
-  Load : function( )
-    {
-      delete phoxy.Load; // Cause this is only one time execution
-      phoxy.state.loaded = true;
-
-      phoxy.InitClickHook();
-
-      //if (!phoxy.prestart.skip_initiation)
-      //  phoxy.ApiRequest(hash);
-    }
-  ,
   ChangeURL : function (url)
     {
       url = phoxy.ConstructURL(url);
@@ -23,35 +12,24 @@ phoxy._InternalCode =
       return false;
     }
   ,
-  GenerateUniqueID : function()
-    {
-      var ret = "";
-      var dictonary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-      for (var i = 0; i < 10; i++)
-        ret += dictonary.charAt(Math.floor(Math.random() * dictonary.length));
-
-      return ret;
-    }
-  ,
-    Reset : function (url)
+  Reset : function (url)
     {
       if ((url || true) === true)
         location.reload();
       location.reload(url);
     }
   ,
-    Config : function()
+  Config : function()
     {
-      return phoxy.config;
+      return phoxy._.config;
     }
   ,
-    Log : function(level)
+  Log : function(level)
     {
       if (phoxy.state.verbose < level)
         return;
 
-      var error_names = phoxy.error_names;
+      var error_names = phoxy._.internal.error_names;
       var errorname = error_names[level < error_names.length ? level : error_names.length - 1];
 
       var skipfirst = true;
@@ -74,4 +52,50 @@ phoxy._InternalCode =
       if (level == 0)
         debugger;
     }
+  ,
+  Override: function(method_name, new_method)
+    {
+      return phoxy._.internal.Override(phoxy, method_name, new_method);
+    }
+};
+
+phoxy._InternalCode._ = {};
+phoxy._InternalCode._.internal =
+{
+  Load : function( )
+    {
+      phoxy.state.loaded = true;
+
+      phoxy._.click.InitClickHook();
+
+      //if (!phoxy._.prestart.skip_initiation)
+      //  phoxy.ApiRequest(hash);
+    }
+  ,
+  GenerateUniqueID : function()
+    {
+      var ret = "";
+      var dictonary = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+      for (var i = 0; i < 10; i++)
+        ret += dictonary.charAt(Math.floor(Math.random() * dictonary.length));
+
+      return ret;
+    }
+  ,
+  Override : function(object, method_name, new_method)
+    {
+      var origin = object[method_name];
+      object[method_name] = new_method;
+      object[method_name].origin = origin;
+    }
+  ,
+  error_names :
+  [
+    "FATAL",
+    "ERROR",
+    "WARNING",
+    "INFO",
+    "DEBUG",
+  ],
 };

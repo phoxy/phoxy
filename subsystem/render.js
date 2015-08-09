@@ -1,12 +1,32 @@
 phoxy._RenderSubsystem =
 {
+  DeferRender : function (ejs, data, rendered_callback, tag)
+    {
+      phoxy.Log(4, "phoxy.DeferRender", arguments);
+      if (tag === undefined)
+        tag = '<defer_render>';
+      var canvas = phoxy._.render.PrepareCanvas(tag);
+      var id = canvas.id;
+
+      phoxy._.render.RenderReplace(id, ejs, data, rendered_callback);
+
+      if (tag === null)
+        return canvas;
+      return canvas.html;
+    }
+  ,
+};
+
+phoxy._RenderSubsystem._ = {};
+phoxy._RenderSubsystem._.render =
+{
   PrepareCanvas : function(tag)
     {
       if (tag === undefined)
         tag = '<div>';
       var vanilla_tag = tag.substring(1, tag.length - 1);
 
-      var id =  phoxy.GenerateUniqueID();
+      var id =  phoxy._.internal.GenerateUniqueID();
       var obj = document.createElement(vanilla_tag);
       obj.setAttribute('id', id);
       var div = obj.outerHTML;
@@ -14,24 +34,9 @@ phoxy._RenderSubsystem =
       return { id: id, obj: obj, html: div };
     }
   ,
-  DeferRender : function (ejs, data, rendered_callback, tag)
-    {
-      phoxy.Log(4, "phoxy.DeferRender", arguments);
-      if (tag === undefined)
-        tag = '<defer_render>';
-      var canvas = phoxy.PrepareCanvas(tag);
-      var id = canvas.id;
-
-      phoxy.RenderReplace(id, ejs, data, rendered_callback);
-
-      if (tag === null)
-        return canvas;
-      return canvas.html;
-    }
-  ,
   AsyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
     { // AsyncRender strategy: for production
-      phoxy.Fancy(ejs, data, function(obj, ejs, data)
+      phoxy._.render.Fancy(ejs, data, function(obj, ejs, data)
       {
         if (typeof obj === 'undefined')
         {
@@ -41,7 +46,7 @@ phoxy._RenderSubsystem =
 
         // Potential cascade memleak
         // Should clear listeners with callback
-        phoxy.Appeared(target, function()
+        phoxy._.time.Appeared(target, function()
         {
           difference.call(phoxy, target, obj.html, arguments);
           for (var k in obj.defer)
@@ -58,9 +63,9 @@ phoxy._RenderSubsystem =
   ,
   SyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
     { // SyncRender strategy: for debug/develop purposes
-      phoxy.Appeared(target, function()
+      phoxy._.time.Appeared(target, function()
       {
-        phoxy.Fancy(ejs, data, function(obj, ejs, data)
+        phoxy._.render.Fancy(ejs, data, function(obj, ejs, data)
         {
           if (typeof obj === 'undefined')
           {
@@ -88,7 +93,7 @@ phoxy._RenderSubsystem =
       {
         document.getElementById(target).innerHTMl = html;
       });
-      phoxy.RenderStrategy.apply(this, args);
+      phoxy._.render.RenderStrategy.apply(this, args);
     }
   ,
   RenderReplace : function (target, ejs, data, rendered_callback)
@@ -100,7 +105,7 @@ phoxy._RenderSubsystem =
         that.insertAdjacentHTML("afterEnd", html);
         that.parentNode.removeChild(that);
       });
-      phoxy.RenderStrategy.apply(this, args);
+      phoxy._.render.RenderStrategy.apply(this, args);
     }
   ,
   Render : function (design, data, callback, is_phoxy_internal_call)
@@ -138,7 +143,7 @@ phoxy._RenderSubsystem =
         if (Array.isArray(args[i]))
         {
           args[i] = phoxy.ConstructURL(args[i]);
-          return phoxy.Fancy.apply(this, args);
+          return phoxy._.render.Fancy.apply(this, args);
         }
 
       phoxy.Log(6, "phoxy.Fancy", arguments);
@@ -190,7 +195,7 @@ phoxy._RenderSubsystem =
           var rpc = args[0];
           FancyServerRequest(rpc, function(obj)
           {
-            phoxy.Fancy(obj, args[1], args[2], args[3]);
+            phoxy._.render.Fancy(obj, args[1], args[2], args[3]);
           });
           return;
         }
@@ -206,7 +211,7 @@ phoxy._RenderSubsystem =
 
         HandleServerAnswerAndInvokeCallback(obj, function()
         {
-          phoxy.Fancy(design, data, callback, args[3]);
+          phoxy._.render.Fancy(design, data, callback, args[3]);
         })
 
         return;
@@ -229,7 +234,7 @@ phoxy._RenderSubsystem =
       function DataLoadedCallback(data)
       {
         data = data || {};
-        phoxy.Fancy(args[0], data, args[2], args[3]);
+        phoxy._.render.Fancy(args[0], data, args[2], args[3]);
       }
 
       if (typeof(args[1]) === 'function')
@@ -283,7 +288,7 @@ phoxy._RenderSubsystem =
 // [c2] ////////
         function DetermineAsync(design)
         {
-          phoxy.Fancy(design, data, args[2], args[3]);
+          phoxy._.render.Fancy(design, data, args[2], args[3]);
         }
 
         design = design(data, DetermineAsync);
@@ -292,10 +297,11 @@ phoxy._RenderSubsystem =
       }
 
       var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
-      html = phoxy.Render(ejs_location, data, undefined, true);
+      html = phoxy._.render.Render(ejs_location, data, undefined, true);
 
       if (!raw_output)
         html = html.html;
       callback(html, design, data);
     }
+  ,
 };
