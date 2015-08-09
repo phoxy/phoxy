@@ -2,7 +2,7 @@ phoxy._ApiSubsystem =
 {
   ApiAnswer : function(answer, callback)
     {
-      if (answer.error)
+      if (answer.error !== undefined)
       {
         phoxy._.api.keyword.error(answer, callback);
         return;
@@ -88,7 +88,7 @@ phoxy._ApiSubsystem._.api =
     {
       function ScriptsFiresUp()
       {
-        phoxy._.api.FindRouteline(answer.routeline, answer)();
+        phoxy._.api.keyword.routeline(answer, callback);
         if (callback)
           callback(answer);
         if (!phoxy.state.loaded)
@@ -96,38 +96,7 @@ phoxy._ApiSubsystem._.api =
       }
       if (answer.design === undefined)
         return ScriptsFiresUp();
-
-      var canvas = phoxy._.render.PrepareCanvas('<render>');
-      var id = canvas.id;
-      var render_id = id;
-
-      var element = canvas.html;
-
-      var url = phoxy.Config()['ejs_dir'] + "/" + answer.design;
-      phoxy._.api.ForwardDownload(url + ".ejs", function()
-      {
-        if (answer.replace === undefined)
-          if (answer.result === undefined)
-            document.getElementsByTagName('body')[0].appendChild(canvas.obj);
-          else if (typeof answer.result === 'string')
-            document.getElementById(answer.result).innerHTML = element;
-          else
-            for (var k in answer.result)
-            {
-              var v = document.getElementById(answer.result[k]);
-              if (v != null)
-                v.innerHTML = element;
-            }
-
-        else
-          render_id = answer.replace;
-
-        phoxy._.render.RenderReplace(
-          render_id,
-          answer.design,
-          answer.data || {},
-          ScriptsFiresUp);
-      });
+      phoxy._.api.keyword.design(answer, callback, ScriptsFiresUp);
     }
   ,
   FindRouteline : function(routeline)
@@ -235,5 +204,52 @@ phoxy._ApiSubsystem._.api.keyword =
       }
 
       phoxy._.api.FindRouteline(answer.before)(AfterBefore, answer);
+    }
+  ,
+  routeline: function(answer, callback)
+    {
+      phoxy._.api.FindRouteline(answer.routeline, answer)();
+    }
+  ,
+  design: function(answer, callback, next)
+    {
+      var canvas = phoxy._.render.PrepareCanvas('<render>');
+
+      var url = phoxy.Config()['ejs_dir'] + "/" + answer.design;
+      phoxy._.api.ForwardDownload(url + ".ejs", function()
+      {
+        if (answer.replace !== undefined)
+          phoxy._.api.keyword.replace(answer, callback, canvas);
+        else if (answer.result !== undefined)
+          phoxy._.api.keyword.result(answer, callback, canvas);
+        else
+          document.getElementsByTagName('body')[0].appendChild(canvas.obj);
+
+        phoxy._.render.RenderReplace(
+          canvas.id,
+          answer.design,
+          answer.data || {},
+          next);
+      });
+
+      return canvas;
+    }
+  ,
+  replace: function(answer, callback, canvas)
+    {
+      canvas.id = answer.replace;
+    }
+  ,
+  result: function(answer, callback, canvas)
+    {
+      if (typeof answer.result === 'string')
+        return document.getElementById(answer.result).innerHTML = canvas.html;
+
+      for (var k in answer.result)
+      {
+        var v = document.getElementById(answer.result[k]);
+        if (v != null)
+          v.innerHTML = canvas.html;
+      }
     }
 };
