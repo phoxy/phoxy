@@ -56,16 +56,16 @@ phoxy._ApiSubsystem =
   ,
   ApiRequest : function(url, callback)
     {
-      if (phoxy._.deprecated.IsObjectOptionalDetected.apply(this, arguments))
-        phoxy._.deprecated.ObjectOptional(phoxy.MenuCall, arguments);
+      if (phoxy._.deprecated.ObjectOptionalRelaunch(this, phoxy.ApiRequest, arguments))
+        return;
 
       phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
     }
   ,
   MenuCall : function(url, callback)
     {
-      if (phoxy._.deprecated.IsObjectOptionalDetected.apply(this, arguments))
-        phoxy._.deprecated.ObjectOptional(phoxy.MenuCall, arguments);
+      if (phoxy._.deprecated.ObjectOptionalRelaunch(this, phoxy.MenuCall, arguments))
+        return;
 
       phoxy.ChangeURL(url);
       phoxy.ApiRequest(url, callback);

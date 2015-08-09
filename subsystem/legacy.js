@@ -9,7 +9,7 @@ phoxy._LegacyLand =
 
 phoxy._LegacyLand._ = {};
 phoxy._LegacyLand._.deprecated = {
-  IsObjectOptionalDetected : function(arguments)
+  IsObjectOptionalDetected : function()
     {
       if (arguments.length !== 3)
         return false;
@@ -30,5 +30,13 @@ phoxy._LegacyLand._.deprecated = {
         url = [url].concat(args[1]);
 
       return method.call(this, url, args[2]);
+    }
+  ,
+  ObjectOptionalRelaunch : function(method, args)
+    {
+      if (!phoxy._.deprecated.IsObjectOptionalDetected.apply(this, args))
+        return false;
+      phoxy._.deprecated.ObjectOptional(method, args);
+      return true;
     }
 }
