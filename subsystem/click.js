@@ -41,7 +41,10 @@ phoxy._ClickHook._.click =
       if (url[0] === '/')
         url = url.substring(1);
 
-      phoxy.MenuCall(url);
+      if (not_push)
+        phoxy.ApiRequest(url);
+      else
+        phoxy.MenuCall(url);
       return false;
     }
   ,
