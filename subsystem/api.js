@@ -3,13 +3,10 @@ phoxy._ApiSubsystem =
   ApiAnswer : function(answer, callback)
     {
       if (answer.error !== undefined)
-      {
-        phoxy._.api.keyword.error(answer, callback);
-        return;
-      }
+        return phoxy._.api.keyword.error(answer, callback);
 
       if (answer.reset !== undefined)
-        phoxy._.api.keyword.reset(answer, callback);
+        return phoxy._.api.keyword.reset(answer, callback);
 
       function Ready()
       {
@@ -19,10 +16,7 @@ phoxy._ApiSubsystem =
           phoxy._.api.keyword.before(answer, callback, phoxy._.api.ScriptsLoaded);
       }
 
-      if (answer.script)
-        phoxy._.api.keyword.script(answer, callback, Ready);
-      else
-        Ready();
+      phoxy._.api.IfKeyword(answer, callback, "script", Ready);
     }
   ,
   AJAX : function(url, callback, params)
@@ -84,6 +78,14 @@ phoxy._ApiSubsystem =
 phoxy._ApiSubsystem._ = {};
 phoxy._ApiSubsystem._.api =
 {
+  IfKeyword : function(answer, callback, keyword, next)
+    {
+      if (answer[keyword] !== undefined)
+        phoxy._.api.keyword[keyword](answer, callback, next);
+      else if (next !== undefined)
+        next(answer, callback);
+    }
+  ,
   ScriptsLoaded : function(answer, callback)
     {
       function ScriptsFiresUp()
@@ -94,9 +96,8 @@ phoxy._ApiSubsystem._.api =
         if (!phoxy.state.loaded)
           phoxy._.internal.Load();
       }
-      if (answer.design === undefined)
-        return ScriptsFiresUp();
-      phoxy._.api.keyword.design(answer, callback, ScriptsFiresUp);
+
+      phoxy._.api.IfKeyword(answer, callback, "design", ScriptsFiresUp);
     }
   ,
   FindRouteline : function(routeline)
@@ -215,8 +216,8 @@ phoxy._ApiSubsystem._.api.keyword =
     {
       var canvas = phoxy._.render.PrepareCanvas('<render>');
 
-      var url = phoxy.Config()['ejs_dir'] + "/" + answer.design;
-      phoxy._.api.ForwardDownload(url + ".ejs", function()
+      var url = phoxy.Config()['ejs_dir'] + "/" + answer.design + ".ejs";
+      phoxy._.api.ForwardDownload(url, function()
       {
         if (answer.replace !== undefined)
           phoxy._.api.keyword.replace(answer, callback, canvas);
