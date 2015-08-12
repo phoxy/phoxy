@@ -30,6 +30,11 @@ phoxy._ApiSubsystem =
       phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function(response)
         {
           data = JSON.parse(response);
+
+          // http://stackoverflow.com/questions/4215737/convert-array-to-object
+          if (Array.isArray(data.data))
+            data.data = data.data.reduce(function(o, v, i) { o[i] = v; return o; });
+
           if (params == undefined)
             params = [];
           params.unshift(data);
