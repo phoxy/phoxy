@@ -10,7 +10,7 @@ phoxy._TimeSubsystem =
       var func = callback;
       func.bind(this);
 
-      if (time == -1)
+      if (time === -1)
         func();
       else
         setTimeout(func, time);
@@ -34,9 +34,9 @@ phoxy._TimeSubsystem._.time =
         check_timeout = 60, // 1 minute for render to complete
         check_delay = 500; // check every 500ms
 
-      if (timeout != undefined)
+      if (timeout !== undefined)
         check_timeout = timeout;
-      if (check_every != undefined)
+      if (check_every !== undefined)
         check_delay = check_every;
 
       var func = function()
@@ -72,7 +72,7 @@ phoxy._TimeSubsystem._.time =
       }
       function IsDivAppeared()
       {
-        return Div() != null;
+        return Div() !== null;
       }
 
       phoxy.Defer(function()
@@ -88,7 +88,7 @@ phoxy._TimeSubsystem._.time =
     {
       function IsDivDisappeared()
       {
-        return document.getElementById(jquery_selector) == null;
+        return document.getElementById(jquery_selector) === null;
       }
 
       phoxy.Defer(function()

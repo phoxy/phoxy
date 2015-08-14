@@ -33,12 +33,12 @@ phoxy._ApiSubsystem =
 
           // http://stackoverflow.com/questions/4215737/convert-array-to-object
           if (Array.isArray(data.data))
-            if (data.data.length == 0)
+            if (data.data.length === 0)
               data.data = {};
             else
               data.data = data.data.reduce(function(o, v, i) { o[i] = v; return o; });
 
-          if (params == undefined)
+          if (params === undefined)
             params = [];
           params.unshift(data);
           callback.apply(this, params);

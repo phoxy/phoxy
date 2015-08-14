@@ -37,14 +37,14 @@ phoxy._.EarlyStage.DependenciesLoaded = function()
     return setTimeout(arguments.callee, 10);
   phoxy.state.runlevel += 0.5; // because config downloaded
 
-  if (typeof phoxy._.prestart.OnBeforeCompile == 'function')
+  if (typeof phoxy._.prestart.OnBeforeCompile === 'function')
     phoxy._.prestart.OnBeforeCompile();
 
   phoxy._.EarlyStage.Compile();
-  if (typeof phoxy.Config().verbose != 'undefined')
+  if (typeof phoxy.Config().verbose !== 'undefined')
     phoxy.state.verbose = phoxy.Config().verbose;
 
-  if (typeof phoxy._.prestart.OnAfterCompile == 'function')
+  if (typeof phoxy._.prestart.OnAfterCompile === 'function')
     phoxy._.prestart.OnAfterCompile();
 
 
@@ -54,10 +54,29 @@ phoxy._.EarlyStage.DependenciesLoaded = function()
   // Entering runlevel 3, compilation finished
   phoxy.state.runlevel += 0.5;
 
-  var initial_client_code = 0;
-
   if (typeof phoxy._.prestart.OnBeforeFirstApiCall === 'function')
     phoxy._.prestart.OnBeforeFirstApiCall();
+
+  var initial_client_code = 0;
+  var total_amount = 0;
+
+  function InitialCodeInvoke(script)
+  {
+    phoxy.ApiRequest(
+      script.getAttribute('phoxy'),
+      function()
+      {
+        phoxy.state.runlevel += 1 / total_amount;
+        phoxy.Defer(function()
+        { // Be sure that zero reached only once
+          if (--initial_client_code)
+            return;
+          if (typeof phoxy._.prestart.OnInitialClientCodeComplete === 'function')
+            phoxy._.prestart.OnInitialClientCodeComplete();
+        });
+      });
+  }
+
   // Invoke client code
   var scripts = document.getElementsByTagName('script');
   for (var i = 0; i < scripts.length; i++)
@@ -66,22 +85,9 @@ phoxy._.EarlyStage.DependenciesLoaded = function()
     else
     {
       initial_client_code++;
-      phoxy.ApiRequest(
-        scripts[i].getAttribute('phoxy'),
-        function()
-        {
-          phoxy.state.runlevel += 1 / total_amount;
-          phoxy.Defer(function()
-          { // Be sure that zero reached only once
-            if (--initial_client_code)
-              return;
-            if (typeof phoxy._.prestart.OnInitialClientCodeComplete === 'function')
-              phoxy._.prestart.OnInitialClientCodeComplete();
-          });
-        });
+      total_amount++;
+      InitialCodeInvoke(scripts[i]);
     }
-
-   var total_amount = initial_client_code;
 };
 
 phoxy._.EarlyStage.Compile = function()

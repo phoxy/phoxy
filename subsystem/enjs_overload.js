@@ -62,10 +62,11 @@ phoxy._OverrideENJS._.enjs =
   ,
   hook_first: function(result)
     {
+      var root;
       while (true)
       {
         if (typeof root === 'undefined')
-          var root = result;
+          root = result;
         else
           root = root.nextSibling;
 
@@ -117,6 +118,7 @@ phoxy._OverrideENJS._.enjs =
         that.CheckIsCompleted.call(that.across);
       }
 
+      var OriginDefer = arguments.callee.origin;
       if (phoxy.state.sync_cascade)
         return OriginDefer.call(this, CBHook, time);
       if (typeof that.defer === 'undefined')
@@ -124,7 +126,6 @@ phoxy._OverrideENJS._.enjs =
       if (typeof time === 'undefined')
         return that.defer.push(CBHook);
 
-      var OriginDefer = arguments.callee.origin;
       that.defer.push(function()
       {
         return OriginDefer(CBHook, time);

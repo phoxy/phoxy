@@ -49,7 +49,7 @@ phoxy._InternalCode =
       else
         method = "debug";
       console[method].apply(console, args);
-      if (level == 0)
+      if (level === 0)
         debugger;
     }
   ,
