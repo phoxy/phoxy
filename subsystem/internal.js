@@ -60,8 +60,8 @@ phoxy._InternalCode._.internal =
 
       phoxy._.click.InitClickHook();
 
-      //if (!phoxy._.prestart.skip_initiation)
-      //  phoxy.ApiRequest(hash);
+      if (phoxy._.prestart.no_home_call === undefined)
+        phoxy.ApiRequest(location.pathname.substr(1) + location.search, phoxy._.prestart.OnFirstPageRendered);
     }
   ,
   GenerateUniqueID : function()
