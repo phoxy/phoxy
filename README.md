@@ -18,10 +18,10 @@ Core problems with 'common web' that forced me to develop this:
 
 ```html
 <button>Login</button>
-<% __context.DeferRender('login.modal') %>
+<% __this.DeferRender('login.modal') %>
 
-<%  __context.first().click(function() {
-  __context.first().next().modal('show');
+<%  __this.first().click(function() {
+  __this.first().next().modal('show');
 })
 ```
 
@@ -30,7 +30,7 @@ Each page uses 10-30 desugn elements, that could be reused. Each have his own DO
 ## Cascade resolution
 
 Design least to html string to be generated. Then this string injects into exsists DOM tree.
-Ether with absolute or relative navigation. Even if original server command was 'append to body', or 'rewrite #id', client command has more power. `__context.first().append(phoxy.DeferRender('module'))` overwrite this, and rendering results appends to login button.
+Ether with absolute or relative navigation. Even if original server command was 'append to body', or 'rewrite #id', client command has more power. `__this.first().append(phoxy.DeferRender('module'))` overwrite this, and rendering results appends to login button.
 
 ## Data caching system
 
@@ -46,9 +46,9 @@ In common internet, often, even if you already know data, and know how to work w
 Data driven development allow us to overload rendered design.
 
 ```html
-Welcome <%@ __context.username %>
+Welcome <%@ __this.username %>
 <%
-__context.chain(function()
+__this.chain(function()
 {
   this.first().find('.button').html('Logout');
 })
@@ -57,7 +57,7 @@ __context.chain(function()
 
 ```html
 <%
-__context.DeferRender('snippets/chain',
+__this.DeferRender('snippets/chain',
 {
   chain:
   [
