@@ -32,22 +32,14 @@ phoxy._InternalCode =
       var error_names = phoxy._.internal.error_names;
       var errorname = error_names[level < error_names.length ? level : error_names.length - 1];
 
-      var skipfirst = true;
-      var args = [errorname];
+      var args = [];
       for (var v in arguments)
-        if (skipfirst)
-          skipfirst = false;
-        else
-          args.push(arguments[v]);
-      var method;
-      if (level < 2)
-        method = "error";
-      else if (level === 2)
-        method = "warn";
-      else if (level === 3)
-        method = "info";
-      else
-        method = "debug";
+        args.push(arguments[v]);
+      args[0] = errorname;
+
+      var error_methods = phoxy._.internal.error_methods;
+      var method = error_methods[level < error_methods.length ? level : error_methods.length - 1];
+
       console[method].apply(console, args);
       if (level === 0)
         debugger;
@@ -98,4 +90,13 @@ phoxy._InternalCode._.internal =
     "INFO",
     "DEBUG",
   ],
+  error_methods :
+  [
+    "error",
+    "error",
+    "warn",
+    "info",
+    "log",
+    "debug",
+  ]
 };
