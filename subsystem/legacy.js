@@ -22,14 +22,18 @@ phoxy._LegacyLand._.deprecated = {
   ,
   ObjectOptional : function(method, args)
     {
+      var url = args[0];
+      var objopt = args[1];
+      var callback = args[2];
+
       phoxy.Log(1, "Object optional IS deprecated. Look at #91");
       if (typeof url !== 'string')
         return phoxy.Log(0, "Failed to soft translate call");
 
-      if (typeof args[1] !== 'undefined')
-        url = [url].concat(args[1]);
+      if (typeof objopt !== 'undefined')
+        url = [url].concat(objopt);
 
-      return method.call(this, url, args[2]);
+      return method.call(this, url, callback);
     }
   ,
   ObjectOptionalRelaunch : function(method, args)

@@ -23,7 +23,7 @@ phoxy._.EarlyStage.LoadConfig = function()
   phoxy._.EarlyStage.ajax(phoxy._.prestart.config || "api/phoxy", function(response)
   {
     phoxy.state.early.loaded++;
-    data = JSON.parse(response);
+    var data = JSON.parse(response);
     phoxy._.config = data;
     phoxy.state.conf_loaded = true;
   })

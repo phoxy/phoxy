@@ -29,7 +29,7 @@ phoxy._ApiSubsystem =
 
       phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function(response)
         {
-          data = JSON.parse(response);
+          var data = JSON.parse(response);
 
           // http://stackoverflow.com/questions/4215737/convert-array-to-object
           if (Array.isArray(data.data))
@@ -125,23 +125,23 @@ phoxy._ApiSubsystem._.api =
   ,
   ForwardDownload : function(url, callback_or_true_for_return)
     {
-      if (typeof(storage) === "undefined")
-        storage = {};
+      if (typeof(phoxy.state.storage) === "undefined")
+        phoxy.state.storage = {};
 
       if (callback_or_true_for_return === true)
-        return storage[url];
+        return phoxy.state.storage[url];
 
       function AddToLocalStorage(data)
       {
-        storage[url] = data;
+        phoxy.state.storage[url] = data;
         if (typeof(callback_or_true_for_return) === 'function')
           callback_or_true_for_return(data);
       }
 
-      if (storage[url] != undefined)
+      if (phoxy.state.storage[url] != undefined)
       {
         if (typeof(callback_or_true_for_return) === 'function')
-          callback_or_true_for_return(storage[url]);
+          callback_or_true_for_return(phoxy.state.storage[url]);
         return true;
       }
 
@@ -156,13 +156,13 @@ phoxy._ApiSubsystem._.api =
   ,
   Serialize : function(obj, nested_mode)
     {
-      json_encoded = JSON.stringify(obj);
-      send_string = json_encoded.substring(1, json_encoded.length - 1);
+      var json_encoded = JSON.stringify(obj);
+      var send_string = json_encoded.substring(1, json_encoded.length - 1);
 
       function EscapeReserved(str, reserved)
       {
-        reserved_characters = reserved.split('');
-        search_string = "\\" + reserved_characters.join("|\\");
+        var reserved_characters = reserved.split('');
+        var search_string = "\\" + reserved_characters.join("|\\");
         var regexp = new RegExp(search_string, "gi");
 
         return str.replace(regexp,
