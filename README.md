@@ -1,4 +1,5 @@
 [![Codacy Badge](https://www.codacy.com/project/badge/9acde29aed7e4accb8bd302520fb4608)](https://www.codacy.com/app/enelar/phoxy)
+[![Code Climate](https://codeclimate.com/github/phoxy/phoxy/badges/gpa.svg)](https://codeclimate.com/github/phoxy/phoxy)
 [![Packagist stable](https://img.shields.io/packagist/v/phoxy/phoxy.svg)](https://packagist.org/packages/phoxy/phoxy)
 [![Packagist unstable](https://img.shields.io/packagist/vpre/phoxy/phoxy.svg)](https://packagist.org/packages/phoxy/phoxy)
 [![Packagist license](https://img.shields.io/packagist/l/phoxy/phoxy.svg)](https://packagist.org/packages/phoxy/phoxy)
