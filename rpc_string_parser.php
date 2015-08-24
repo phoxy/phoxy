@@ -117,11 +117,14 @@ class rpc_string_parser
     $pos++;
     $argstring = substr($token, $pos, $length - $pos - 1);
 
-
     $unescaped = str_replace(
       ["%28", "%29", "%3F", "%23", "%5C"],
       ["(", ")", "?", "#", "\\"], $argstring);
     $args = json_decode("[$unescaped]");
+
+    if ($args === null && strlen($unescaped) > 0)
+      die("Error at rpc resolve: Failure at params decode. Is json valid?");
+
     return [$method, $args];
   }
 
