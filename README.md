@@ -11,7 +11,7 @@ Core problems with 'common web' that forced me to develop this:
 <ul>
   <li>Even small page change lead to whole page cache miss</li>
   <li>Same data (like user name/avatar) appears on several pages, and always should be redownloaded</li>
-  <li>Appending simple button with effects cause me to use absolute dom path navigation(or even #id)</li>
+  <li>Appending simple button with effects cause me to use absolute dom path navigation(i wanted $(this).click, relative context's)</li>
   <li>No way to decorate/reuse page block</li>
   <li>Design driven, not data driven development</li>
   <li>Everything with design should be computed on client(im talking about templating), server is only for data process</li>
@@ -23,11 +23,15 @@ Core problems with 'common web' that forced me to develop this:
 
 ```html
 <button>Login</button>
-<% __this.DeferRender('login.modal') %>
-
-<%  __this.first().click(function() {
-  __this.first().next().modal('show');
-})
+<%
+__this.DeferRender('login.modal')
+__this.first(function()
+{
+  __this.first().click(function()
+  {
+    __this.first().next().modal('show');
+  })
+});
 ```
 
 Each page uses 10-30 desugn elements, that could be reused. Each have his own DOM context.
