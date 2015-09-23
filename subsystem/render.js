@@ -187,7 +187,7 @@ phoxy._RenderSubsystem._.render =
       if (typeof(args[1]) === 'undefined')
       {
         if (typeof(args[0]) === 'undefined')
-          return callback(undefined, undefined, undefined);
+          return phoxy._.birth.Vision(callback);
 
         if (typeof(args[0]) === 'string')
 // [a0] ////////
@@ -257,7 +257,7 @@ phoxy._RenderSubsystem._.render =
 
       if (typeof(args[0]) === 'undefined')
 // [c0] ////////
-        return callback(html, design, data);
+        return phoxy._.birth.Vision(callback, design, data);
 
       if (typeof(args[0]) === 'string')
 // [c1] ////////
@@ -278,6 +278,11 @@ phoxy._RenderSubsystem._.render =
 
 phoxy._RenderSubsystem._.birth =
 {
+  Vision: function(cb, design, data)
+  {
+    return cb(design, data);
+  }
+  ,
   Prophecy: function(rpc)
   {
     var args = arguments;
