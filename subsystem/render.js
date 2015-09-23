@@ -224,8 +224,7 @@ phoxy._RenderSubsystem._.render =
       if (typeof(args[1]) === 'function')
       {
 // [b0] ////////
-        var data_load_functor = args[1];
-        data = data_load_functor(DataLoadedCallback);
+        data = phoxy._.birth.Pray(args[1], DataLoadedCallback);
         if (typeof(data) !== 'object')
           return; // data will be returned async
       }
@@ -308,6 +307,11 @@ phoxy._RenderSubsystem._.birth =
     {
       DataLoadedCallback(json.data);
     });
+  }
+  ,
+  Pray: function(data_load_functor, DataLoadedCallback)
+  {
+    return data_load_functor(DataLoadedCallback);
   }
   ,
   Mutation: function(design, data)
