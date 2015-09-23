@@ -286,13 +286,9 @@ phoxy._RenderSubsystem._.render =
       else if (typeof(args[0]) === 'function')
       {
 // [c2] ////////
-        function DetermineAsync(design)
-        {
-          phoxy._.render.Fancy(design, data, args[2], args[3]);
-        }
+        var mutation = phoxy._.birth.Mutation.apply(phoxy._.birth, arguments);
 
-        design = design(data, DetermineAsync);
-        if (typeof(design) !== 'string')
+        if (typeof(mutation) !== 'string')
           return; // Will be rendered later (async design determine)
       }
 
@@ -306,6 +302,15 @@ phoxy._RenderSubsystem._.birth =
   Envision: function()
   {
 
+  },
+  Mutation: function(design, data)
+  {
+    function DetermineAsync(design)
+    {
+      phoxy._.render.Fancy(design, data, args[2], args[3]);
+    }
+
+    return design(data, DetermineAsync);
   },
   Conceive: function(design, data, callback, raw_output)
   {
