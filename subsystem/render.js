@@ -184,8 +184,13 @@ phoxy._RenderSubsystem._.birth = function(will, spirit, callback, raw_output)
 {
   this.will = will;
   this.spirit = spirit;
-  this.callback = callback;
+  this.callback = function()
+  {
+    debugger;
+    callback.apply(this.arguments);
+  }
   this.raw_output = raw_output;
+  this.log = [];
 
   return this.Decision(will, spirit, callback);
 }
@@ -306,4 +311,9 @@ phoxy._RenderSubsystem._.birth.prototype =
         html = html.html;
       this.callback(html, design, data);
     }
+  ,
+  Log: function()
+  {
+    this.log.push(arguments);
+  }
 }
