@@ -161,38 +161,6 @@ phoxy._RenderSubsystem._.render =
   ,
   Fancy : function(design, data, callback, raw_output)
     {
-      var html;
-
-      /* Rendering
-       * [c0] phoxy.Fancy(undefined, NOT undefined, anytype)
-       * * Only invoking callback with prepared data
-       * * Used when design determining dynamically
-       *
-       * [c1] phoxy.Fancy(string, NOT undefined, anytype)
-       * * First parameter is EJS string, same as in 'design' keyword
-       *
-       * [c2] phoxy.Fancy(function, NOT undefined, anytype)
-       * * First paremeter if method which determine design in runtime
-       * * Just same as [b0] for data preparing do.
-       */
-
-      if (typeof(args[0]) === 'undefined')
-// [c0] ////////
-        return phoxy._.birth.Vision(callback, design, data);
-
-      if (typeof(args[0]) === 'string')
-// [c1] ////////
-        design = args[0];
-      else if (typeof(args[0]) === 'function')
-      {
-// [c2] ////////
-        var mutation = phoxy._.birth.Mutation.apply(phoxy._.birth, arguments);
-
-        if (typeof(mutation) !== 'string')
-          return; // Will be rendered later (async design determine)
-      }
-
-      phoxy._.birth.Conceive(design, data, callback, raw_output);
     }
   ,
 };
@@ -219,6 +187,7 @@ phoxy._RenderSubsystem._.birth =
         return phoxy._.birth.Fortune(args[0], callback);
       if (typeof args[1] !== 'object')
         return phoxy._.birth.Hope(args[0], args[1], callback);
+      return phoxy._.birth.Fate(args[0]. args[1], callback);
     }
   ,
   Fortune: function(word, callback)
@@ -255,8 +224,15 @@ phoxy._RenderSubsystem._.birth =
         phoxy.Log(0, "birth.Hope", idea, "(Failed data receive)");
     }
   ,
-  Fate: function()
+  Fate: function(design, data, callback)
     {
+      if (typeof(design) === 'undefined')
+        return phoxy._.birth.Vision(callback, design, data);
+      else if (typeof(design) === 'function')
+        design = phoxy._.birth.Mutation.apply(phoxy._.birth, arguments);
+
+      if (typeof(design) === 'string')
+        return phoxy._.birth.Conceive(design, data, callback, raw_output);
     }
   ,
   Vision: function(cb, design, data)
