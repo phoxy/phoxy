@@ -159,22 +159,14 @@ phoxy._RenderSubsystem._.render =
     });
   }
   ,
-  Fancy : function(design, data, callback, raw_output)
-    {
-    }
-  ,
-};
-
-phoxy._RenderSubsystem._.birth =
-{
-  Decision: function()
+  Fancy : function()
     {
       var args = arguments;
       for (var i = 0; i < 2; i++)
         if (Array.isArray(args[i]))
         {
           args[i] = phoxy.ConstructURL(args[i]);
-          return phoxy._.render.Decision.apply(this, args);
+          return phoxy._.render.Fancy.apply(this, args);
         }
 
       phoxy.Log(6, "phoxy.Fancy", arguments);
@@ -183,11 +175,20 @@ phoxy._RenderSubsystem._.birth =
       if (typeof(callback) === 'undefined')
         callback = function (){};
 
-      if (typeof args[1] === 'undefined')
-        return phoxy._.birth.Fortune(args[0], callback);
-      if (typeof args[1] !== 'object')
-        return phoxy._.birth.Hope(args[0], args[1], callback);
-      return phoxy._.birth.Fate(args[0]. args[1], callback);
+      return phoxy._.birth.Decision(args[0], args[1], callback);
+    }
+  ,
+};
+
+phoxy._RenderSubsystem._.birth =
+{
+  Decision: function(will, spirit, callback)
+    {
+      if (typeof spirit === 'undefined')
+        return phoxy._.birth.Fortune(will, callback);
+      if (typeof spirit !== 'object')
+        return phoxy._.birth.Hope(will, spirit, callback);
+      return phoxy._.birth.Fate(will, spirit, callback);
     }
   ,
   Fortune: function(word, callback)
