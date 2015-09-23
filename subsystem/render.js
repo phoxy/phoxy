@@ -175,30 +175,39 @@ phoxy._RenderSubsystem._.render =
       if (typeof(callback) === 'undefined')
         callback = function (){};
 
-      return phoxy._.birth.Decision(args[0], args[1], callback);
+      return new phoxy._.birth(args[0], args[1], callback);
     }
   ,
 };
 
-phoxy._RenderSubsystem._.birth =
+phoxy._RenderSubsystem._.birth = function(will, spirit, callback)
+{
+  this.will = will;
+  this.spirit = spirit;
+  this.callback = callback;
+
+  return this.Decision(will, spirit, callback);
+}
+
+phoxy._RenderSubsystem._.birth.prototype =
 {
   Decision: function(will, spirit, callback)
     {
       if (typeof spirit === 'undefined')
-        return phoxy._.birth.Fortune(will, callback);
+        return this.Fortune(will, callback);
       if (typeof spirit !== 'object')
-        return phoxy._.birth.Hope(will, spirit, callback);
-      return phoxy._.birth.Fate(will, spirit, callback);
+        return this.Hope(will, spirit, callback);
+      return this.Fate(will, spirit, callback);
     }
   ,
   Fortune: function(word, callback)
     {
       if (typeof(word) === 'undefined')
-        return phoxy._.birth.Vision(callback);
+        return this.Vision(callback);
       else if (typeof(word) === 'string')
-        return phoxy._.birth.Prophecy(word);
+        return this.Prophecy(word);
       else if (typeof(word) !== 'object')
-        return phoxy._.birth.Presage(word);
+        return this.Presage(word);
       phoxy.Log(0, "birth.Fortune", word, "(Failed object recognize)");
     }
   ,
@@ -210,14 +219,14 @@ phoxy._RenderSubsystem._.birth =
       function DataLoadedCallback(data)
       {
         data = data || {};
-        phoxy._.birth.Decision(args[0], data, args[2], args[3]);
+        this.Decision(args[0], data, args[2], args[3]);
       }
 
       if (typeof(idea) === 'string')
-        return phoxy._.birth.Desire(idea, DataLoadedCallback);
+        return this.Desire(idea, DataLoadedCallback);
       else if (typeof(idea) === 'function')
       {
-        var data = phoxy._.birth.Pray(args[1], DataLoadedCallback);
+        var data = this.Pray(args[1], DataLoadedCallback);
         if (typeof(data) === 'object')
           DataLoadedCallback(data);
       }
@@ -228,12 +237,12 @@ phoxy._RenderSubsystem._.birth =
   Fate: function(design, data, callback)
     {
       if (typeof(design) === 'undefined')
-        return phoxy._.birth.Vision(callback, design, data);
+        return this.Vision(callback, design, data);
       else if (typeof(design) === 'function')
-        design = phoxy._.birth.Mutation.apply(phoxy._.birth, arguments);
+        design = this.Mutation.apply(this, arguments);
 
       if (typeof(design) === 'string')
-        return phoxy._.birth.Conceive(design, data, callback, raw_output);
+        return this.Conceive(design, data, callback, raw_output);
     }
   ,
   Vision: function(cb, design, data)
