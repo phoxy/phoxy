@@ -175,16 +175,17 @@ phoxy._RenderSubsystem._.render =
       if (typeof(callback) === 'undefined')
         callback = function (){};
 
-      return new phoxy._.birth(args[0], args[1], callback);
+      return new phoxy._.birth(args[0], args[1], callback, true);
     }
   ,
 };
 
-phoxy._RenderSubsystem._.birth = function(will, spirit, callback)
+phoxy._RenderSubsystem._.birth = function(will, spirit, callback, raw_output)
 {
   this.will = will;
   this.spirit = spirit;
   this.callback = callback;
+  this.raw_output = raw_output;
 
   return this.Decision(will, spirit, callback);
 }
