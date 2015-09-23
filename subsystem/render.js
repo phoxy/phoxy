@@ -136,6 +136,21 @@ phoxy._RenderSubsystem._.render =
       return html;
     }
   ,
+  HandleServerAnswerAndInvokeCallback : function(answer, cb)
+    {
+      var obj = EJS.IsolateContext(answer);
+
+      // Those removed because we dont need to render anything
+      delete obj.design;
+      // Those ignored since it phoxy.Fancy.(low level rendering) Place to render already choosed
+      delete obj.result;
+      delete obj.replace;
+      phoxy.ApiAnswer(obj, function()
+      {
+        cb(answer);
+      });
+    }
+  ,
   Fancy : function(design, data, callback, raw_output)
     {
       var args = arguments;
@@ -152,26 +167,11 @@ phoxy._RenderSubsystem._.render =
       if (typeof(callback) === 'undefined')
         callback = function (){};
 
-      function HandleServerAnswerAndInvokeCallback(answer, cb)
-      {
-        var obj = EJS.IsolateContext(answer);
-
-        // Those removed because we dont need to render anything
-        delete obj.design;
-        // Those ignored since it phoxy.Fancy.(low level rendering) Place to render already choosed
-        delete obj.result;
-        delete obj.replace;
-        phoxy.ApiAnswer(obj, function()
-        {
-          cb(answer);
-        });
-      }
-
       function FancyServerRequest(url, cb)
       {
         phoxy.AJAX(url, function(obj)
         {
-          HandleServerAnswerAndInvokeCallback(obj, cb);
+          phoxy._.render.HandleServerAnswerAndInvokeCallback(obj, cb);
         });
       }
 
@@ -209,7 +209,7 @@ phoxy._RenderSubsystem._.render =
         var design = obj.design;
         var data = obj.data || {};
 
-        HandleServerAnswerAndInvokeCallback(obj, function()
+        phoxy._.render.HandleServerAnswerAndInvokeCallback(obj, function()
         {
           phoxy._.render.Fancy(design, data, callback, args[3]);
         })
