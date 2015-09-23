@@ -187,7 +187,7 @@ phoxy._RenderSubsystem._.birth = function(will, spirit, callback, raw_output)
   this.callback = function()
   {
     debugger;
-    callback.apply(this.arguments);
+    callback.apply(this, arguments);
   }
   this.raw_output = raw_output;
   this.log = [];
@@ -199,6 +199,7 @@ phoxy._RenderSubsystem._.birth.prototype =
 {
   Decision: function(will, spirit)
     {
+      this.Log("Decision", arguments);
       if (typeof spirit === 'undefined')
         return this.Fortune(will);
       if (typeof spirit !== 'object')
@@ -208,6 +209,7 @@ phoxy._RenderSubsystem._.birth.prototype =
   ,
   Fortune: function(word)
     {
+      this.Log("Fortune", arguments);
       if (typeof(word) === 'undefined')
         return this.Vision();
       else if (typeof(word) === 'string')
@@ -219,6 +221,7 @@ phoxy._RenderSubsystem._.birth.prototype =
   ,
   Hope: function()
     {
+      this.Log("Hope", arguments);
       var args = arguments;
       var idea = args[1];
 
@@ -242,6 +245,7 @@ phoxy._RenderSubsystem._.birth.prototype =
   ,
   Fate: function(design, data)
     {
+      this.Log("Fate", arguments);
       if (typeof(design) === 'undefined')
         return this.Vision(design, data);
       else if (typeof(design) === 'function')
@@ -253,11 +257,13 @@ phoxy._RenderSubsystem._.birth.prototype =
   ,
   Vision: function(cb, design, data)
     {
+      this.Log("Vision", arguments);
       return cb(design, data);
     }
   ,
   Prophecy: function(rpc)
     {
+      this.Log("Prophecy", arguments);
       var args = arguments;
       phoxy._.render.FancyServerRequest(rpc, function(obj)
       {
@@ -267,6 +273,7 @@ phoxy._RenderSubsystem._.birth.prototype =
   ,
   Presage: function(obj)
     {
+      this.Log("Presage", arguments);
       var obj = args[0];
 
       // Maybe its wrong. Maybe i should ignore other params
@@ -281,6 +288,7 @@ phoxy._RenderSubsystem._.birth.prototype =
   ,
   Desire: function(rpc, DataLoadedCallback)
     {
+      this.Log("Desire", arguments);
       phoxy._.render.FancyServerRequest(rpc, function(json)
       {
         DataLoadedCallback(json.data);
@@ -289,11 +297,13 @@ phoxy._RenderSubsystem._.birth.prototype =
   ,
   Pray: function(data_load_functor, DataLoadedCallback)
     {
+      this.Log("Pray", arguments);
       return data_load_functor(DataLoadedCallback);
     }
   ,
   Mutation: function(design, data)
     {
+      this.Log("Mutation", arguments);
       function DetermineAsync(design)
       {
         phoxy._.render.Fancy(design, data, args[2], args[3]);
@@ -304,6 +314,7 @@ phoxy._RenderSubsystem._.birth.prototype =
   ,
   Conceive: function(design, data)
     {
+      this.Log("Conceive", arguments);
       var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
       var html = phoxy._.render.Render(ejs_location, data, undefined, true);
 
