@@ -296,12 +296,24 @@ phoxy._RenderSubsystem._.render =
           return; // Will be rendered later (async design determine)
       }
 
-      var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
-      html = phoxy._.render.Render(ejs_location, data, undefined, true);
-
-      if (!raw_output)
-        html = html.html;
-      callback(html, design, data);
+      phoxy._.birth.Conceive(design, data, callback, raw_output);
     }
   ,
+};
+
+phoxy._RenderSubsystem._.birth =
+{
+  Envision: function()
+  {
+
+  },
+  Conceive: function(design, data, callback, raw_output)
+  {
+    var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
+    var html = phoxy._.render.Render(ejs_location, data, undefined, true);
+
+    if (!raw_output)
+      html = html.html;
+    callback(html, design, data);
+  }
 };
