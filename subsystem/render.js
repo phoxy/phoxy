@@ -137,29 +137,6 @@ phoxy._RenderSubsystem._.render =
       return html;
     }
   ,
-  HandleServerAnswerAndInvokeCallback : function(answer, cb)
-    {
-      var obj = EJS.IsolateContext(answer);
-
-      // Those removed because we dont need to render anything
-      delete obj.design;
-      // Those ignored since it phoxy.Fancy.(low level rendering) Place to render already choosed
-      delete obj.result;
-      delete obj.replace;
-      phoxy.ApiAnswer(obj, function()
-      {
-        cb(answer);
-      });
-    }
-  ,
-  FancyServerRequest : function(url, cb)
-  {
-    phoxy.AJAX(url, function(obj)
-    {
-      phoxy._.render.HandleServerAnswerAndInvokeCallback(obj, cb);
-    });
-  }
-  ,
   Fancy : function()
     {
       var args = arguments;
