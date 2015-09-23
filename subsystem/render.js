@@ -191,19 +191,19 @@ phoxy._RenderSubsystem._.birth = function(will, spirit, callback)
 
 phoxy._RenderSubsystem._.birth.prototype =
 {
-  Decision: function(will, spirit, callback)
+  Decision: function(will, spirit)
     {
       if (typeof spirit === 'undefined')
-        return this.Fortune(will, callback);
+        return this.Fortune(will);
       if (typeof spirit !== 'object')
-        return this.Hope(will, spirit, callback);
-      return this.Fate(will, spirit, callback);
+        return this.Hope(will, spirit);
+      return this.Fate(will, spirit);
     }
   ,
-  Fortune: function(word, callback)
+  Fortune: function(word)
     {
       if (typeof(word) === 'undefined')
-        return this.Vision(callback);
+        return this.Vision();
       else if (typeof(word) === 'string')
         return this.Prophecy(word);
       else if (typeof(word) !== 'object')
@@ -234,15 +234,15 @@ phoxy._RenderSubsystem._.birth.prototype =
         phoxy.Log(0, "birth.Hope", idea, "(Failed data receive)");
     }
   ,
-  Fate: function(design, data, callback)
+  Fate: function(design, data)
     {
       if (typeof(design) === 'undefined')
-        return this.Vision(callback, design, data);
+        return this.Vision(design, data);
       else if (typeof(design) === 'function')
         design = this.Mutation.apply(this, arguments);
 
       if (typeof(design) === 'string')
-        return this.Conceive(design, data, callback, raw_output);
+        return this.Conceive(design, data);
     }
   ,
   Vision: function(cb, design, data)
@@ -269,7 +269,7 @@ phoxy._RenderSubsystem._.birth.prototype =
 
       phoxy._.render.HandleServerAnswerAndInvokeCallback(obj, function()
       {
-        phoxy._.render.Fancy(design, data, callback, args[3]);
+        phoxy._.render.Fancy(design, data, this.callback, args[3]);
       })
     }
   ,
@@ -296,13 +296,13 @@ phoxy._RenderSubsystem._.birth.prototype =
       return design(data, DetermineAsync);
     }
   ,
-  Conceive: function(design, data, callback, raw_output)
+  Conceive: function(design, data)
     {
       var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
       var html = phoxy._.render.Render(ejs_location, data, undefined, true);
 
-      if (!raw_output)
+      if (!this.raw_output)
         html = html.html;
-      callback(html, design, data);
+      this.callback(html, design, data);
     }
 }
