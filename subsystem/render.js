@@ -204,16 +204,7 @@ phoxy._RenderSubsystem._.render =
           throw "Failed phoxy.Fancy object recognize";
 
 // [a1] ////////
-        var obj = args[0];
-        // Maybe its wrong. Maybe i should ignore other params
-        var design = obj.design;
-        var data = obj.data || {};
-
-        phoxy._.render.HandleServerAnswerAndInvokeCallback(obj, function()
-        {
-          phoxy._.render.Fancy(design, data, callback, args[3]);
-        })
-
+        phoxy._.birth.Envision(args[0]);
         return;
       }
 
@@ -299,9 +290,18 @@ phoxy._RenderSubsystem._.render =
 
 phoxy._RenderSubsystem._.birth =
 {
-  Envision: function()
+  Envision: function(obj)
   {
+    var obj = args[0];
 
+    // Maybe its wrong. Maybe i should ignore other params
+    var design = obj.design;
+    var data = obj.data || {};
+
+    phoxy._.render.HandleServerAnswerAndInvokeCallback(obj, function()
+    {
+      phoxy._.render.Fancy(design, data, callback, args[3]);
+    })
   },
   Mutation: function(design, data)
   {
