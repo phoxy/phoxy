@@ -161,45 +161,6 @@ phoxy._RenderSubsystem._.render =
   ,
   Fancy : function(design, data, callback, raw_output)
     {
-      /* Data preparing
-       * [b0] phoxy.Fancy(anytype, function, anytype)
-       * * Generating data through function
-       * * Data could be returned directly (object only)
-       * *  or could be returned asynchronously with callback, as soon as it will be ready.
-       *
-       * [b1] phoxy.Fancy(anytype, string, anytype)
-       * * Requesting data with RPC
-       * * NOTICE: Every keywoards except data ARE ignored.
-       *
-       * [b2] phoxy.Fancy(anytype, object, anytype)
-       * * Serving with constructed object. Ready to render!
-       */
-
-      function DataLoadedCallback(data)
-      {
-        data = data || {};
-        phoxy._.render.Fancy(args[0], data, args[2], args[3]);
-      }
-
-      if (typeof(args[1]) === 'function')
-      {
-// [b0] ////////
-        data = phoxy._.birth.Pray(args[1], DataLoadedCallback);
-        if (typeof(data) !== 'object')
-          return; // data will be returned async
-      }
-      else if (typeof(args[1]) === 'string')
-      {
-// [b1] ////////
-        phoxy._.birth.Desire(args[1], DataLoadedCallback);
-        return;
-      }
-      else if (typeof(args[1]) !== 'object')
-        throw "Failed phoxy.Fancy data receive";
-      else
-// [b2] ////////
-        data = args[1];
-
       var html;
 
       /* Rendering
@@ -255,10 +216,12 @@ phoxy._RenderSubsystem._.birth =
         callback = function (){};
 
       if (typeof args[1] === 'undefined')
-        return phoxy._.birth.Hope(args[0], callback);
+        return phoxy._.birth.Fortune(args[0], callback);
+      if (typeof args[1] !== 'object')
+        return phoxy._.birth.Hope(args[0], args[1], callback);
     }
   ,
-  Hope: function(word, callback)
+  Fortune: function(word, callback)
     {
       if (typeof(word) === 'undefined')
         return phoxy._.birth.Vision(callback);
@@ -266,10 +229,33 @@ phoxy._RenderSubsystem._.birth =
         return phoxy._.birth.Prophecy(word);
       else if (typeof(word) !== 'object')
         return phoxy._.birth.Presage(word);
-      phoxy.Log(0, "Hope", word, "(Failed object recognize)");
+      phoxy.Log(0, "birth.Fortune", word, "(Failed object recognize)");
     }
   ,
-  Spirit: function()
+  Hope: function()
+    {
+      var args = arguments;
+      var idea = args[1];
+
+      function DataLoadedCallback(data)
+      {
+        data = data || {};
+        phoxy._.birth.Decision(args[0], data, args[2], args[3]);
+      }
+
+      if (typeof(idea) === 'string')
+        return phoxy._.birth.Desire(idea, DataLoadedCallback);
+      else if (typeof(idea) === 'function')
+      {
+        var data = phoxy._.birth.Pray(args[1], DataLoadedCallback);
+        if (typeof(data) === 'object')
+          DataLoadedCallback(data);
+      }
+      else
+        phoxy.Log(0, "birth.Hope", idea, "(Failed data receive)");
+    }
+  ,
+  Fate: function()
     {
     }
   ,
