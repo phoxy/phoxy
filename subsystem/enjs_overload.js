@@ -108,7 +108,7 @@ phoxy._OverrideENJS._.enjs =
   Defer: function(callback, time)
     {
       var that = this.escape();
-      that.log("Defer");
+      that.log("Defer", callback, time);
       that.recursive++;
       phoxy._.enjs.AlreadyFiredUp(that);
 
@@ -137,7 +137,7 @@ phoxy._OverrideENJS._.enjs =
   DeferCascade: function(callback)
     {
       var that = this.escape();
-      that.log("DeferCascade");
+      that.log("DeferCascade", callback);
       phoxy._.enjs.AlreadyFiredUp(that);
 
       if (typeof that.cascade === 'undefined')

@@ -189,7 +189,8 @@ phoxy._RenderSubsystem._.birth = function(will, spirit, callback, raw_output)
   console.time("phoxy.birth " + this.birth_id);
   this.callback = function()
   {
-    console.groupCollapsed("phoxy.birth", will, spirit);
+    console.groupCollapsed("phoxy.birth", will);
+      console.log(spirit);
       for (var k in this.log)
         console.log.apply(console, this.log[k]);
 
@@ -273,35 +274,24 @@ phoxy._RenderSubsystem._.birth.prototype =
   Prophecy: function(rpc)
     {
       this.Log("Prophecy", arguments);
-      var args = arguments;
-      phoxy._.render.FancyServerRequest(rpc, function(obj)
+      this.Plea(rpc, function(obj)
       {
-        phoxy._.render.Fancy(obj, args[1], args[2], args[3]);
+        this.Presage(obj);
       });
     }
   ,
   Presage: function(obj)
     {
       this.Log("Presage", arguments);
-      var obj = args[0];
 
       // Maybe its wrong. Maybe i should ignore other params
       var design = obj.design;
       var data = obj.data || {};
 
-      phoxy._.render.HandleServerAnswerAndInvokeCallback(obj, function()
+      this.Boon(obj, function()
       {
-        phoxy._.render.Fancy(design, data, this.callback, args[3]);
+        this.Decision(design, data, this.callback);
       })
-    }
-  ,
-  Desire: function(rpc, DataLoadedCallback)
-    {
-      this.Log("Desire", arguments);
-      phoxy._.render.FancyServerRequest(rpc, function(json)
-      {
-        DataLoadedCallback(json.data);
-      });
     }
   ,
   Pray: function(data_load_functor, DataLoadedCallback)
@@ -331,6 +321,42 @@ phoxy._RenderSubsystem._.birth.prototype =
         html = html.html;
       this.callback(html, design, data);
     }
+  ,
+  Desire: function(rpc, DataLoadedCallback)
+    {
+      this.Log("Desire", arguments);
+      this.Plea(rpc, function(json)
+      {
+        DataLoadedCallback(json.data);
+      });
+    }
+  ,
+  Plea: function(url, cb)
+    {
+      this.Log("Plea", arguments);
+      var that = this;
+      phoxy.AJAX(url, function(obj)
+      {
+        that.Boon(obj, cb);
+      });
+    }
+  ,
+  Boon: function(answer, cb)
+  {
+    this.Log("Boon", arguments);
+    var obj = EJS.IsolateContext(answer);
+
+    // Those removed because we dont need to render anything
+    delete obj.design;
+    // Those ignored since it phoxy.Fancy.(low level rendering) Place to render already choosed
+    delete obj.result;
+    delete obj.replace;
+    var that = this;
+    phoxy.ApiAnswer(obj, function()
+    {
+      cb.call(that, answer);
+    });
+  }
   ,
   Log: function()
     {
