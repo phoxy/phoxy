@@ -197,7 +197,7 @@ phoxy._RenderSubsystem._.render =
           throw "Failed phoxy.Fancy object recognize";
 
 // [a1] ////////
-        phoxy._.birth.Envision.apply(phoxy._.birth, args);
+        phoxy._.birth.Presage.apply(phoxy._.birth, args);
         return;
       }
 
@@ -292,7 +292,7 @@ phoxy._RenderSubsystem._.birth =
     });
   }
   ,
-  Envision: function(obj)
+  Presage: function(obj)
   {
     var obj = args[0];
 
