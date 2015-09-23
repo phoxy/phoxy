@@ -50,6 +50,7 @@ phoxy._OverrideENJS._.enjs =
       var escape = this.escape();
       if (--escape.recursive === 0)
       {
+        escape.log("FireUp");
         escape.fired_up = true;
         for (var k in escape.cascade)
           if (typeof (escape.cascade[k]) === 'function')
@@ -86,6 +87,7 @@ phoxy._OverrideENJS._.enjs =
   DeferRender: function(ejs, data, callback, tag)
     {
       var that = this.escape();
+      that.log("DeferRender", ejs, data);
       phoxy._.enjs.AlreadyFiredUp(that);
       that.recursive++;
       phoxy.state.RenderCalls++;
@@ -106,6 +108,7 @@ phoxy._OverrideENJS._.enjs =
   Defer: function(callback, time)
     {
       var that = this.escape();
+      that.log("Defer");
       that.recursive++;
       phoxy._.enjs.AlreadyFiredUp(that);
 
@@ -134,6 +137,7 @@ phoxy._OverrideENJS._.enjs =
   DeferCascade: function(callback)
     {
       var that = this.escape();
+      that.log("DeferCascade");
       phoxy._.enjs.AlreadyFiredUp(that);
 
       if (typeof that.cascade === 'undefined')

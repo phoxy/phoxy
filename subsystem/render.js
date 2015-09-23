@@ -110,6 +110,8 @@ phoxy._RenderSubsystem._.render =
   ,
   Render : function (design, data, callback, is_phoxy_internal_call)
     {
+      phoxy.Log(2, "phoxy.Render is OBSOLETE. Use phoxy.Fancy instead");
+
       if (data === undefined)
         data = {};
 
@@ -323,7 +325,7 @@ phoxy._RenderSubsystem._.birth.prototype =
     {
       this.Log("Conceive", arguments);
       var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
-      var html = phoxy._.render.Render(ejs_location, data, undefined, true);
+      var html = this.Render(ejs_location, data);
 
       if (!this.raw_output)
         html = html.html;
@@ -331,7 +333,33 @@ phoxy._RenderSubsystem._.birth.prototype =
     }
   ,
   Log: function()
+    {
+      this.log.push(arguments);
+    }
+  ,
+  Render: function(design, data)
   {
-    this.log.push(arguments);
+    var html;
+    if (design.indexOf(".ejs") === -1)
+        design += ".ejs";
+
+    var ejs;
+    //if (!phoxy.ForwardDownload(design))
+      ejs = new EJS({'url' : design});
+    //else
+    // ejs = new EJS({'text' : phoxy.ForwardDownload(design), 'name' : design});
+
+    var that = this;
+    function log()
+    {
+      that.Log.apply(that, arguments);
+    }
+
+    var obj = ejs.prepare(data);
+      obj.on_complete = this.callback;
+      obj.log = log;
+      ejs.execute(obj);
+
+    return obj;
   }
 }
