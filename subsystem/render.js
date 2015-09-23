@@ -161,46 +161,6 @@ phoxy._RenderSubsystem._.render =
   ,
   Fancy : function(design, data, callback, raw_output)
     {
-      var args = arguments;
-      for (var i = 0; i < 2; i++)
-        if (Array.isArray(args[i]))
-        {
-          args[i] = phoxy.ConstructURL(args[i]);
-          return phoxy._.render.Fancy.apply(this, args);
-        }
-
-      phoxy.Log(6, "phoxy.Fancy", arguments);
-
-      var callback = args[2];
-      if (typeof(callback) === 'undefined')
-        callback = function (){};
-
-      /*
-       * [a0] phoxy.Fancy(string, undefined, anytype)
-       * * Then it full RPC call, with fixed render place
-       * * (result/replace keywords ignoring)
-       *
-       * [a1] phoxy.Fancy(object, undefined, anytype)
-       * * Then params already constructed with object
-       * * NOTICE: All keywoards ARE interprenting
-       */
-      if (typeof(args[1]) === 'undefined')
-      {
-        if (typeof(args[0]) === 'undefined')
-          return phoxy._.birth.Vision(callback);
-
-        if (typeof(args[0]) === 'string')
-// [a0] ////////
-          return phoxy._.birth.Prophecy.apply(phoxy._.birth, arguments);
-
-        if (typeof(args[0]) !== 'object')
-          throw "Failed phoxy.Fancy object recognize";
-
-// [a1] ////////
-        phoxy._.birth.Presage.apply(phoxy._.birth, args);
-        return;
-      }
-
       /* Data preparing
        * [b0] phoxy.Fancy(anytype, function, anytype)
        * * Generating data through function
@@ -278,64 +238,99 @@ phoxy._RenderSubsystem._.render =
 
 phoxy._RenderSubsystem._.birth =
 {
+  Decision: function()
+    {
+      var args = arguments;
+      for (var i = 0; i < 2; i++)
+        if (Array.isArray(args[i]))
+        {
+          args[i] = phoxy.ConstructURL(args[i]);
+          return phoxy._.render.Decision.apply(this, args);
+        }
+
+      phoxy.Log(6, "phoxy.Fancy", arguments);
+
+      var callback = args[2];
+      if (typeof(callback) === 'undefined')
+        callback = function (){};
+
+      if (typeof args[1] === 'undefined')
+        return phoxy._.birth.Hope(args[0], callback);
+    }
+  ,
+  Hope: function(word, callback)
+    {
+      if (typeof(word) === 'undefined')
+        return phoxy._.birth.Vision(callback);
+      else if (typeof(word) === 'string')
+        return phoxy._.birth.Prophecy(word);
+      else if (typeof(word) !== 'object')
+        return phoxy._.birth.Presage(word);
+      phoxy.Log(0, "Hope", word, "(Failed object recognize)");
+    }
+  ,
+  Spirit: function()
+    {
+    }
+  ,
   Vision: function(cb, design, data)
-  {
-    return cb(design, data);
-  }
+    {
+      return cb(design, data);
+    }
   ,
   Prophecy: function(rpc)
-  {
-    var args = arguments;
-    phoxy._.render.FancyServerRequest(rpc, function(obj)
     {
-      phoxy._.render.Fancy(obj, args[1], args[2], args[3]);
-    });
-  }
+      var args = arguments;
+      phoxy._.render.FancyServerRequest(rpc, function(obj)
+      {
+        phoxy._.render.Fancy(obj, args[1], args[2], args[3]);
+      });
+    }
   ,
   Presage: function(obj)
-  {
-    var obj = args[0];
-
-    // Maybe its wrong. Maybe i should ignore other params
-    var design = obj.design;
-    var data = obj.data || {};
-
-    phoxy._.render.HandleServerAnswerAndInvokeCallback(obj, function()
     {
-      phoxy._.render.Fancy(design, data, callback, args[3]);
-    })
-  }
+      var obj = args[0];
+
+      // Maybe its wrong. Maybe i should ignore other params
+      var design = obj.design;
+      var data = obj.data || {};
+
+      phoxy._.render.HandleServerAnswerAndInvokeCallback(obj, function()
+      {
+        phoxy._.render.Fancy(design, data, callback, args[3]);
+      })
+    }
   ,
   Desire: function(rpc, DataLoadedCallback)
-  {
-    phoxy._.render.FancyServerRequest(rpc, function(json)
     {
-      DataLoadedCallback(json.data);
-    });
-  }
+      phoxy._.render.FancyServerRequest(rpc, function(json)
+      {
+        DataLoadedCallback(json.data);
+      });
+    }
   ,
   Pray: function(data_load_functor, DataLoadedCallback)
-  {
-    return data_load_functor(DataLoadedCallback);
-  }
+    {
+      return data_load_functor(DataLoadedCallback);
+    }
   ,
   Mutation: function(design, data)
-  {
-    function DetermineAsync(design)
     {
-      phoxy._.render.Fancy(design, data, args[2], args[3]);
-    }
+      function DetermineAsync(design)
+      {
+        phoxy._.render.Fancy(design, data, args[2], args[3]);
+      }
 
-    return design(data, DetermineAsync);
-  }
+      return design(data, DetermineAsync);
+    }
   ,
   Conceive: function(design, data, callback, raw_output)
-  {
-    var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
-    var html = phoxy._.render.Render(ejs_location, data, undefined, true);
+    {
+      var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
+      var html = phoxy._.render.Render(ejs_location, data, undefined, true);
 
-    if (!raw_output)
-      html = html.html;
-    callback(html, design, data);
-  }
-};
+      if (!raw_output)
+        html = html.html;
+      callback(html, design, data);
+    }
+}
