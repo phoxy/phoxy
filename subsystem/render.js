@@ -151,6 +151,14 @@ phoxy._RenderSubsystem._.render =
       });
     }
   ,
+  FancyServerRequest : function(url, cb)
+  {
+    phoxy.AJAX(url, function(obj)
+    {
+      phoxy._.render.HandleServerAnswerAndInvokeCallback(obj, cb);
+    });
+  }
+  ,
   Fancy : function(design, data, callback, raw_output)
     {
       var args = arguments;
@@ -167,14 +175,6 @@ phoxy._RenderSubsystem._.render =
       if (typeof(callback) === 'undefined')
         callback = function (){};
 
-      function FancyServerRequest(url, cb)
-      {
-        phoxy.AJAX(url, function(obj)
-        {
-          phoxy._.render.HandleServerAnswerAndInvokeCallback(obj, cb);
-        });
-      }
-
       /*
        * [a0] phoxy.Fancy(string, undefined, anytype)
        * * Then it full RPC call, with fixed render place
@@ -190,21 +190,14 @@ phoxy._RenderSubsystem._.render =
           return callback(undefined, undefined, undefined);
 
         if (typeof(args[0]) === 'string')
-        {
 // [a0] ////////
-          var rpc = args[0];
-          FancyServerRequest(rpc, function(obj)
-          {
-            phoxy._.render.Fancy(obj, args[1], args[2], args[3]);
-          });
-          return;
-        }
+          return phoxy._.birth.Prophecy.apply(phoxy._.birth, arguments);
 
         if (typeof(args[0]) !== 'object')
           throw "Failed phoxy.Fancy object recognize";
 
 // [a1] ////////
-        phoxy._.birth.Envision(args[0]);
+        phoxy._.birth.Envision.apply(phoxy._.birth, args);
         return;
       }
 
@@ -240,7 +233,7 @@ phoxy._RenderSubsystem._.render =
       {
 // [b1] ////////
         var rpc_url = args[1];
-        FancyServerRequest(rpc_url, function(json)
+        phoxy._.render.FancyServerRequest(rpc_url, function(json)
         {
           DataLoadedCallback(json.data);
         });
@@ -290,6 +283,15 @@ phoxy._RenderSubsystem._.render =
 
 phoxy._RenderSubsystem._.birth =
 {
+  Prophecy: function(rpc)
+  {
+    var args = arguments;
+    phoxy._.render.FancyServerRequest(rpc, function(obj)
+    {
+      phoxy._.render.Fancy(obj, args[1], args[2], args[3]);
+    });
+  }
+  ,
   Envision: function(obj)
   {
     var obj = args[0];
