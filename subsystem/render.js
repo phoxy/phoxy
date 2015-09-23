@@ -232,11 +232,7 @@ phoxy._RenderSubsystem._.render =
       else if (typeof(args[1]) === 'string')
       {
 // [b1] ////////
-        var rpc_url = args[1];
-        phoxy._.render.FancyServerRequest(rpc_url, function(json)
-        {
-          DataLoadedCallback(json.data);
-        });
+        phoxy._.birth.Desire(args[1], DataLoadedCallback);
         return;
       }
       else if (typeof(args[1]) !== 'object')
@@ -304,7 +300,16 @@ phoxy._RenderSubsystem._.birth =
     {
       phoxy._.render.Fancy(design, data, callback, args[3]);
     })
-  },
+  }
+  ,
+  Desire: function(rpc, DataLoadedCallback)
+  {
+    phoxy._.render.FancyServerRequest(rpc, function(json)
+    {
+      DataLoadedCallback(json.data);
+    });
+  }
+  ,
   Mutation: function(design, data)
   {
     function DetermineAsync(design)
@@ -313,7 +318,8 @@ phoxy._RenderSubsystem._.birth =
     }
 
     return design(data, DetermineAsync);
-  },
+  }
+  ,
   Conceive: function(design, data, callback, raw_output)
   {
     var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
