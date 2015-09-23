@@ -50,7 +50,6 @@ phoxy._OverrideENJS._.enjs =
       var escape = this.escape();
       if (--escape.recursive === 0)
       {
-        phoxy.Log(9, "phoxy.FireUp", [escape.name, escape]);
         escape.fired_up = true;
         for (var k in escape.cascade)
           if (typeof (escape.cascade[k]) === 'function')

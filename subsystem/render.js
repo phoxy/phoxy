@@ -113,7 +113,6 @@ phoxy._RenderSubsystem._.render =
       if (data === undefined)
         data = {};
 
-      phoxy.Log(5, "phoxy.Render", arguments);
       var html;
       if (design.indexOf(".ejs") === -1)
         design += ".ejs";
@@ -184,9 +183,17 @@ phoxy._RenderSubsystem._.birth = function(will, spirit, callback, raw_output)
 {
   this.will = will;
   this.spirit = spirit;
+  this.birth_id = phoxy._.internal.GenerateUniqueID();
+  console.time("phoxy.birth " + this.birth_id);
   this.callback = function()
   {
-    debugger;
+    console.groupCollapsed("phoxy.birth", will, spirit);
+      for (var k in this.log)
+        console.log.apply(console, this.log[k]);
+
+    console.timeEnd("phoxy.birth " + this.birth_id);
+    console.groupEnd();
+
     callback.apply(this, arguments);
   }
   this.raw_output = raw_output;
