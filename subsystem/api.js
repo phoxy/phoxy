@@ -27,7 +27,7 @@ phoxy._ApiSubsystem =
         if (typeof phoxy._.prestart.OnAjaxBegin === 'function')
           phoxy._.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
 
-      phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function(response)
+      phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function ajax_callback(response)
         {
           var data = JSON.parse(response);
 
@@ -184,7 +184,7 @@ phoxy._.api =
   ,
   PlugInKeyword : function(keyword, args)
   {
-    require([phoxy._.EarlyStage.subsystem_dir + "/" + keyword + ".js"], function()
+    require([phoxy._.EarlyStage.subsystem_dir + "/" + keyword + ".js"], function keyword_plugin()
     {
       if (phoxy._.api.keyword[keyword] === undefined)
         Log(0, "Keyword handler for '" + keyword + "' is missing");
@@ -194,7 +194,7 @@ phoxy._.api =
   ,
   KeywordMissing : function(keyword)
   {
-    return function()
+    return function auto_plugin_keyword()
     {
       return phoxy._.api.PlugInKeyword(keyword, arguments);
     };
@@ -242,7 +242,7 @@ phoxy._.api.keyword =
       var canvas = phoxy._.render.PrepareCanvas('<render>');
 
       var url = phoxy.Config()['ejs_dir'] + "/" + answer.design + ".ejs";
-      phoxy._.api.ForwardDownload(url, function()
+      phoxy._.api.ForwardDownload(url, function design_files_downloaded()
       {
         if (answer.replace !== undefined)
           phoxy._.api.keyword.replace(answer, callback, canvas);

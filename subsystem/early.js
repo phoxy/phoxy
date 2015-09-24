@@ -20,7 +20,7 @@ phoxy._.EarlyStage.ajax = function (url, callback, data, x)
 
 phoxy._.EarlyStage.LoadConfig = function()
 {
-  phoxy._.EarlyStage.ajax(phoxy._.prestart.config || "api/phoxy", function(response)
+  phoxy._.EarlyStage.ajax(phoxy._.prestart.config || "api/phoxy", function early_conf_loaded(response)
   {
     phoxy.state.early.loaded++;
     var data = JSON.parse(response);
@@ -64,10 +64,10 @@ phoxy._.EarlyStage.DependenciesLoaded = function()
   {
     phoxy.ApiRequest(
       script.getAttribute('phoxy'),
-      function()
+      function on_client_code_result()
       {
         phoxy.state.runlevel += 1 / total_amount;
-        phoxy.Defer(function()
+        phoxy.Defer(function when_client_code_applied()
         { // Be sure that zero reached only once
           if (--initial_client_code)
             return;

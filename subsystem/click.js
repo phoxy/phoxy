@@ -7,7 +7,7 @@ phoxy._.click =
 {
   InitClickHook: function()
     {
-      document.querySelector('body').addEventListener('click', function(event)
+      document.querySelector('body').addEventListener('click', function click_hook(event)
       {
         var target = event.target;
         while (true)

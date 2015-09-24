@@ -18,7 +18,7 @@ phoxy._TimeSubsystem =
   ,
   DDefer : function(callback, time)
     {
-      phoxy.Defer.call(this, function()
+      phoxy.Defer.call(this, function ddefer_callback()
       {
         phoxy.Defer.call(this, callback);
       }, time);
@@ -38,7 +38,7 @@ phoxy._.time =
       if (check_every !== undefined)
         check_delay = check_every;
 
-      var func = function()
+      var func = function required_event_occured()
       {
         if (!callback_condition())
           return;
@@ -52,7 +52,7 @@ phoxy._.time =
         if (i <= 0)
           return func();
 
-        phoxy.Defer(function()
+        phoxy.Defer(function waiting_for_event()
         {
           if (callback_condition())
             i = 0;
@@ -76,7 +76,7 @@ phoxy._.time =
 
       phoxy.Defer(function()
       {
-        phoxy._.time.WaitFor(IsDivAppeared, function()
+        phoxy._.time.WaitFor(IsDivAppeared, function dom_element_appeared()
         {
           phoxy.DDefer.call(Div(), callback, call_delay);
         }, timeout)
@@ -92,7 +92,7 @@ phoxy._.time =
 
       phoxy.Defer(function()
       {
-        phoxy._.time.WaitFor(IsDivDisappeared, function()
+        phoxy._.time.WaitFor(IsDivDisappeared, function dom_element_disappeared()
         {
           phoxy.DDefer(callback, call_delay);
         }, timeout);
