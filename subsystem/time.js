@@ -1,4 +1,4 @@
-phoxy._TimeSubsystem =
+phoxy.time =
 {
   Defer : function(callback, time)
     {

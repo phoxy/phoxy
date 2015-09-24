@@ -1,4 +1,4 @@
-phoxy._InternalCode =
+phoxy.internal =
 {
   ChangeURL : function (url)
     {

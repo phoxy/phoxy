@@ -1,4 +1,4 @@
-phoxy._ApiSubsystem =
+phoxy.api =
 {
   ApiAnswer : function(answer, callback)
     {

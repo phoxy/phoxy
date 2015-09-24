@@ -57,13 +57,13 @@ phoxy._.EarlyStage =
   systems:
     {
       'early.js': undefined,
-      'time.js': '_TimeSubsystem',
-      'render.js': '_RenderSubsystem',
-      'api.js': '_ApiSubsystem',
-      'internal.js': '_InternalCode',
-      'click.js': '_ClickHook',
-      'legacy.js': '_LegacyLand',
-      'enjs_overload.js': '_OverrideENJS',
+      'time.js': 'time',
+      'render.js': 'render',
+      'api.js': 'api',
+      'internal.js': 'internal',
+      'click.js': 'click',
+      'legacy.js': 'legacy',
+      'enjs_overload.js': 'OverrideENJS',
     }
   ,
   sync_require:

@@ -1,4 +1,4 @@
-phoxy._ClickHook =
+phoxy.click =
 {
   _: {},
 };

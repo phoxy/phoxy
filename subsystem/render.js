@@ -1,4 +1,4 @@
-phoxy._RenderSubsystem =
+phoxy.render =
 {
   DeferRender : function (ejs, data, rendered_callback, tag)
     {

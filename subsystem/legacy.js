@@ -1,4 +1,4 @@
-phoxy._LegacyLand =
+phoxy.legacy =
 {
   ChangeHash : function(hash)
     {

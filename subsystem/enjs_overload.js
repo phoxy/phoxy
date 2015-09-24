@@ -3,7 +3,7 @@
  ***/
 
 
-phoxy._OverrideENJS =
+phoxy.OverrideENJS =
 {
   _: {},
 };
