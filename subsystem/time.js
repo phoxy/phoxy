@@ -25,8 +25,7 @@ phoxy._TimeSubsystem =
     }
 };
 
-phoxy._TimeSubsystem._ = {};
-phoxy._TimeSubsystem._.time =
+phoxy._.time =
 {
   WaitFor : function(callback_condition, callback, timeout, check_every)
     {

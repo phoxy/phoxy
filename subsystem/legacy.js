@@ -7,8 +7,7 @@ phoxy._LegacyLand =
     }
 }
 
-phoxy._LegacyLand._ = {};
-phoxy._LegacyLand._.deprecated = {
+phoxy._.deprecated = {
   IsObjectOptionalDetected : function()
     {
       if (arguments.length !== 3)

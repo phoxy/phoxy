@@ -3,7 +3,7 @@ phoxy._ClickHook =
   _: {},
 };
 
-phoxy._ClickHook._.click =
+phoxy._.click =
 {
   InitClickHook: function()
     {

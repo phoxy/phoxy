@@ -51,8 +51,7 @@ phoxy._InternalCode =
     }
 };
 
-phoxy._InternalCode._ = {};
-phoxy._InternalCode._.internal =
+phoxy._.internal =
 {
   Load : function( )
     {

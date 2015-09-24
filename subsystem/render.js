@@ -17,8 +17,7 @@ phoxy._RenderSubsystem =
   ,
 };
 
-phoxy._RenderSubsystem._ = {};
-phoxy._RenderSubsystem._.render =
+phoxy._.render =
 {
   PrepareCanvas : function(tag)
     {
@@ -158,7 +157,7 @@ phoxy._RenderSubsystem._.render =
   ,
 };
 
-phoxy._RenderSubsystem._.birth = function(will, spirit, callback, raw_output)
+phoxy._.birth = function(will, spirit, callback, raw_output)
 {
   this.will = will;
   this.spirit = spirit;
@@ -182,7 +181,7 @@ phoxy._RenderSubsystem._.birth = function(will, spirit, callback, raw_output)
   return this.Decision(will, spirit, callback);
 }
 
-phoxy._RenderSubsystem._.birth.prototype =
+phoxy._.birth.prototype =
 {
   Decision: function(will, spirit)
     {

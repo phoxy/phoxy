@@ -8,7 +8,7 @@ phoxy._OverrideENJS =
   _: {},
 };
 
-phoxy._OverrideENJS._.enjs =
+phoxy._.enjs =
 {
   OverloadENJSCanvas: function()
     {

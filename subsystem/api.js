@@ -80,8 +80,7 @@ phoxy._ApiSubsystem =
     }
 }
 
-phoxy._ApiSubsystem._ = {};
-phoxy._ApiSubsystem._.api =
+phoxy._.api =
 {
   ScriptsLoaded : function(answer, callback)
     {
@@ -202,7 +201,7 @@ phoxy._ApiSubsystem._.api =
   }
 };
 
-phoxy._ApiSubsystem._.api.keyword =
+phoxy._.api.keyword =
 {
   error: function(answer, callback)
     {
@@ -280,6 +279,6 @@ phoxy._ApiSubsystem._.api.keyword =
       }
     }
   ,
-  exception: phoxy._ApiSubsystem._.api.KeywordMissing("exception")
+  exception: phoxy._.api.KeywordMissing("exception")
   ,
 };
