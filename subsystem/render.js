@@ -36,7 +36,7 @@ phoxy._RenderSubsystem._.render =
   ,
   AsyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
     { // AsyncRender strategy: for production
-      phoxy._.render.Fancy(ejs, data, function(obj, ejs, data)
+      phoxy._.render.Fancy(ejs, data, function async_strategy_birth(obj, ejs, data)
       {
         if (typeof obj === 'undefined')
         {
@@ -46,14 +46,14 @@ phoxy._RenderSubsystem._.render =
 
         // Potential cascade memleak
         // Should clear listeners with callback
-        phoxy._.time.Appeared(target, function()
+        phoxy._.time.Appeared(target, function async_strategy_wait_for_apperance()
         {
           difference.call(phoxy, target, obj.html, arguments);
           for (var k in obj.defer)
               obj.defer[k]();
         }, undefined, -1);
 
-        obj.on_complete = function()
+        obj.on_complete = function async_strategy_on_complete()
         {
           if (typeof(rendered_callback) !== 'undefined')
             rendered_callback.call(obj.across, ejs, data, obj.html);
@@ -63,9 +63,9 @@ phoxy._RenderSubsystem._.render =
   ,
   SyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
     { // SyncRender strategy: for debug/develop purposes
-      phoxy._.time.Appeared(target, function()
+      phoxy._.time.Appeared(target, function sync_strategy_wait_for_apperance()
       {
-        phoxy._.render.Fancy(ejs, data, function(obj, ejs, data)
+        phoxy._.render.Fancy(ejs, data, function sync_strategy_birth(obj, ejs, data)
         {
           if (typeof obj === 'undefined')
           {
@@ -75,7 +75,7 @@ phoxy._RenderSubsystem._.render =
 
           difference.call(phoxy, target, obj.html, arguments);
 
-          obj.on_complete = function()
+          obj.on_complete = function sync_strategy_on_complete()
           {
             if (typeof(rendered_callback) !== 'undefined')
               rendered_callback.call(obj.across, ejs, data, obj.html);
@@ -89,7 +89,7 @@ phoxy._RenderSubsystem._.render =
   RenderInto : function (target, ejs, data, rendered_callback)
     {
       var args = Array.prototype.slice.call(arguments);
-      args.push(function(target, html)
+      args.push(function render_into_f(target, html)
       {
         document.getElementById(target).innerHTMl = html;
       });
@@ -99,7 +99,7 @@ phoxy._RenderSubsystem._.render =
   RenderReplace : function (target, ejs, data, rendered_callback)
     {
       var args = Array.prototype.slice.call(arguments);
-      args.push(function(target, html)
+      args.push(function render_replace_f(target, html)
       {
         var that = document.getElementById(target);
         that.insertAdjacentHTML("afterEnd", html);
@@ -164,7 +164,7 @@ phoxy._RenderSubsystem._.birth = function(will, spirit, callback, raw_output)
   this.spirit = spirit;
   this.birth_id = phoxy._.internal.GenerateUniqueID();
   console.time("phoxy.birth " + this.birth_id);
-  this.callback = function()
+  this.callback = function birth_log_report()
   {
     console.groupCollapsed("phoxy.birth", will);
       console.log(spirit);
@@ -251,7 +251,7 @@ phoxy._RenderSubsystem._.birth.prototype =
   Prophecy: function(rpc)
     {
       this.Log("Prophecy", arguments);
-      this.Plea(rpc, function(obj)
+      this.Plea(rpc, function on_rpc_design_received(obj)
       {
         this.Presage(obj);
       });
@@ -265,7 +265,7 @@ phoxy._RenderSubsystem._.birth.prototype =
       var design = obj.design;
       var data = obj.data || {};
 
-      this.Boon(obj, function()
+      this.Boon(obj, function on_design_object_decoded()
       {
         this.Decision(design, data, this.callback);
       })
@@ -302,7 +302,7 @@ phoxy._RenderSubsystem._.birth.prototype =
   Desire: function(rpc, DataLoadedCallback)
     {
       this.Log("Desire", arguments);
-      this.Plea(rpc, function(json)
+      this.Plea(rpc, function on_data_recieved(json)
       {
         DataLoadedCallback(json.data);
       });
@@ -312,7 +312,7 @@ phoxy._RenderSubsystem._.birth.prototype =
     {
       this.Log("Plea", arguments);
       var that = this;
-      phoxy.AJAX(url, function(obj)
+      phoxy.AJAX(url, function on_ajax_answer(obj)
       {
         that.Boon(obj, cb);
       });
@@ -329,7 +329,7 @@ phoxy._RenderSubsystem._.birth.prototype =
     delete obj.result;
     delete obj.replace;
     var that = this;
-    phoxy.ApiAnswer(obj, function()
+    phoxy.ApiAnswer(obj, function on_default_action_done()
     {
       cb.call(that, answer);
     });
