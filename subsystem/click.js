@@ -36,7 +36,7 @@ phoxy._.click =
   OnClick: function (url, not_push)
     {
       // Element without url
-      if (url === undefined)
+      if (!url)
         return true;
 
       if (url.indexOf('#') !== -1)
