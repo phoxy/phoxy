@@ -22,6 +22,9 @@ phoxy._.enjs =
 
       phoxy._.internal.Override(EJS.Canvas.across.prototype, 'DeferRender', phoxy._.enjs.DeferRender);
       phoxy._.internal.Override(EJS.Canvas.across.prototype, 'DeferCascade', phoxy._.enjs.DeferCascade);
+
+      phoxy._.internal.Override(EJS.Canvas.across.prototype, 'CascadeDesign', phoxy._.enjs.CascadeDesign);
+      phoxy._.internal.Override(EJS.Canvas.across.prototype, 'CascadeRequest', phoxy._.enjs.CascadeRequest);
     }
   ,
   RenderCompleted: function()
@@ -86,8 +89,17 @@ phoxy._.enjs =
   ,
   DeferRender: function(ejs, data, callback, tag)
     {
-      var that = this.escape();
-      that.log("DeferRender", ejs, data);
+      phoxy.Log(2, "__this.DeferRender is deprecated. Use __this.CascadeDesign or __this.CascadeRequest");
+
+      if (data === undefined || data === null )
+        return this.CascadeRequest.call(this, ejs, callback, tag);
+
+      return this.CascadeDesign.apply(this, arguments);
+    }
+  ,
+  CascadeInit: function(across, ejs, data, callback, tag)
+    {
+      var that = across.escape();
       phoxy._.enjs.AlreadyFiredUp(that);
       that.recursive++;
       phoxy.state.RenderCalls++;
@@ -101,8 +113,41 @@ phoxy._.enjs =
         that.CheckIsCompleted.call(that.across);
       }
 
-      that.Append(phoxy.DeferRender(ejs, data, CBHook, tag));
+      var ancor = phoxy.DeferRender(ejs, data, CBHook, tag);
+      that.Append(ancor);
+
       return "<!-- <%= %> IS OBSOLETE. Refactor " + that.name + " -->";
+    }
+  ,
+  CascadeDesign: function(ejs, data, callback, tag)
+    {
+      if (data === undefined || data === null)
+        data = {};
+
+      var data_type = typeof data;
+      if (data_type !== 'object'
+        && data_type !== 'function'
+        && data_type !== 'string')
+        return phoxy.Log(1, "Are you sure that DATA parameters of CascadeDesign right?");
+
+      var design_type = typeof ejs;
+      if (design_type !== 'string'
+        && design_type !== 'function')
+        return phoxy.Log(1, "Are you sure that EJS parameters of CascadeDesign right?");
+
+      this.escape().log("Design", ejs, data);
+      return phoxy._.enjs.CascadeInit(this, ejs, data, callback, tag);
+    }
+  ,
+  CascadeRequest: function(url, callback, tag)
+    {
+      var url_type = typeof url;
+
+      if (typeof url !== 'string')
+        return phoxy.Log(1, "Are you sure that URL parameters of CascadeRequest right?");
+
+      this.escape().log("Request", url);
+      return phoxy._.enjs.CascadeInit(this, url, undefined, callback, tag);
     }
   ,
   Defer: function(callback, time)
