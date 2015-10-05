@@ -339,29 +339,36 @@ phoxy._.birth.prototype =
       this.log.push(arguments);
     }
   ,
-  Render: function(design, data)
+  Render: function(design, data, cb)
   {
-    var html;
+    var async = typeof cb === 'function';
+
     if (design.indexOf(".ejs") === -1)
         design += ".ejs";
 
-    var ejs;
-    //if (!phoxy.ForwardDownload(design))
-      ejs = new EJS({'url' : design});
-    //else
-    // ejs = new EJS({'text' : phoxy.ForwardDownload(design), 'name' : design});
+    var ejs = new EJS({'url' : design}, async ? WhenReady : undefined);
 
     var that = this;
-    function log()
+    function WhenReady()
     {
-      that.Log.apply(that, arguments);
-    }
+      function log()
+      {
+        that.Log.apply(that, arguments);
+      }
 
-    var obj = ejs.prepare(data);
+      var obj = ejs.prepare(data);
+
       obj.on_complete = this.callback;
       obj.log = log;
       ejs.execute(obj);
 
-    return obj;
+      if (async)
+        cb(obj);
+
+      return obj;
+    }
+
+    if (!async)
+      return WhenReady();
   }
 }
