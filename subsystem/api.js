@@ -122,30 +122,9 @@ phoxy._.api =
       return obj[method];
     }
   ,
-  ForwardDownload : function(url, callback_or_true_for_return)
+  ForwardDownload : function()
     {
-      if (typeof(phoxy.state.storage) === "undefined")
-        phoxy.state.storage = {};
-
-      if (callback_or_true_for_return === true)
-        return phoxy.state.storage[url];
-
-      function AddToLocalStorage(data)
-      {
-        phoxy.state.storage[url] = data;
-        if (typeof(callback_or_true_for_return) === 'function')
-          callback_or_true_for_return(data);
-      }
-
-      if (phoxy.state.storage[url] != undefined)
-      {
-        if (typeof(callback_or_true_for_return) === 'function')
-          callback_or_true_for_return(phoxy.state.storage[url]);
-        return true;
-      }
-
-      phoxy._.internal.ajax(url, AddToLocalStorage);
-      return false;
+      phoxy.Log(0, "phoxy._.api.ForwardDownload is deprecated since ENJS v2.1.8 (phoxy v1.4.1.8)");
     }
   ,
   ajax : function ()

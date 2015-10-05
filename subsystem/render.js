@@ -109,31 +109,7 @@ phoxy._.render =
   ,
   Render : function (design, data, callback, is_phoxy_internal_call)
     {
-      phoxy.Log(2, "phoxy.Render is OBSOLETE. Use phoxy.Fancy instead");
-
-      if (data === undefined)
-        data = {};
-
-      var html;
-      if (design.indexOf(".ejs") === -1)
-        design += ".ejs";
-      var ejs;
-      //if (!phoxy.ForwardDownload(design))
-        ejs = new EJS({'url' : design});
-      //else
-//        ejs = new EJS({'text' : phoxy.ForwardDownload(design), 'name' : design});
-
-      var obj = ejs.prepare(data);
-      obj.on_complete = callback;
-      ejs.execute(obj);
-      html = obj.html;
-
-      if (typeof phoxy === 'undefined' || typeof phoxy.state === 'undefined')
-        throw "EJS render failed. Phoxy is missing. Is .ejs file exsists? Is your .htacess right? Check last AJAX request.";
-
-      if (is_phoxy_internal_call)
-        return obj;
-      return html;
+      phoxy.Log(0, "phoxy.Render is OBSOLETE. Use phoxy.Fancy instead");
     }
   ,
   Fancy : function()
