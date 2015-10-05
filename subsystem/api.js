@@ -242,21 +242,19 @@ phoxy._.api.keyword =
       var canvas = phoxy._.render.PrepareCanvas('<render>');
 
       var url = phoxy.Config()['ejs_dir'] + "/" + answer.design + ".ejs";
-      phoxy._.api.ForwardDownload(url, function design_files_downloaded()
-      {
-        if (answer.replace !== undefined)
-          phoxy._.api.keyword.replace(answer, callback, canvas);
-        else if (answer.result !== undefined)
-          phoxy._.api.keyword.result(answer, callback, canvas);
-        else
-          document.getElementsByTagName('body')[0].appendChild(canvas.obj);
 
-        phoxy._.render.RenderReplace(
-          canvas.id,
-          answer.design,
-          answer.data || {},
-          next);
-      });
+      if (answer.replace !== undefined)
+        phoxy._.api.keyword.replace(answer, callback, canvas);
+      else if (answer.result !== undefined)
+        phoxy._.api.keyword.result(answer, callback, canvas);
+      else
+        document.getElementsByTagName('body')[0].appendChild(canvas.obj);
+
+      phoxy._.render.RenderReplace(
+        canvas.id,
+        answer.design,
+        answer.data || {},
+        next);
 
       return canvas;
     }

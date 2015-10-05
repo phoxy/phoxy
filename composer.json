@@ -8,7 +8,7 @@
   "require" :
   {
     "php": "~5.5",
-    "phoxy/enjs": "~2.1.2"
+    "phoxy/enjs": "~2.1.8"
   },
   "suggest" :
   {
