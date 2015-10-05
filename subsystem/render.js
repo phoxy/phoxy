@@ -291,11 +291,16 @@ phoxy._.birth.prototype =
     {
       this.Log("Conceive", arguments);
       var ejs_location = phoxy.Config()['ejs_dir'] + "/" + design;
-      var html = this.Render(ejs_location, data);
 
-      if (!this.raw_output)
-        html = html.html;
-      this.callback(html, design, data);
+      var that = this;
+      function RenderCallback(html)
+      {
+        if (!that.raw_output)
+          html = html.html;
+        that.callback(html, design, data);
+      }
+
+      this.Render(ejs_location, data, RenderCallback);
     }
   ,
   Desire: function(rpc, DataLoadedCallback)
