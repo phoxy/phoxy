@@ -176,7 +176,7 @@ phoxy._.birth.prototype =
         return this.Vision();
       else if (typeof(word) === 'string')
         return this.Prophecy(word);
-      else if (typeof(word) !== 'object')
+      else if (typeof(word) === 'object')
         return this.Presage(word);
       phoxy.Log(0, "birth.Fortune", word, "(Failed object recognize)");
     }
