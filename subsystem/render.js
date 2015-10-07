@@ -187,10 +187,11 @@ phoxy._.birth.prototype =
       var args = arguments;
       var idea = args[1];
 
+      var that = this;
       function DataLoadedCallback(data)
       {
         data = data || {};
-        this.Decision(args[0], data, args[2], args[3]);
+        that.Decision(args[0], data, args[2], args[3]);
       }
 
       if (typeof(idea) === 'string')
@@ -226,9 +227,11 @@ phoxy._.birth.prototype =
   Prophecy: function(rpc)
     {
       this.Log("Prophecy", arguments);
+
+      var that = this;
       this.Plea(rpc, function on_rpc_design_received(obj)
       {
-        this.Presage(obj);
+        that.Presage(obj);
       });
     }
   ,
@@ -240,9 +243,10 @@ phoxy._.birth.prototype =
       var design = obj.design;
       var data = obj.data || {};
 
+      var that = this;
       this.Boon(obj, function on_design_object_decoded()
       {
-        this.Decision(design, data, this.callback);
+        that.Decision(design, data, that.callback);
       })
     }
   ,
@@ -255,6 +259,7 @@ phoxy._.birth.prototype =
   Mutation: function(design, data)
     {
       this.Log("Mutation", arguments);
+
       function DetermineAsync(design)
       {
         phoxy._.render.Fancy(design, data, args[2], args[3]);
