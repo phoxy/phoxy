@@ -122,18 +122,8 @@ phoxy._.enjs =
   CascadeDesign: function(ejs, data, callback, tag)
     {
       if (data === undefined || data === null)
-        data = {};
-
-      var data_type = typeof data;
-      if (data_type !== 'object'
-        && data_type !== 'function'
-        && data_type !== 'string')
-        return phoxy.Log(1, "Are you sure that DATA parameters of CascadeDesign right?");
-
-      var design_type = typeof ejs;
-      if (design_type !== 'string'
-        && design_type !== 'function')
-        return phoxy.Log(1, "Are you sure that EJS parameters of CascadeDesign right?");
+        if (typeof ejs !== 'object')
+          data = {};
 
       this.escape().log("Design", ejs, data);
       return phoxy._.enjs.CascadeInit(this, ejs, data, callback, tag);
