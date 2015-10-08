@@ -133,7 +133,7 @@ phoxy._.enjs =
     {
       var url_type = typeof url;
 
-      if (typeof url !== 'string')
+      if (typeof url !== 'string' && !Array.isArray(url))
         return phoxy.Log(1, "Are you sure that URL parameters of CascadeRequest right?");
 
       this.escape().log("Request", url);
