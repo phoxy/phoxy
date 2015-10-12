@@ -35,7 +35,14 @@ phoxy._.render =
   ,
   AsyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
     { // AsyncRender strategy: for production
-      phoxy._.render.Fancy(ejs, data, function async_strategy_birth(obj, ejs, data)
+      function async_strategy_wait_for_apperance()
+      {
+        difference.call(phoxy, target, obj.html, arguments);
+        for (var k in obj.defer)
+            obj.defer[k]();
+      }
+
+      function async_strategy_birth(obj, ejs, data)
       {
         if (typeof obj === 'undefined')
         {
@@ -45,66 +52,64 @@ phoxy._.render =
 
         // Potential cascade memleak
         // Should clear listeners with callback
-        phoxy._.time.Appeared(target, function async_strategy_wait_for_apperance()
-        {
-          difference.call(phoxy, target, obj.html, arguments);
-          for (var k in obj.defer)
-              obj.defer[k]();
-        }, undefined, -1);
+        phoxy._.time.Appeared(target, async_strategy_wait_for_apperance, undefined, -1);
 
         obj.on_complete = function async_strategy_on_complete()
         {
           if (typeof(rendered_callback) !== 'undefined')
             rendered_callback.call(obj.across, ejs, data, obj.html);
         };
-      }, true);
+      }
+
+      phoxy._.render.Fancy(ejs, data, async_strategy_birth, true);
     }
   ,
   SyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
     { // SyncRender strategy: for debug/develop purposes
-      phoxy._.time.Appeared(target, function sync_strategy_wait_for_apperance()
+      function sync_strategy_birth(obj, ejs, data)
       {
-        phoxy._.render.Fancy(ejs, data, function sync_strategy_birth(obj, ejs, data)
+        if (typeof obj === 'undefined')
         {
-          if (typeof obj === 'undefined')
-          {
-            phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
-            return; // And break dependencies execution
-          }
+          phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
+          return; // And break dependencies execution
+        }
 
-          difference.call(phoxy, target, obj.html, arguments);
+        difference.call(phoxy, target, obj.html, arguments);
 
-          obj.on_complete = function sync_strategy_on_complete()
-          {
-            if (typeof(rendered_callback) !== 'undefined')
-              rendered_callback.call(obj.across, ejs, data, obj.html);
-          };
-        }, true);
-      }, undefined, -1);
+        obj.on_complete = function sync_strategy_on_complete()
+        {
+          if (typeof(rendered_callback) !== 'undefined')
+            rendered_callback.call(obj.across, ejs, data, obj.html);
+        };
+      }
+
+      function sync_strategy_wait_for_apperance()
+      {
+        phoxy._.render.Fancy(ejs, data, sync_strategy_birth, true);
+      }
+
+      phoxy._.time.Appeared(target, sync_strategy_wait_for_apperance, undefined, -1);
     }
   ,
   RenderStrategy : "Will be replaced by selected strategy after compilation."
   ,
   RenderInto : function (target, ejs, data, rendered_callback)
     {
-      var args = Array.prototype.slice.call(arguments);
-      args.push(function render_into_f(target, html)
-      {
-        document.getElementById(target).innerHTMl = html;
-      });
-      phoxy._.render.RenderStrategy.apply(this, args);
+      phoxy.Log(0, "phoxy.RenderInto is OBSOLETE");
     }
   ,
   RenderReplace : function (target, ejs, data, rendered_callback)
     {
       var args = Array.prototype.slice.call(arguments);
-      args.push(function render_replace_f(target, html)
-      {
-        var that = document.getElementById(target);
-        that.insertAdjacentHTML("afterEnd", html);
-        that.parentNode.removeChild(that);
-      });
+      args.push(phoxy._.render.Replace);
       phoxy._.render.RenderStrategy.apply(this, args);
+    }
+  ,
+  Replace : function(target, html)
+    {
+      var that = document.getElementById(target);
+      that.insertAdjacentHTML("afterEnd", html);
+      that.parentNode.removeChild(that);
     }
   ,
   Render : function (design, data, callback, is_phoxy_internal_call)
