@@ -32,7 +32,7 @@ phoxy._.enjs =
       arguments.callee.origin.apply(this);
 
       // In case of recursive rendering, forbid later using
-      // If you losed context from this, and access it with __context
+      // If you losed context from this, and access it with __this
       // Then probably its too late to use this methods:
       delete this.across.Defer;
       delete this.across.DeferRender;
@@ -40,7 +40,8 @@ phoxy._.enjs =
 
       if (this.recursive)
         return;
-      // no one DeferRender was invoked
+
+      // not single DeferRender was invoked
       // but Canvas.on_completed not prepared
       // So render plan is plain, and we attach CheckIsCompleted in this.Defer queue
       this.recursive++;
@@ -100,7 +101,7 @@ phoxy._.enjs =
   CascadeInit: function(across, ejs, data, callback, tag)
     {
       var that = across.escape();
-      phoxy._.enjs.AlreadyFiredUp(that);
+      phoxy._.enjs.RequireENJSRutime(that);
       that.recursive++;
       phoxy.state.RenderCalls++;
 
@@ -143,29 +144,30 @@ phoxy._.enjs =
   Defer: function(callback, time)
     {
       var that = this.escape();
+
       that.log("Defer", callback, time);
       that.recursive++;
-      phoxy._.enjs.AlreadyFiredUp(that);
+      phoxy._.enjs.RequireENJSRutime(that);
 
 
-      function CBHook()
+      function defer_cb()
       {
         if (typeof callback === 'function')
           callback.call(that.across);
         that.CheckIsCompleted.call(that.across);
       }
 
+      // In sync cascade defer executing immideately
       var OriginDefer = arguments.callee.origin;
       if (phoxy.state.sync_cascade)
-        return OriginDefer.call(this, CBHook, time);
+        return OriginDefer.call(this, defer_cb, time);
+
       if (typeof that.defer === 'undefined')
         that.defer = [];
-      if (typeof time === 'undefined')
-        return that.defer.push(CBHook);
 
-      that.defer.push(function()
+      return that.defer.push(function enjs_defer_sheduler()
       {
-        return OriginDefer(CBHook, time);
+        return OriginDefer(defer_cb, time);
       })
     }
   ,
@@ -173,7 +175,7 @@ phoxy._.enjs =
     {
       var that = this.escape();
       that.log("DeferCascade", callback);
-      phoxy._.enjs.AlreadyFiredUp(that);
+      phoxy._.enjs.RequireENJSRutime(that);
 
       if (typeof that.cascade === 'undefined')
         that.cascade = [];
@@ -181,15 +183,14 @@ phoxy._.enjs =
       that.cascade.push(callback);
     }
   ,
-  AlreadyFiredUp: function(that)
+  RequireENJSRutime: function(that)
   {
-    if (that.fired_up)
-    {
-      phoxy.Log("You can't invoke this.Defer... methods after rendering finished.\
+    if (!that.fired_up)
+      return; // requirment ment. continue;
+
+    phoxy.Log(0, "You can't invoke __this.Defer... methods after rendering finished.\
 Because parent cascade callback already executed, and probably you didn't expect new elements on your context.\
-Check if you call this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
+Check if you call __this.Defer... on DOM(jquery) events? Thats too late. (It mean DOM event exsist -> Render completed).\
 In that case use phoxy.Defer methods directly. They context-dependence free.");
-      debugger; // already finished
-    }
   }
 };
