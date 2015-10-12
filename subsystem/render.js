@@ -48,7 +48,7 @@ phoxy._.render =
 
         // Potential cascade memleak
         // Should clear listeners with callback
-        phoxy._.time.Appeared(target, async_strategy_wait_for_apperance, undefined, -1);
+        phoxy._.time.Appeared(target, async_strategy_wait_for_apperance);
       }
 
       phoxy._.render.Fancy(ejs, data, async_strategy_birth, true);
@@ -67,7 +67,7 @@ phoxy._.render =
         difference.call(phoxy, target, obj.html, arguments);
       }
 
-      phoxy._.time.Appeared(target, sync_strategy_wait_for_apperance, undefined, -1);
+      phoxy._.time.Appeared(target, sync_strategy_wait_for_apperance);
     }
   ,
   AfterENJSFinished : function(obj, ejs, data, rendered_callback)
