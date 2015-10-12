@@ -44,21 +44,11 @@ phoxy._.render =
 
       function async_strategy_birth(obj, ejs, data)
       {
-        if (typeof obj === 'undefined')
-        {
-          phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
-          return; // And break dependencies execution
-        }
+        phoxy._.render.AfterENJSFinished(obj, ejs, data, rendered_callback);
 
         // Potential cascade memleak
         // Should clear listeners with callback
         phoxy._.time.Appeared(target, async_strategy_wait_for_apperance, undefined, -1);
-
-        obj.on_complete = function async_strategy_on_complete()
-        {
-          if (typeof(rendered_callback) !== 'undefined')
-            rendered_callback.call(obj.across, ejs, data, obj.html);
-        };
       }
 
       phoxy._.render.Fancy(ejs, data, async_strategy_birth, true);
@@ -66,29 +56,33 @@ phoxy._.render =
   ,
   SyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
     { // SyncRender strategy: for debug/develop purposes
-      function sync_strategy_birth(obj, ejs, data)
-      {
-        if (typeof obj === 'undefined')
-        {
-          phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
-          return; // And break dependencies execution
-        }
-
-        difference.call(phoxy, target, obj.html, arguments);
-
-        obj.on_complete = function sync_strategy_on_complete()
-        {
-          if (typeof(rendered_callback) !== 'undefined')
-            rendered_callback.call(obj.across, ejs, data, obj.html);
-        };
-      }
-
       function sync_strategy_wait_for_apperance()
       {
         phoxy._.render.Fancy(ejs, data, sync_strategy_birth, true);
       }
 
+      function sync_strategy_birth(obj, ejs, data)
+      {
+        phoxy._.render.AfterENJSFinished(obj, ejs, data, rendered_callback);
+        difference.call(phoxy, target, obj.html, arguments);
+      }
+
       phoxy._.time.Appeared(target, sync_strategy_wait_for_apperance, undefined, -1);
+    }
+  ,
+  AfterENJSFinished : function(obj, ejs, data, rendered_callback)
+    {
+      if (typeof obj === 'undefined')
+      {
+        phoxy.Log(3, 'phoxy.Reality', 'Design render skiped. (No design was choosed?)', document.getElementById(target));
+        return; // And break dependencies execution
+      }
+
+      obj.on_complete = function strategy_on_complete()
+      {
+        if (typeof(rendered_callback) !== 'undefined')
+          rendered_callback.call(obj.across, ejs, data, obj.html);
+      };
     }
   ,
   RenderStrategy : "Will be replaced by selected strategy after compilation."
