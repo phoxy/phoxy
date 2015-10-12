@@ -63,39 +63,42 @@ phoxy._.time =
       WaitAndCallCountDown(check_timeout * 1000 / check_delay);
     }
   ,
-  Appeared : function(jquery_selector, callback, timeout, call_delay)
+  Appeared : function(css_selector, callback, timeout, call_delay)
     {
-      function Div()
-      {
-        return document.getElementById(jquery_selector);
-      }
       function IsDivAppeared()
       {
-        return Div() !== null;
+        return phoxy._.time.Div(css_selector) !== null;
       }
 
-      phoxy.Defer(function()
-      {
-        phoxy._.time.WaitFor(IsDivAppeared, function dom_element_appeared()
-        {
-          phoxy.DDefer.call(Div(), callback, call_delay);
-        }, timeout)
-      });
+      phoxy._.time.DefaultWaitBehaviour(IsDivAppeared, callback, timeout, call_delay);
     }
   ,
-  Disappeared : function(jquery_selector, callback, timeout, call_delay)
+  Disappeared : function(css_selector, callback, timeout, call_delay)
     {
       function IsDivDisappeared()
       {
-        return document.getElementById(jquery_selector) === null;
+        return phoxy._.time.Div(css_selector) === null;
       }
+
+      phoxy._.time.DefaultWaitBehaviour(IsDivDisappeared, callback, timeout, call_delay);
+    }
+  ,
+  DefaultWaitBehaviour : function(check_function, callback, timeout, call_delay)
+    {
+      if (typeof call_delay == undefined)
+        call_delay = -1;
 
       phoxy.Defer(function()
       {
-        phoxy._.time.WaitFor(IsDivDisappeared, function dom_element_disappeared()
+        phoxy._.time.WaitFor(check_function, function phoxy_time_wait_finished()
         {
           phoxy.DDefer(callback, call_delay);
         }, timeout);
       });
+    }
+  ,
+  Div : function(css_selector)
+    {
+      return document.getElementById(css_selector);
     }
 }
