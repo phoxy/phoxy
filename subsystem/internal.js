@@ -114,7 +114,7 @@ phoxy._.internal =
     "ERROR",
     "WARNING",
     "INFO",
-    "DEBUG",
+    "DEBUG"
   ],
   error_methods :
   [
@@ -123,6 +123,6 @@ phoxy._.internal =
     "warn",
     "info",
     "log",
-    "debug",
+    "debug"
   ]
 };

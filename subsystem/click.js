@@ -1,6 +1,6 @@
 phoxy.click =
 {
-  _: {},
+  _: {}
 };
 
 phoxy._.click =

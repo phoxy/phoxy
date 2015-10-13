@@ -263,5 +263,4 @@ phoxy._.api.keyword =
     }
   ,
   exception: phoxy._.api.KeywordMissing("exception")
-  ,
 };

@@ -5,7 +5,7 @@
 
 phoxy.OverrideENJS =
 {
-  _: {},
+  _: {}
 };
 
 phoxy._.enjs =

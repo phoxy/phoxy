@@ -24,7 +24,6 @@ phoxy.render =
         return ancor;
       return ancor.html;
     }
-  ,
 };
 
 phoxy._.render =
