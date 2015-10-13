@@ -93,7 +93,7 @@ phoxy._.enjs =
       phoxy.Log(2, "__this.DeferRender is deprecated. Use __this.CascadeDesign or __this.CascadeRequest");
 
       if (data === undefined || data === null )
-        return this.CascadeRequest.call(this, ejs, callback, tag);
+        return this.CascadeRequest.call(this, ejs, callback);
 
       return this.CascadeDesign.apply(this, arguments);
     }
@@ -127,7 +127,7 @@ phoxy._.enjs =
           data = {};
 
       this.escape().log("Design", ejs, data);
-      return phoxy._.enjs.CascadeInit(this, ejs, data, callback, tag);
+      return phoxy._.enjs.CascadeInit(this, ejs, data, callback, tag || "<CascadeDesign>");
     }
   ,
   CascadeRequest: function(url, callback, tag)
@@ -138,7 +138,7 @@ phoxy._.enjs =
         return phoxy.Log(1, "Are you sure that URL parameters of CascadeRequest right?");
 
       this.escape().log("Request", url);
-      return phoxy._.enjs.CascadeInit(this, url, undefined, callback, tag);
+      return phoxy._.enjs.CascadeInit(this, url, undefined, callback, tag || "<CascadeRequest>");
     }
   ,
   Defer: function(callback, time)

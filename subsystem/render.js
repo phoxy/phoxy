@@ -5,7 +5,17 @@ phoxy.render =
       phoxy.Log(4, "phoxy.DeferRender", arguments);
       if (tag === undefined)
         tag = '<defer_render>';
-      var ancor = phoxy._.render.PrepareAncor(tag);
+
+      var attributes;
+
+      if (phoxy.state.cascade_debug)
+        attributes =
+        {
+          ejs: ejs,
+          data: JSON.stringify(data),
+        };
+
+      var ancor = phoxy._.render.PrepareAncor(tag, attributes);
       var id = ancor.id;
 
       phoxy._.render.RenderStrategy(id, ejs, data, rendered_callback);
@@ -110,7 +120,7 @@ phoxy._.render =
       that.parentNode.removeChild(that);
     }
   ,
-  PrepareAncor : function(tag)
+  PrepareAncor : function(tag, attributes)
     {
       if (tag === undefined)
         tag = '<div>';
@@ -118,6 +128,10 @@ phoxy._.render =
 
       var id =  phoxy._.internal.GenerateUniqueID();
       var obj = document.createElement(vanilla_tag);
+
+      for (var k in attributes)
+        obj.setAttribute(k, attributes[k]);
+
       obj.setAttribute('id', id);
       var div = obj.outerHTML;
 

@@ -215,7 +215,16 @@ phoxy._.api.keyword =
   ,
   design: function(answer, callback, next)
     {
-      var ancor = phoxy._.render.PrepareAncor('<render>');
+      var attributes;
+
+      if (phoxy.state.cascade_debug)
+        attributes =
+        {
+          ejs: answer.design,
+          data: JSON.stringify(answer.data),
+        };
+
+      var ancor = phoxy._.render.PrepareAncor('<KeywordDesign>', attributes);
 
       var url = phoxy.Config()['ejs_dir'] + "/" + answer.design + ".ejs";
 
