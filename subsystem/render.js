@@ -19,6 +19,27 @@ phoxy.render =
 
 phoxy._.render =
 {
+  Fancy : function()
+    {
+      var args = arguments;
+      for (var i = 0; i < 2; i++)
+        if (Array.isArray(args[i]))
+        {
+          args[i] = phoxy.ConstructURL(args[i]);
+          return phoxy._.render.Fancy.apply(this, args);
+        }
+
+      phoxy.Log(6, "phoxy.Fancy", arguments);
+
+      var callback = args[2];
+      if (typeof(callback) === 'undefined')
+        callback = function (){};
+
+      return new phoxy._.birth(args[0], args[1], callback, true);
+    }
+  ,
+  RenderStrategy : "Will be replaced by selected strategy after compilation."
+  ,
   AsyncRender_Strategy : function (target, ejs, data, rendered_callback)
     { // AsyncRender strategy: for production
       function async_strategy_wait_for_apperance()
@@ -72,18 +93,12 @@ phoxy._.render =
       };
     }
   ,
-  RenderStrategy : "Will be replaced by selected strategy after compilation."
-  ,
   TriggerRenderedEvent : function(target)
     {
       var event_name = 'phoxy.rendered.alpha';
 
       phoxy._.internal.DispatchEvent(target, event_name);
     }
-  ,
-  RenderInto : phoxy._.deprecated(0, "phoxy._.render.RenderInto is OBSOLETE")
-  ,
-  RenderReplace : phoxy._.deprecated(0, "Since phoxy._.render.RenderInto is OBSOLETE phoxy._.render.RenderReplace become OBSOLETE too. Now it using by default within any strategy")
   ,
   Replace : function(target, html)
     {
@@ -94,8 +109,6 @@ phoxy._.render =
 
       that.parentNode.removeChild(that);
     }
-  ,
-  Render : phoxy._.deprecated(0, "phoxy.Render is OBSOLETE. Use phoxy.Fancy instead")
   ,
   PrepareAncor : function(tag)
     {
@@ -116,25 +129,11 @@ phoxy._.render =
       return document.getElementById(dom_element_id);
     }
   ,
-  Fancy : function()
-    {
-      var args = arguments;
-      for (var i = 0; i < 2; i++)
-        if (Array.isArray(args[i]))
-        {
-          args[i] = phoxy.ConstructURL(args[i]);
-          return phoxy._.render.Fancy.apply(this, args);
-        }
-
-      phoxy.Log(6, "phoxy.Fancy", arguments);
-
-      var callback = args[2];
-      if (typeof(callback) === 'undefined')
-        callback = function (){};
-
-      return new phoxy._.birth(args[0], args[1], callback, true);
-    }
+  RenderInto : phoxy._.deprecated(0, "phoxy._.render.RenderInto is OBSOLETE")
   ,
+  RenderReplace : phoxy._.deprecated(0, "Since phoxy._.render.RenderInto is OBSOLETE phoxy._.render.RenderReplace become OBSOLETE too. Now it using by default within any strategy")
+  ,
+  Render : phoxy._.deprecated(0, "phoxy.Render is OBSOLETE. Use phoxy.Fancy instead")
 };
 
 phoxy._.birth = function(will, spirit, callback, raw_output)
