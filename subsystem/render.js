@@ -192,13 +192,7 @@ phoxy._.birth = function(will, spirit, callback, raw_output)
   console.time("phoxy.birth " + this.birth_id);
   this.callback = function birth_log_report()
   {
-    console.groupCollapsed("phoxy.birth", will);
-      console.log(spirit);
-      for (var k in this.log)
-        console.log.apply(console, this.log[k]);
-
-    console.timeEnd("phoxy.birth " + this.birth_id);
-    console.groupEnd();
+    this.DumpLog();
 
     callback.apply(this, arguments);
   }
@@ -374,6 +368,17 @@ phoxy._.birth.prototype =
   Log: function()
     {
       this.log.push(arguments);
+    }
+  ,
+  DumpLog : function()
+    {
+      console.groupCollapsed("phoxy.birth", this.will);
+      console.log(this.spirit);
+      for (var k in this.log)
+        console.log.apply(console, this.log[k]);
+
+      console.timeEnd("phoxy.birth " + this.birth_id);
+      console.groupEnd();
     }
   ,
   Render: function(design, data, cb)
