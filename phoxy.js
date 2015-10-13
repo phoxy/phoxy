@@ -42,7 +42,12 @@ var phoxy =
       cases: {},
       handlers: {}
     },
-    cascade_debug: true
+    cascade_debug: true,
+    birth:
+    {
+      active: {},
+      finished: {}
+    }
   },
   _:
   {

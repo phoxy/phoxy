@@ -53,8 +53,8 @@ phoxy._.render =
     { // AsyncRender strategy: for production
       function async_strategy_wait_for_apperance()
       {
-        phoxy._.render.CheckIfMultiplySpawned(target, ejs, data);
         phoxy._.render.Replace.call(phoxy, target, obj.html, arguments);
+        phoxy._.render.CheckIfMultiplySpawned(target, ejs, data);
 
         for (var k in obj.defer)
             obj.defer[k]();
@@ -69,7 +69,7 @@ phoxy._.render =
         phoxy._.time.Appeared(target, async_strategy_wait_for_apperance);
       }
 
-      phoxy._.render.Fancy(ejs, data, async_strategy_birth, true);
+      phoxy._.render.AppendBirthToState(target, ejs, data, async_strategy_birth, true);
     }
   ,
   SyncRender_Strategy : function (target, ejs, data, rendered_callback)
@@ -77,7 +77,7 @@ phoxy._.render =
       function sync_strategy_wait_for_apperance()
       {
         phoxy._.render.CheckIfMultiplySpawned(target, ejs, data);
-        phoxy._.render.Fancy(ejs, data, sync_strategy_birth, true);
+        phoxy._.render.AppendBirthToState(target, ejs, data, sync_strategy_birth, true);
       }
 
       function sync_strategy_birth(obj, ejs, data)
@@ -87,6 +87,20 @@ phoxy._.render =
       }
 
       phoxy._.time.Appeared(target, sync_strategy_wait_for_apperance);
+    }
+  ,
+  AppendBirthToState : function(target, ejs, data, cb, raw)
+    {
+      function clear_birth_state()
+      {
+        if (phoxy.state.cascade_debug)
+          phoxy.state.birth.finished[target] = phoxy.state.birth.active[target];
+        delete phoxy.state.birth.active[target];
+
+        cb.apply(this, arguments);
+      }
+
+      phoxy.state.birth.active[target] = phoxy._.render.Fancy(ejs, data, clear_birth_state, raw);
     }
   ,
   CheckIfMultiplySpawned : function(target, ejs, data)
