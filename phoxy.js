@@ -57,12 +57,12 @@ phoxy._.EarlyStage =
   systems:
     {
       'early.js': undefined,
+      'legacy.js': 'legacy',
       'time.js': 'time',
       'render.js': 'render',
       'api.js': 'api',
       'internal.js': 'internal',
       'click.js': 'click',
-      'legacy.js': 'legacy',
       'enjs_overload.js': 'OverrideENJS',
     }
   ,

@@ -7,39 +7,46 @@ phoxy.legacy =
     }
 }
 
-phoxy._.deprecated = {
-  IsObjectOptionalDetected : function()
+phoxy._.deprecated = function()
+  {
+    var args = arguments;
+    return function deprecated_method_report()
     {
-      if (arguments.length !== 3)
-        return false;
-      if (typeof callback === 'function')
-        return false;
-      if (typeof callback === 'undefined')
-        return false;
-      return true;
-    }
-  ,
-  ObjectOptional : function(method, args)
-    {
-      var url = args[0];
-      var objopt = args[1];
-      var callback = args[2];
+      phoxy.Log.apply(phoxy, args);
+    };
+  };
 
-      phoxy.Log(1, "Object optional IS deprecated. Look at #91");
-      if (typeof url !== 'string')
-        return phoxy.Log(0, "Failed to soft translate call");
+phoxy._.deprecated.IsObjectOptionalDetected = function()
+  {
+    if (arguments.length !== 3)
+      return false;
+    if (typeof callback === 'function')
+      return false;
+    if (typeof callback === 'undefined')
+      return false;
+    return true;
+  };
 
-      if (typeof objopt !== 'undefined')
-        url = [url].concat(objopt);
+phoxy._.deprecated.ObjectOptional = function(method, args)
+  {
+    var url = args[0];
+    var objopt = args[1];
+    var callback = args[2];
 
-      return method.call(this, url, callback);
-    }
-  ,
-  ObjectOptionalRelaunch : function(method, args)
-    {
-      if (!phoxy._.deprecated.IsObjectOptionalDetected.apply(this, args))
-        return false;
-      phoxy._.deprecated.ObjectOptional(method, args);
-      return true;
-    }
-}
+    phoxy.Log(1, "Object optional IS deprecated. Look at #91");
+    if (typeof url !== 'string')
+      return phoxy.Log(0, "Failed to soft translate call");
+
+    if (typeof objopt !== 'undefined')
+      url = [url].concat(objopt);
+
+    return method.call(this, url, callback);
+  };
+
+phoxy._.deprecated.ObjectOptionalRelaunch = function(method, args)
+  {
+    if (!phoxy._.deprecated.IsObjectOptionalDetected.apply(this, args))
+      return false;
+    phoxy._.deprecated.ObjectOptional(method, args);
+    return true;
+  };

@@ -81,10 +81,7 @@ phoxy._.render =
       phoxy._.internal.DispatchEvent(target, event_name);
     }
   ,
-  RenderInto : function (target, ejs, data, rendered_callback)
-    {
-      phoxy.Log(0, "phoxy.RenderInto is OBSOLETE");
-    }
+  RenderInto : phoxy._.deprecated(0, "phoxy.RenderInto is OBSOLETE")
   ,
   RenderReplace : function (target, ejs, data, rendered_callback)
     {
@@ -103,10 +100,7 @@ phoxy._.render =
       that.parentNode.removeChild(that);
     }
   ,
-  Render : function (design, data, callback, is_phoxy_internal_call)
-    {
-      phoxy.Log(0, "phoxy.Render is OBSOLETE. Use phoxy.Fancy instead");
-    }
+  Render : phoxy._.deprecated(0, "phoxy.Render is OBSOLETE. Use phoxy.Fancy instead")
   ,
   PrepareAncor : function(tag)
     {
