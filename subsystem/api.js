@@ -226,7 +226,7 @@ phoxy._.api.keyword =
       else
         document.getElementsByTagName('body')[0].appendChild(ancor.obj);
 
-      phoxy._.render.RenderReplace(
+      phoxy._.render.RenderStrategy(
         ancor.id,
         answer.design,
         answer.data || {},
