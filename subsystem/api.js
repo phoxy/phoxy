@@ -1,4 +1,4 @@
-phoxy._ApiSubsystem =
+phoxy.api =
 {
   ApiAnswer : function(answer, callback)
     {
@@ -27,7 +27,7 @@ phoxy._ApiSubsystem =
         if (typeof phoxy._.prestart.OnAjaxBegin === 'function')
           phoxy._.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
 
-      phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function(response)
+      phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function ajax_callback(response)
         {
           var data = JSON.parse(response);
 
@@ -80,8 +80,7 @@ phoxy._ApiSubsystem =
     }
 }
 
-phoxy._ApiSubsystem._ = {};
-phoxy._ApiSubsystem._.api =
+phoxy._.api =
 {
   ScriptsLoaded : function(answer, callback)
     {
@@ -123,31 +122,7 @@ phoxy._ApiSubsystem._.api =
       return obj[method];
     }
   ,
-  ForwardDownload : function(url, callback_or_true_for_return)
-    {
-      if (typeof(phoxy.state.storage) === "undefined")
-        phoxy.state.storage = {};
-
-      if (callback_or_true_for_return === true)
-        return phoxy.state.storage[url];
-
-      function AddToLocalStorage(data)
-      {
-        phoxy.state.storage[url] = data;
-        if (typeof(callback_or_true_for_return) === 'function')
-          callback_or_true_for_return(data);
-      }
-
-      if (phoxy.state.storage[url] != undefined)
-      {
-        if (typeof(callback_or_true_for_return) === 'function')
-          callback_or_true_for_return(phoxy.state.storage[url]);
-        return true;
-      }
-
-      phoxy._.internal.ajax(url, AddToLocalStorage);
-      return false;
-    }
+  ForwardDownload : phoxy._.deprecated(0, "phoxy._.api.ForwardDownload is deprecated since ENJS v2.1.8 (phoxy v1.4.1.8)")
   ,
   ajax : function ()
     {
@@ -185,7 +160,7 @@ phoxy._ApiSubsystem._.api =
   ,
   PlugInKeyword : function(keyword, args)
   {
-    require([phoxy._.EarlyStage.subsystem_dir + "/" + keyword + ".js"], function()
+    require([phoxy._.EarlyStage.subsystem_dir + "/" + keyword + ".js"], function keyword_plugin()
     {
       if (phoxy._.api.keyword[keyword] === undefined)
         Log(0, "Keyword handler for '" + keyword + "' is missing");
@@ -195,14 +170,14 @@ phoxy._ApiSubsystem._.api =
   ,
   KeywordMissing : function(keyword)
   {
-    return function()
+    return function auto_plugin_keyword()
     {
       return phoxy._.api.PlugInKeyword(keyword, arguments);
     };
   }
 };
 
-phoxy._ApiSubsystem._.api.keyword =
+phoxy._.api.keyword =
 {
   error: function(answer, callback)
     {
@@ -240,26 +215,33 @@ phoxy._ApiSubsystem._.api.keyword =
   ,
   design: function(answer, callback, next)
     {
-      var canvas = phoxy._.render.PrepareCanvas('<render>');
+      var attributes;
+
+      if (phoxy.state.cascade_debug)
+        attributes =
+        {
+          ejs: answer.design,
+          data: JSON.stringify(answer.data),
+        };
+
+      var ancor = phoxy._.render.PrepareAncor('<KeywordDesign>', attributes);
 
       var url = phoxy.Config()['ejs_dir'] + "/" + answer.design + ".ejs";
-      phoxy._.api.ForwardDownload(url, function()
-      {
-        if (answer.replace !== undefined)
-          phoxy._.api.keyword.replace(answer, callback, canvas);
-        else if (answer.result !== undefined)
-          phoxy._.api.keyword.result(answer, callback, canvas);
-        else
-          document.getElementsByTagName('body')[0].appendChild(canvas.obj);
 
-        phoxy._.render.RenderReplace(
-          canvas.id,
-          answer.design,
-          answer.data || {},
-          next);
-      });
+      if (answer.replace !== undefined)
+        phoxy._.api.keyword.replace(answer, callback, ancor);
+      else if (answer.result !== undefined)
+        phoxy._.api.keyword.result(answer, callback, ancor);
+      else
+        document.getElementsByTagName('body')[0].appendChild(ancor.obj);
 
-      return canvas;
+      phoxy._.render.RenderStrategy(
+        ancor.id,
+        answer.design,
+        answer.data || {},
+        next);
+
+      return ancor;
     }
   ,
   replace: function(answer, callback, canvas)
@@ -280,6 +262,5 @@ phoxy._ApiSubsystem._.api.keyword =
       }
     }
   ,
-  exception: phoxy._ApiSubsystem._.api.KeywordMissing("exception")
-  ,
+  exception: phoxy._.api.KeywordMissing("exception")
 };

@@ -1,13 +1,13 @@
-phoxy._ClickHook =
+phoxy.click =
 {
-  _: {},
+  _: {}
 };
 
-phoxy._ClickHook._.click =
+phoxy._.click =
 {
   InitClickHook: function()
     {
-      document.querySelector('body').addEventListener('click', function(event)
+      document.querySelector('body').addEventListener('click', function click_hook(event)
       {
         var target = event.target;
         while (true)
@@ -36,7 +36,7 @@ phoxy._ClickHook._.click =
   OnClick: function (url, not_push)
     {
       // Element without url
-      if (url === undefined)
+      if (!url)
         return true;
 
       if (url.indexOf('#') !== -1)

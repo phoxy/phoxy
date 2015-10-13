@@ -25,7 +25,7 @@ var phoxy =
     {
       nesting_level : 0,
       active_id : 0,
-      active : [],
+      active : []
     },
     verbose : typeof phoxy.verbose === 'undefined' ? 10 : phoxy.verbose,
     early:
@@ -34,20 +34,21 @@ var phoxy =
       loaded: 0,
       optional:
       {
-        initial: 0,
+        initial: 0
       }
     },
     exception:
     {
       cases: {},
-      handlers: {},
+      handlers: {}
     },
+    cascade_debug: true
   },
   _:
   {
     plugin : {},
-    prestart: phoxy,
-  }, // for internal code
+    prestart: phoxy
+  } // for internal code
 };
 
 phoxy._.EarlyStage =
@@ -57,18 +58,18 @@ phoxy._.EarlyStage =
   systems:
     {
       'early.js': undefined,
-      'time.js': '_TimeSubsystem',
-      'render.js': '_RenderSubsystem',
-      'api.js': '_ApiSubsystem',
-      'internal.js': '_InternalCode',
-      'click.js': '_ClickHook',
-      'legacy.js': '_LegacyLand',
-      'enjs_overload.js': '_OverrideENJS',
+      'legacy.js': 'legacy',
+      'time.js': 'time',
+      'render.js': 'render',
+      'api.js': 'api',
+      'internal.js': 'internal',
+      'click.js': 'click',
+      'enjs_overload.js': 'OverrideENJS'
     }
   ,
   sync_require:
     [
-      "enjs", // composer now IS required
+      "enjs" // composer now IS required
     ]
   ,
   async_require:
@@ -86,6 +87,9 @@ phoxy._.EarlyStage =
         waitSeconds: 60
       });
 
+      if (phoxy._.prestart.subsystem_dir)
+        phoxy._.EarlyStage.subsystem_dir = phoxy._.prestart.subsystem_dir;
+
       if (!phoxy._.prestart.wait)
         phoxy._.EarlyStage.EntryPoint();
       else
@@ -96,7 +100,7 @@ phoxy._.EarlyStage =
   EntryPoint: function()
     {
       phoxy.state.runlevel = 1;
-      var dir = phoxy._.prestart.subsystem_dir || phoxy._.EarlyStage.subsystem_dir;
+      var dir = phoxy._.EarlyStage.subsystem_dir;
       var require_systems = [];
 
       for (var k in phoxy._.EarlyStage.systems)
@@ -124,7 +128,7 @@ phoxy._.EarlyStage =
       require
       (
         require_systems,
-        function()
+        function require_systems()
         {
           phoxy.state.runlevel += 0.5;
           phoxy._.EarlyStage.LoadConfig();
@@ -134,7 +138,7 @@ phoxy._.EarlyStage =
       require
       (
         phoxy._.EarlyStage.sync_require,
-        function()
+        function require_sync()
         {
           phoxy.state.runlevel += 0.5;
           phoxy._.EarlyStage.Ready();
@@ -144,7 +148,7 @@ phoxy._.EarlyStage =
       require
       (
         phoxy._.EarlyStage.async_require,
-        function() {}
+        function require_async() {}
       );
     }
   ,
@@ -178,3 +182,15 @@ phoxy._.EarlyStage =
 }
 
 phoxy._.EarlyStage.Prepare();
+
+if (!Object.keys)
+  Object.keys = function(obj)
+  {
+    var keys = [];
+
+    for (var i in obj)
+      if (obj.hasOwnProperty(i))
+        keys.push(i);
+
+    return keys;
+  };
