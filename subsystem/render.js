@@ -5,34 +5,20 @@ phoxy.render =
       phoxy.Log(4, "phoxy.DeferRender", arguments);
       if (tag === undefined)
         tag = '<defer_render>';
-      var canvas = phoxy._.render.PrepareCanvas(tag);
-      var id = canvas.id;
+      var ancor = phoxy._.render.PrepareAncor(tag);
+      var id = ancor.id;
 
       phoxy._.render.RenderReplace(id, ejs, data, rendered_callback);
 
       if (tag === null)
-        return canvas;
-      return canvas.html;
+        return ancor;
+      return ancor.html;
     }
   ,
 };
 
 phoxy._.render =
 {
-  PrepareCanvas : function(tag)
-    {
-      if (tag === undefined)
-        tag = '<div>';
-      var vanilla_tag = tag.substring(1, tag.length - 1);
-
-      var id =  phoxy._.internal.GenerateUniqueID();
-      var obj = document.createElement(vanilla_tag);
-      obj.setAttribute('id', id);
-      var div = obj.outerHTML;
-
-      return { id: id, obj: obj, html: div };
-    }
-  ,
   AsyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
     { // AsyncRender strategy: for production
       function async_strategy_wait_for_apperance()
@@ -86,14 +72,14 @@ phoxy._.render =
       };
     }
   ,
+  RenderStrategy : "Will be replaced by selected strategy after compilation."
+  ,
   TriggerRenderedEvent : function(target)
     {
       var event_name = 'phoxy.rendered.alpha';
 
-      phoxy._.time.DispatchEvent(target, event_name);
+      phoxy._.internal.DispatchEvent(target, event_name);
     }
-  ,
-  RenderStrategy : "Will be replaced by selected strategy after compilation."
   ,
   RenderInto : function (target, ejs, data, rendered_callback)
     {
@@ -105,11 +91,6 @@ phoxy._.render =
       var args = Array.prototype.slice.call(arguments);
       args.push(phoxy._.render.Replace);
       phoxy._.render.RenderStrategy.apply(this, args);
-    }
-  ,
-  Div : function(dom_element_id)
-    {
-      return document.getElementById(dom_element_id);
     }
   ,
   Replace : function(target, html)
@@ -125,6 +106,25 @@ phoxy._.render =
   Render : function (design, data, callback, is_phoxy_internal_call)
     {
       phoxy.Log(0, "phoxy.Render is OBSOLETE. Use phoxy.Fancy instead");
+    }
+  ,
+  PrepareAncor : function(tag)
+    {
+      if (tag === undefined)
+        tag = '<div>';
+      var vanilla_tag = tag.substring(1, tag.length - 1);
+
+      var id =  phoxy._.internal.GenerateUniqueID();
+      var obj = document.createElement(vanilla_tag);
+      obj.setAttribute('id', id);
+      var div = obj.outerHTML;
+
+      return { id: id, obj: obj, html: div };
+    }
+  ,
+  Div : function(dom_element_id)
+    {
+      return document.getElementById(dom_element_id);
     }
   ,
   Fancy : function()

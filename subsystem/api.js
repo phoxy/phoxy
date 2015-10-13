@@ -218,24 +218,24 @@ phoxy._.api.keyword =
   ,
   design: function(answer, callback, next)
     {
-      var canvas = phoxy._.render.PrepareCanvas('<render>');
+      var ancor = phoxy._.render.PrepareAncor('<render>');
 
       var url = phoxy.Config()['ejs_dir'] + "/" + answer.design + ".ejs";
 
       if (answer.replace !== undefined)
-        phoxy._.api.keyword.replace(answer, callback, canvas);
+        phoxy._.api.keyword.replace(answer, callback, ancor);
       else if (answer.result !== undefined)
-        phoxy._.api.keyword.result(answer, callback, canvas);
+        phoxy._.api.keyword.result(answer, callback, ancor);
       else
-        document.getElementsByTagName('body')[0].appendChild(canvas.obj);
+        document.getElementsByTagName('body')[0].appendChild(ancor.obj);
 
       phoxy._.render.RenderReplace(
-        canvas.id,
+        ancor.id,
         answer.design,
         answer.data || {},
         next);
 
-      return canvas;
+      return ancor;
     }
   ,
   replace: function(answer, callback, canvas)
