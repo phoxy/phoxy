@@ -177,11 +177,11 @@ phoxy._.render =
       return document.getElementById(dom_element_id);
     }
   ,
-  RenderInto : phoxy._.deprecated(0, "phoxy._.render.RenderInto is OBSOLETE")
+  RenderInto : phoxy._.EarlyStage.Deprecated(0, "phoxy._.render.RenderInto is OBSOLETE")
   ,
-  RenderReplace : phoxy._.deprecated(0, "Since phoxy._.render.RenderInto is OBSOLETE phoxy._.render.RenderReplace become OBSOLETE too. Now it using by default within any strategy")
+  RenderReplace : phoxy._.EarlyStage.Deprecated(0, "Since phoxy._.render.RenderInto is OBSOLETE phoxy._.render.RenderReplace become OBSOLETE too. Now it using by default within any strategy")
   ,
-  Render : phoxy._.deprecated(0, "phoxy.Render is OBSOLETE. Use phoxy.Fancy instead")
+  Render : phoxy._.EarlyStage.Deprecated(0, "phoxy.Render is OBSOLETE. Use phoxy.Fancy instead")
 };
 
 phoxy._.birth = function(will, spirit, callback, raw_output)

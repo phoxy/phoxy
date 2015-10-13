@@ -184,6 +184,15 @@ phoxy._.EarlyStage =
 
       return percent;
     }
+  ,
+  Deprecated : function()
+    {
+      var args = arguments;
+      return function deprecated_method_report()
+      {
+        phoxy.Log.apply(phoxy, args);
+      };
+    }
 }
 
 phoxy._.EarlyStage.Prepare();

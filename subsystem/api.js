@@ -122,7 +122,7 @@ phoxy._.api =
       return obj[method];
     }
   ,
-  ForwardDownload : phoxy._.deprecated(0, "phoxy._.api.ForwardDownload is deprecated since ENJS v2.1.8 (phoxy v1.4.1.8)")
+  ForwardDownload : phoxy._.EarlyStage.Deprecated(0, "phoxy._.api.ForwardDownload is deprecated since ENJS v2.1.8 (phoxy v1.4.1.8)")
   ,
   ajax : function ()
     {

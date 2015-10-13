@@ -7,16 +7,9 @@ phoxy.legacy =
     }
 }
 
-phoxy._.deprecated = function()
-  {
-    var args = arguments;
-    return function deprecated_method_report()
-    {
-      phoxy.Log.apply(phoxy, args);
-    };
-  };
-
-phoxy._.deprecated.IsObjectOptionalDetected = function()
+phoxy._.deprecated =
+{
+  IsObjectOptionalDetected : function()
   {
     if (arguments.length !== 3)
       return false;
@@ -25,9 +18,9 @@ phoxy._.deprecated.IsObjectOptionalDetected = function()
     if (typeof callback === 'undefined')
       return false;
     return true;
-  };
-
-phoxy._.deprecated.ObjectOptional = function(method, args)
+  }
+  ,
+  ObjectOptional : function(method, args)
   {
     var url = args[0];
     var objopt = args[1];
@@ -41,12 +34,13 @@ phoxy._.deprecated.ObjectOptional = function(method, args)
       url = [url].concat(objopt);
 
     return method.call(this, url, callback);
-  };
-
-phoxy._.deprecated.ObjectOptionalRelaunch = function(method, args)
+  }
+  ,
+  ObjectOptionalRelaunch : function(method, args)
   {
     if (!phoxy._.deprecated.IsObjectOptionalDetected.apply(this, args))
       return false;
     phoxy._.deprecated.ObjectOptional(method, args);
     return true;
-  };
+  }
+}
