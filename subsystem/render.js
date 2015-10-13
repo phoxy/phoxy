@@ -33,7 +33,7 @@ phoxy._.render =
 
       var callback = args[2];
       if (typeof(callback) === 'undefined')
-        callback = function (){};
+        callback = function empty_birth_callback(){};
 
       return new phoxy._.birth(args[0], args[1], callback, true);
     }
