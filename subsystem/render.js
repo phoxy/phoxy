@@ -8,7 +8,7 @@ phoxy.render =
       var ancor = phoxy._.render.PrepareAncor(tag);
       var id = ancor.id;
 
-      phoxy._.render.RenderReplace(id, ejs, data, rendered_callback);
+      phoxy._.render.RenderStrategy(id, ejs, data, rendered_callback);
 
       if (tag === null)
         return ancor;
@@ -19,11 +19,11 @@ phoxy.render =
 
 phoxy._.render =
 {
-  AsyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
+  AsyncRender_Strategy : function (target, ejs, data, rendered_callback)
     { // AsyncRender strategy: for production
       function async_strategy_wait_for_apperance()
       {
-        difference.call(phoxy, target, obj.html, arguments);
+        phoxy._.render.Replace.call(phoxy, target, obj.html, arguments);
 
         for (var k in obj.defer)
             obj.defer[k]();
@@ -41,7 +41,7 @@ phoxy._.render =
       phoxy._.render.Fancy(ejs, data, async_strategy_birth, true);
     }
   ,
-  SyncRender_Strategy : function (target, ejs, data, rendered_callback, difference)
+  SyncRender_Strategy : function (target, ejs, data, rendered_callback)
     { // SyncRender strategy: for debug/develop purposes
       function sync_strategy_wait_for_apperance()
       {
@@ -51,7 +51,7 @@ phoxy._.render =
       function sync_strategy_birth(obj, ejs, data)
       {
         phoxy._.render.AfterENJSFinished(obj, ejs, data, rendered_callback);
-        difference.call(phoxy, target, obj.html, arguments);
+        phoxy._.render.Replace.call(phoxy, target, obj.html, arguments);
       }
 
       phoxy._.time.Appeared(target, sync_strategy_wait_for_apperance);
@@ -81,14 +81,9 @@ phoxy._.render =
       phoxy._.internal.DispatchEvent(target, event_name);
     }
   ,
-  RenderInto : phoxy._.deprecated(0, "phoxy.RenderInto is OBSOLETE")
+  RenderInto : phoxy._.deprecated(0, "phoxy._.render.RenderInto is OBSOLETE")
   ,
-  RenderReplace : function (target, ejs, data, rendered_callback)
-    {
-      var args = Array.prototype.slice.call(arguments);
-      args.push(phoxy._.render.Replace);
-      phoxy._.render.RenderStrategy.apply(this, args);
-    }
+  RenderReplace : phoxy._.deprecated(0, "Since phoxy._.render.RenderInto is OBSOLETE phoxy._.render.RenderReplace become OBSOLETE too. Now it using by default within any strategy")
   ,
   Replace : function(target, html)
     {
