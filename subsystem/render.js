@@ -38,6 +38,7 @@ phoxy._.render =
       function async_strategy_wait_for_apperance()
       {
         difference.call(phoxy, target, obj.html, arguments);
+
         for (var k in obj.defer)
             obj.defer[k]();
       }
@@ -85,6 +86,13 @@ phoxy._.render =
       };
     }
   ,
+  TriggerRenderedEvent : function(target)
+    {
+      var event_name = 'phoxy.rendered.alpha';
+
+      phoxy._.time.DispatchEvent(target, event_name);
+    }
+  ,
   RenderStrategy : "Will be replaced by selected strategy after compilation."
   ,
   RenderInto : function (target, ejs, data, rendered_callback)
@@ -99,10 +107,18 @@ phoxy._.render =
       phoxy._.render.RenderStrategy.apply(this, args);
     }
   ,
+  Div : function(dom_element_id)
+    {
+      return document.getElementById(dom_element_id);
+    }
+  ,
   Replace : function(target, html)
     {
       var that = document.getElementById(target);
       that.insertAdjacentHTML("afterEnd", html);
+
+      phoxy._.render.TriggerRenderedEvent(target);
+
       that.parentNode.removeChild(that);
     }
   ,

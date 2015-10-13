@@ -63,21 +63,21 @@ phoxy._.time =
       WaitAndCallCountDown(check_timeout * 1000 / check_delay);
     }
   ,
-  Appeared : function(css_selector, callback, timeout, call_delay)
+  Appeared : function(dom_element_id, callback, timeout, call_delay)
     {
       function IsDivAppeared()
       {
-        return phoxy._.time.Div(css_selector) !== null;
+        return phoxy._.render.Div(dom_element_id) !== null;
       }
 
       phoxy._.time.DefaultWaitBehaviour(IsDivAppeared, callback, timeout, call_delay);
     }
   ,
-  Disappeared : function(css_selector, callback, timeout, call_delay)
+  Disappeared : function(dom_element_id, callback, timeout, call_delay)
     {
       function IsDivDisappeared()
       {
-        return phoxy._.time.Div(css_selector) === null;
+        return phoxy._.render.Div(dom_element_id) === null;
       }
 
       phoxy._.time.DefaultWaitBehaviour(IsDivDisappeared, callback, timeout, call_delay);
@@ -97,8 +97,30 @@ phoxy._.time =
       });
     }
   ,
-  Div : function(css_selector)
+  DispatchEvent : function(dom_element_id, event_name)
     {
-      return document.getElementById(css_selector);
+      var that = phoxy._.render.Div(dom_element_id);
+
+      if (document.createEvent)
+      {
+        event = document.createEvent("HTMLEvents");
+        event.initEvent(event_name, true, true);
+        event.eventName = event_name;
+        that.dispatchEvent(event);
+      }
+      else
+      {
+        event = document.createEventObject();
+        event.eventType = event_name;
+        event.eventName = event_name;
+        that.fireEvent("on" + event.eventType, event);
+      }
+    }
+  ,
+  HookEvent : function(dom_element_id, event_name, callback)
+    {
+      var that = phoxy._.render.Div(dom_element_id);
+
+      that.addEventListener(event_name, callback);
     }
 }
