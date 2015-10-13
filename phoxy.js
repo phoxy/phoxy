@@ -87,6 +87,9 @@ phoxy._.EarlyStage =
         waitSeconds: 60
       });
 
+      if (phoxy._.prestart.subsystem_dir)
+        phoxy._.EarlyStage.subsystem_dir = phoxy._.prestart.subsystem_dir;
+
       if (!phoxy._.prestart.wait)
         phoxy._.EarlyStage.EntryPoint();
       else
@@ -97,7 +100,7 @@ phoxy._.EarlyStage =
   EntryPoint: function()
     {
       phoxy.state.runlevel = 1;
-      var dir = phoxy._.prestart.subsystem_dir || phoxy._.EarlyStage.subsystem_dir;
+      var dir = phoxy._.EarlyStage.subsystem_dir;
       var require_systems = [];
 
       for (var k in phoxy._.EarlyStage.systems)
