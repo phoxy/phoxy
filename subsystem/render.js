@@ -53,6 +53,7 @@ phoxy._.render =
     { // AsyncRender strategy: for production
       function async_strategy_wait_for_apperance()
       {
+        phoxy._.render.CheckIfMultiplySpawned(target, ejs, data);
         phoxy._.render.Replace.call(phoxy, target, obj.html, arguments);
 
         for (var k in obj.defer)
@@ -75,6 +76,7 @@ phoxy._.render =
     { // SyncRender strategy: for debug/develop purposes
       function sync_strategy_wait_for_apperance()
       {
+        phoxy._.render.CheckIfMultiplySpawned(target, ejs, data);
         phoxy._.render.Fancy(ejs, data, sync_strategy_birth, true);
       }
 
@@ -85,6 +87,25 @@ phoxy._.render =
       }
 
       phoxy._.time.Appeared(target, sync_strategy_wait_for_apperance);
+    }
+  ,
+  CheckIfMultiplySpawned : function(target, ejs, data)
+    {
+      var stack = [];
+      var div;
+
+      while (div = phoxy._.render.Div(target))
+      {
+        div.id = phoxy._.internal.GenerateUniqueID();
+        stack.push(div);
+      }
+
+      stack[0].id = target;
+
+      function multiplied_spawn_empty_cb() {};
+
+      for (var i = 1; i < stack.length; i++)
+        phoxy._.render.RenderStrategy(stack[i].id, ejs, data, multiplied_spawn_empty_cb);
     }
   ,
   AfterENJSFinished : function(obj, ejs, data, rendered_callback)
