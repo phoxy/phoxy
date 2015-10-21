@@ -74,11 +74,11 @@ phoxy._.EarlyStage =
   ,
   sync_require:
     [
-      "enjs" // composer now IS required
     ]
   ,
   async_require:
     [
+      "enjs" // composer now IS required
     ]
   ,
   Prepare: function()
@@ -163,9 +163,7 @@ phoxy._.EarlyStage =
         phoxy._.EarlyStage.async_require,
         function require_async()
         {
-          if (phoxy.state.runlevel < 3)
-            return setTimeout(arguments.callee, 50);
-          phoxy._.EarlyStage.ExecuteInitialClientCode();
+          phoxy._.EarlyStage.EnterFinalExecution();
         }
       );
     }

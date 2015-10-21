@@ -50,10 +50,6 @@ phoxy._.EarlyStage.DependenciesLoaded = function()
   phoxy._.EarlyStage.PreloadInitialClientCode();
   phoxy._.EarlyStage.HomePageLoad();
 
-
-  phoxy._.enjs.OverloadENJSCanvas();
-  requirejs.config({baseUrl: phoxy.Config()['js_dir']});
-
   // Entering runlevel 3, compilation finished
   phoxy.state.runlevel += 0.5;
 };
@@ -127,6 +123,20 @@ phoxy._.EarlyStage.PreloadInitialClientCode = function()
       phoxy._.EarlyStage.total_amount++;
       InitialCodePreload(scripts[i]);
     }
+}
+
+phoxy._.EarlyStage.EnterFinalExecution = function()
+{
+  if (phoxy.state.runlevel < 3)
+    return setTimeout(arguments.callee, 50);
+
+  phoxy._.enjs.OverloadENJSCanvas();
+  requirejs.config({baseUrl: phoxy.Config()['js_dir']});
+
+  if (typeof phoxy._.prestart.OnExecutingInitialClientCode === 'function')
+    phoxy._.prestart.OnExecutingInitialClientCode();
+
+  phoxy._.EarlyStage.ExecuteInitialClientCode();
 }
 
 phoxy._.EarlyStage.ExecuteInitialClientCode = function()
