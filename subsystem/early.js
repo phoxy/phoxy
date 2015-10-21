@@ -47,6 +47,8 @@ phoxy._.EarlyStage.DependenciesLoaded = function()
   if (typeof phoxy._.prestart.OnAfterCompile === 'function')
     phoxy._.prestart.OnAfterCompile();
 
+  phoxy._.EarlyStage.PreloadInitialClientCode();
+
 
   phoxy._.enjs.OverloadENJSCanvas();
   requirejs.config({baseUrl: phoxy.Config()['js_dir']});
@@ -54,40 +56,7 @@ phoxy._.EarlyStage.DependenciesLoaded = function()
   // Entering runlevel 3, compilation finished
   phoxy.state.runlevel += 0.5;
 
-  if (typeof phoxy._.prestart.OnBeforeFirstApiCall === 'function')
-    phoxy._.prestart.OnBeforeFirstApiCall();
-
-  var initial_client_code = 0;
-  var total_amount = 0;
-
-  function InitialCodeInvoke(script)
-  {
-    phoxy.ApiRequest(
-      script.getAttribute('phoxy'),
-      function on_client_code_result()
-      {
-        phoxy.state.runlevel += 1 / total_amount;
-        phoxy.Defer(function when_client_code_applied()
-        { // Be sure that zero reached only once
-          if (--initial_client_code)
-            return;
-          if (typeof phoxy._.prestart.OnInitialClientCodeComplete === 'function')
-            phoxy._.prestart.OnInitialClientCodeComplete();
-        });
-      });
-  }
-
-  // Invoke client code
-  var scripts = document.getElementsByTagName('script');
-  for (var i = 0; i < scripts.length; i++)
-    if (scripts[i].getAttribute('phoxy') === null)
-      continue;
-    else
-    {
-      initial_client_code++;
-      total_amount++;
-      InitialCodeInvoke(scripts[i]);
-    }
+  phoxy._.EarlyStage.ExecuteInitialClientCode();
 };
 
 phoxy._.EarlyStage.Compile = function()
@@ -129,3 +98,58 @@ phoxy._.EarlyStage.Compile = function()
 
   phoxy.state.compiled = true;
 };
+
+phoxy._.EarlyStage.PreloadInitialClientCode = function()
+{
+  if (typeof phoxy._.prestart.OnBeforeFirstApiCall === 'function')
+    phoxy._.prestart.OnBeforeFirstApiCall();
+
+  phoxy._.EarlyStage.initial_client_code = 0;
+  phoxy._.EarlyStage.total_amount = 0;
+
+  phoxy._.EarlyStage.initial_preloaded = [];
+
+  function InitialCodePreload(script)
+  {
+    phoxy.AJAX(script.getAttribute('phoxy'), function on_intial_code_preloaded(response)
+    {
+      phoxy._.EarlyStage.initial_preloaded.push(response);
+    });
+  }
+
+  // Invoke client code
+  var scripts = document.getElementsByTagName('script');
+  for (var i = 0; i < scripts.length; i++)
+    if (scripts[i].getAttribute('phoxy') === null)
+      continue;
+    else
+    {
+      phoxy._.EarlyStage.initial_client_code++;
+      phoxy._.EarlyStage.total_amount++;
+      InitialCodePreload(scripts[i]);
+    }
+}
+
+phoxy._.EarlyStage.ExecuteInitialClientCode = function()
+{
+  if (phoxy._.EarlyStage.initial_client_code == 0)
+  {
+    if (typeof phoxy._.prestart.OnInitialClientCodeComplete === 'function')
+      phoxy._.prestart.OnInitialClientCodeComplete();
+    return;
+  }
+
+  // reshedule if nothing to process
+  if (phoxy._.EarlyStage.initial_client_code > 0 && phoxy._.EarlyStage.initial_preloaded.length == 0)
+    return setTimeout(arguments.callee, 50);
+
+  var code = phoxy._.EarlyStage.initial_preloaded.pop();
+
+  phoxy.state.runlevel += 1 / phoxy._.EarlyStage.total_amount;
+  phoxy.ApiAnswer(code, function when_client_code_applied()
+  {
+    if (--phoxy._.EarlyStage.initial_client_code)
+      return;
+    phoxy._.EarlyStage.ExecuteInitialClientCode();
+  });
+}
