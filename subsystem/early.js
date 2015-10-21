@@ -48,6 +48,7 @@ phoxy._.EarlyStage.DependenciesLoaded = function()
     phoxy._.prestart.OnAfterCompile();
 
   phoxy._.EarlyStage.PreloadInitialClientCode();
+  phoxy._.EarlyStage.HomePageLoad();
 
 
   phoxy._.enjs.OverloadENJSCanvas();
@@ -151,5 +152,27 @@ phoxy._.EarlyStage.ExecuteInitialClientCode = function()
     if (--phoxy._.EarlyStage.initial_client_code)
       return;
     phoxy._.EarlyStage.ExecuteInitialClientCode();
+  });
+}
+
+phoxy._.EarlyStage.HomePageLoad = function()
+{
+  if (phoxy._.prestart.no_home_call !== undefined)
+    return;
+
+  var home_result;
+  function when_home_result_ready()
+  {
+    if (phoxy._.EarlyStage.initial_client_code > 0)
+      return setTimeout(arguments.callee, 50);
+    // Wait for initial code to complete, before execute first page code
+    phoxy.ApiAnswer(home_result, phoxy._.prestart.OnFirstPageRendered);
+  }
+
+
+  phoxy.AJAX(location.pathname.substr(1) + location.search, function(response)
+  {
+    home_result = response;
+    when_home_result_ready();
   });
 }

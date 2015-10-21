@@ -58,9 +58,6 @@ phoxy._.internal =
       phoxy.state.loaded = true;
 
       phoxy._.click.InitClickHook();
-
-      if (phoxy._.prestart.no_home_call === undefined)
-        phoxy.ApiRequest(location.pathname.substr(1) + location.search, phoxy._.prestart.OnFirstPageRendered);
     }
   ,
   GenerateUniqueID : function()
