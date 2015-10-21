@@ -132,11 +132,19 @@ phoxy._.EarlyStage =
 
       require
       (
+        [require_systems[0]],
+        function require_early_stage()
+        {
+          phoxy._.EarlyStage.LoadConfig();
+        }
+      );
+
+      require
+      (
         require_systems,
         function require_systems()
         {
           phoxy.state.runlevel += 0.5;
-          phoxy._.EarlyStage.LoadConfig();
         }
       );
 
