@@ -161,7 +161,12 @@ phoxy._.EarlyStage =
       require
       (
         phoxy._.EarlyStage.async_require,
-        function require_async() {}
+        function require_async()
+        {
+          if (phoxy.state.runlevel < 3)
+            return setTimeout(arguments.callee, 50);
+          phoxy._.EarlyStage.ExecuteInitialClientCode();
+        }
       );
     }
   ,

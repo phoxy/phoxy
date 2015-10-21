@@ -56,8 +56,6 @@ phoxy._.EarlyStage.DependenciesLoaded = function()
 
   // Entering runlevel 3, compilation finished
   phoxy.state.runlevel += 0.5;
-
-  phoxy._.EarlyStage.ExecuteInitialClientCode();
 };
 
 phoxy._.EarlyStage.Compile = function()
