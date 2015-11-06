@@ -65,7 +65,7 @@ phoxy._.render =
         var _obj = obj;
         var _args = arguments;
 
-        phoxy._.render.AfterENJSFinished(obj, ejs, data, rendered_callback);
+        phoxy._.render.AfterENJSFinished(target, obj, ejs, data, rendered_callback);
 
         // Potential cascade memleak
         // Should clear listeners with callback
@@ -88,7 +88,7 @@ phoxy._.render =
 
       function sync_strategy_birth(obj, ejs, data)
       {
-        phoxy._.render.AfterENJSFinished(obj, ejs, data, rendered_callback);
+        phoxy._.render.AfterENJSFinished(target, obj, ejs, data, rendered_callback);
         phoxy._.render.Replace.call(phoxy, target, obj.html, arguments);
       }
 
@@ -128,7 +128,7 @@ phoxy._.render =
         phoxy._.render.RenderStrategy(stack[i].id, ejs, data, multiplied_spawn_empty_cb);
     }
   ,
-  AfterENJSFinished : function(obj, ejs, data, rendered_callback)
+  AfterENJSFinished : function(target, obj, ejs, data, rendered_callback)
     {
       if (typeof obj === 'undefined')
       {
