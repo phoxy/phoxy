@@ -269,10 +269,12 @@ phoxy._.birth.prototype =
         return this.Conceive(design, data);
     }
   ,
-  Vision: function(cb, design, data)
+  Vision: function(design, data)
     {
       this.Log("Vision", arguments);
-      return cb(design, data);
+
+      var return_object = undefined;
+      return this.callback(return_object, design, data);
     }
   ,
   Prophecy: function(rpc)
