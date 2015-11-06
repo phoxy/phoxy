@@ -42,7 +42,7 @@ phoxy.internal =
 
       console[method].apply(console, args);
       if (level === 0)
-        debugger;
+        throw "Break execution on fatal log";
     }
   ,
   Override: function(method_name, new_method)
