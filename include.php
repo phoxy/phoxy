@@ -10,7 +10,7 @@ function IncludeModule( $dir, $module )
     $module = $module[0];
   }
 
-  if (substr($dir, 0, 2) == './')
+  if (substr($dir, 0, 2) === './')
     $dir = substr($dir, 2);
 
   $module_file = str_replace('\\', '/', $module);

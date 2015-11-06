@@ -16,7 +16,7 @@ class rpc_string_parser
     foreach ($try as $t)
     {
       $target_dir = ".";
-      if ($t['class'] == 'phoxy') // reserved module name
+      if ($t['class'] === 'phoxy') // reserved module name
       {
         $target_dir = realpath(dirname(__FILE__));
         $t["scope"] = str_replace(phoxy_conf()["api_dir"], "", $t["scope"]);
@@ -107,7 +107,7 @@ class rpc_string_parser
     $length = strlen($token);
 
     $pos = strpos($token, '(');
-    if ($pos == false)
+    if ($pos === false)
       return $token;
 
     if ($token[$length - 1] != ')')
@@ -173,11 +173,11 @@ class rpc_string_parser
     {
       $ch = $token[$i];
       if ($in_string)
-        if ($ch != $in_string)
+        if ($ch !== $in_string)
           continue;
         else
           $in_string = false;
-      else if ($ch == '"' || $ch == "'")
+      else if ($ch === '"' || $ch === "'")
         $in_string = $ch;
       else if (strpos("()", $ch) !== false)
         $path[] = $ch;
@@ -210,7 +210,7 @@ class rpc_string_parser
       if (!in_array($ch, $mirroring[1]))
         continue; // ignore for path resolve
 
-      if (end($expect) != $ch)
+      if (end($expect) !== $ch)
         return false;
       array_pop($expect);
     }

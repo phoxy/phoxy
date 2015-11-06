@@ -57,7 +57,7 @@ class phoxy_sys_api
       phoxy_return_worker::NewCache($ret['cache']);
 
     if (is_array($ret) && isset($ret['data'])
-        && count($ret['data']) == 1 && isset($ret['data'][$name]))
+        && count($ret['data']) === 1 && isset($ret['data'][$name]))
       $ret = $ret['data'][$name];
 
     if (!is_array($ret))

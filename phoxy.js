@@ -1,7 +1,7 @@
 if (typeof phoxy === 'undefined')
   phoxy = {};
 if (typeof phoxy.state !== 'undefined')
-  if (phoxy.state.loaded == true)
+  if (phoxy.state.loaded === true)
     throw "Phoxy already loaded. Dont mess with this";
 
 

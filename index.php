@@ -16,7 +16,7 @@ function PhoxyStart()
   $file = $_GET[$get_param];
   unset($_GET[$get_param]);
 
-  if ($file == 'htaccess')
+  if ($file === 'htaccess')
     exit('Rewrite engine work SUCCESS');
 
   try

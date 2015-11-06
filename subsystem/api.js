@@ -257,7 +257,7 @@ phoxy._.api.keyword =
       for (var k in answer.result)
       {
         var v = document.getElementById(answer.result[k]);
-        if (v != null)
+        if (v !== null)
           v.innerHTML = canvas.html;
       }
     }

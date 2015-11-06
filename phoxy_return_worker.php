@@ -129,7 +129,7 @@ class phoxy_return_worker
         $no[] = $scope;
 
     foreach ($no as $scope)
-      if ($scope == 'all')
+      if ($scope === 'all')
       {
         unset($this->obj['cache']);
         break;
@@ -173,7 +173,7 @@ class phoxy_return_worker
     {
       $amount = $arr[$base + 1];
       $modifyer = $arr[$base + 2];
-      if ($modifyer == '')
+      if ($modifyer === '')
         $modifyer = 's';
       $mult = 1;
       switch ($modifyer)

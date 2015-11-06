@@ -5,7 +5,7 @@ phoxy.internal =
       url = phoxy.ConstructURL(url);
 
       phoxy.Log(4, "History push", url);
-      if (url[0] != '/')
+      if (url[0] !== '/')
         url = '/' + url;
       history.pushState({}, document.title, url);
 

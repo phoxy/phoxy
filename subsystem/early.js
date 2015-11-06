@@ -141,7 +141,7 @@ phoxy._.EarlyStage.EnterFinalExecution = function()
 
 phoxy._.EarlyStage.ExecuteInitialClientCode = function()
 {
-  if (phoxy._.EarlyStage.initial_client_code == 0)
+  if (phoxy._.EarlyStage.initial_client_code === 0)
   {
     if (typeof phoxy._.prestart.OnInitialClientCodeComplete === 'function')
       phoxy._.prestart.OnInitialClientCodeComplete();
@@ -149,7 +149,7 @@ phoxy._.EarlyStage.ExecuteInitialClientCode = function()
   }
 
   // reshedule if nothing to process
-  if (phoxy._.EarlyStage.initial_client_code > 0 && phoxy._.EarlyStage.initial_preloaded.length == 0)
+  if (phoxy._.EarlyStage.initial_client_code > 0 && phoxy._.EarlyStage.initial_preloaded.length === 0)
     return setTimeout(arguments.callee, 50);
 
   var code = phoxy._.EarlyStage.initial_preloaded.pop();

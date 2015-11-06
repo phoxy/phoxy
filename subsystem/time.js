@@ -2,7 +2,7 @@ phoxy.time =
 {
   Defer : function(callback, time)
     {
-      if (time == undefined)
+      if (time === undefined)
         time = 0;
       if (typeof callback !== 'function')
         return phoxy.Log(0, "phoxy.Defer: Callback not a function", callback);
