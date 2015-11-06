@@ -133,7 +133,7 @@ phoxy._.EarlyStage =
       require
       (
         [require_systems[0]],
-        function require_early_stage()
+        function on_require_early_stage()
         {
           phoxy._.EarlyStage.LoadConfig();
         }
@@ -142,7 +142,7 @@ phoxy._.EarlyStage =
       require
       (
         require_systems,
-        function require_systems()
+        function on_require_systems()
         {
           phoxy.state.runlevel += 0.5;
         }
@@ -151,7 +151,7 @@ phoxy._.EarlyStage =
       require
       (
         phoxy._.EarlyStage.sync_require,
-        function require_sync()
+        function on_require_sync()
         {
           phoxy.state.runlevel += 0.5;
           phoxy._.EarlyStage.Ready();
@@ -161,7 +161,7 @@ phoxy._.EarlyStage =
       require
       (
         phoxy._.EarlyStage.async_require,
-        function require_async()
+        function on_require_async()
         {
           phoxy._.EarlyStage.EnterFinalExecution();
         }

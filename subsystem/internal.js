@@ -77,14 +77,14 @@ phoxy._.internal =
 
       if (document.createEvent)
       {
-        event = document.createEvent("HTMLEvents");
+        var event = document.createEvent("HTMLEvents");
         event.initEvent(event_name, true, true);
         event.eventName = event_name;
         that.dispatchEvent(event);
       }
       else
       {
-        event = document.createEventObject();
+        var event = document.createEventObject();
         event.eventType = event_name;
         event.eventName = event_name;
         that.fireEvent("on" + event.eventType, event);

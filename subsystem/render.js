@@ -62,8 +62,8 @@ phoxy._.render =
 
       function async_strategy_birth(obj, ejs, data)
       {
-        _obj = obj;
-        _args = arguments;
+        var _obj = obj;
+        var _args = arguments;
 
         phoxy._.render.AfterENJSFinished(obj, ejs, data, rendered_callback);
 
