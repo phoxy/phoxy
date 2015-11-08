@@ -396,7 +396,14 @@ phoxy._.birth.prototype =
     if (design.indexOf(".ejs") === -1)
         design += ".ejs";
 
-    var ejs = new EJS({'url' : design}, async ? WhenReady : undefined);
+    var callback = async ? WhenReady : undefined;
+    var obj =
+    {
+      domain: phoxy.Config().site,
+      url: design,
+    };
+
+    var ejs = new EJS(obj, callback);
 
     var that = this;
     function WhenReady()
