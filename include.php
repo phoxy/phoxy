@@ -1,4 +1,12 @@
-<?php
+<?php namespace phoxy;
+
+function InstanceClassByName($classname, $args)
+{
+  $reflection = new \ReflectionClass($classname);
+  $obj = $reflection->newInstanceArgs($args);
+  $obj->phoxy_api_init();
+  return $obj;
+}
 
 $_phoxy_loaded_classes = [];
 function IncludeModule( $dir, $module )
@@ -55,9 +63,7 @@ function IncludeModule( $dir, $module )
     if (!class_exists($module))
       die('Class include failed. File do not carrying that');
 
-    $reflection = new ReflectionClass($module);
-    $obj = $reflection->newInstanceArgs($args);
-    $obj->phoxy_api_init();
+    $obj = InstanceClassByName($module, $args);
 
     if (!isset($_phoxy_loaded_classes[$dir]))
       $_phoxy_loaded_classes[$dir] = [];
