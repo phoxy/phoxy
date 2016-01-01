@@ -1,4 +1,4 @@
-<?php namespace phoxy;
+<?php
 
 function InstanceClassByName($classname, $args)
 {
@@ -55,6 +55,7 @@ function IncludeModule( $dir, $module )
       if (!isset($_phoxy_loaded_classes[$dir]))
         $_phoxy_loaded_classes[$dir] = [];
       $_phoxy_loaded_classes[$dir][$module] = $obj;
+
       return $obj;
     }
 

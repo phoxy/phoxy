@@ -10,4 +10,4 @@ $code = preg_replace('/ api\s*\n/', '\\api', $code);
 eval($code);
 
 $classname = "\\".$tempns."\\$module";
-$obj = \phoxy\InstanceClassByName($classname, $args);
+$obj = InstanceClassByName($classname, $args);
