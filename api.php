@@ -147,7 +147,7 @@ class api
 
     $ret = array_merge_recursive($this->addons, $ret);
 
-    $conf = phoxy_conf();
+    $conf = phoxy::Config();
 
     return new phoxy_return_worker($ret);
   }
@@ -155,10 +155,19 @@ class api
   private function Call( $name, $arguments )
   {
     if (!method_exists($this, $name))
-      return ["error" => "Unexpected RPC call (Module handler not found)"];
+      return
+      [
+        "error" => "Unexpected RPC call (Module handler not found)",
+        "description" => htmlentities($name),
+      ];
+
     $reflection = new ReflectionMethod($this, $name);
     if (!$reflection->isProtected())
-      return ["error" => "Security violation (Module handler not protected)"];
+      return
+      [
+        "error" => "Security violation (Module handler not protected)",
+        "description" => htmlentities($name),
+      ];
     $ret = call_user_func_array([$this, $name], $arguments);
     return $ret;
   }
@@ -168,12 +177,8 @@ class api
     $where = "{$what}{$where}";
   }
 
-  // $this(false, true) <-- reinclude yourself
-  // $this('dir', 'module') <-- include other
-  public function __invoke($force_raw = false, $expect_simple_result = true, $fallback_raw = false, $fallback_simpe = true)
+  public function fork($expect_simple_result = true, $fallback_raw = false)
   {
-    if (is_string($force_raw) && is_string($expect_simple_result))
-      return LoadModule($force_raw, $expect_simple_result, $fallback_raw, $fallback_simpe);
     return new phoxy_sys_api($this, $force_raw, $expect_simple_result);
   }
 };

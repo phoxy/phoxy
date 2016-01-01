@@ -60,7 +60,7 @@ class phoxy_return_worker
   {
     if (!isset($this->obj[$a]) || !count($this->obj[$a]))
       return;
-    $conf = phoxy_conf();
+    $conf = phoxy::Config();
     if (is_null($conf[$b]))
       return;
     if (is_array($this->obj[$a]))
@@ -87,7 +87,7 @@ class phoxy_return_worker
 
   private function DefaultCacheTiming()
   {
-    $conf = phoxy_conf();
+    $conf = phoxy::Config();
     if (!isset($this->obj['cache']))
       $this->obj['cache'] = [];
     $cache = $this->obj['cache'];
