@@ -147,7 +147,8 @@ phoxy._.api =
           });
       }
 
-      return EscapeReserved(send_string, "()?#\\");
+      var escaped_send_string = EscapeReserved(send_string, "()?#\\");
+      return encodeURIComponent(escaped_send_string);
     }
   ,
   IfKeyword : function(answer, callback, keyword, next)
