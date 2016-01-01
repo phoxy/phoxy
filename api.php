@@ -147,7 +147,7 @@ class api
 
     $ret = array_merge_recursive($this->addons, $ret);
 
-    $conf = phoxy_conf();
+    $conf = phoxy::Config();
 
     return new phoxy_return_worker($ret);
   }

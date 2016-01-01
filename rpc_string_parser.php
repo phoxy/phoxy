@@ -19,7 +19,7 @@ class rpc_string_parser
       if ($t['class'] === 'phoxy') // reserved module name
       {
         $target_dir = realpath(dirname(__FILE__));
-        $t["scope"] = str_replace(phoxy_conf()["api_dir"], "", $t["scope"]);
+        $t["scope"] = str_replace(phoxy::Config()["api_dir"], "", $t["scope"]);
       }
 
       $file_location = $target_dir.$t["scope"];

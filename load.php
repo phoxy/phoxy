@@ -10,5 +10,5 @@ include('config.php');
 include('api.php');
 include('phoxy.php');
 
-if (phoxy_conf()['autostart'])
+if (phoxy::Config()['autostart'])
   phoxy::Start();

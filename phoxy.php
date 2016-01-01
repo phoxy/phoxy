@@ -2,15 +2,22 @@
 
 class phoxy extends api
 {
+  // Calling api/phoxy returning server configuration for current session
   protected function Reserve()
   {
-    $ret = phoxy_conf();
-    return $ret;
+    return self::Config();
   }
 
+  // For user phoxy configuration overload we using phoxy_conf method redefine
+  public static function Config()
+  {
+    return phoxy_conf();
+  }
+
+  // Calling phoxy::modulename immideatelly loading or using preloaded module object
   public static function __callStatic($name, $arguments)
   {
-    $dir = phoxy_conf()['api_dir'];
+    $dir = phoxy::Config()['api_dir'];
     $names = explode('/', $name);
 
     $module = array_pop($names);
@@ -19,6 +26,7 @@ class phoxy extends api
     return LoadModule($directory, $module);
   }
 
+  // Begin default phoxy behaviour
   public static function Start()
   {
     global $_SERVER;
@@ -26,7 +34,7 @@ class phoxy extends api
       die("Request aborted due API direct XSS warning");
 
     global $_GET;
-    $get_param = phoxy_conf()["get_api_param"];
+    $get_param = phoxy::Config()["get_api_param"];
     $file = $_GET[$get_param];
     unset($_GET[$get_param]);
 
