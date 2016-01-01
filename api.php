@@ -177,7 +177,12 @@ class api
     $where = "{$what}{$where}";
   }
 
-  public function fork($expect_simple_result = true, $fallback_raw = false)
+  public function __invoke()
+  {
+    return $this->Reserve();
+  }
+
+  public function fork($force_raw = false, $expect_simple_result = true)
   {
     return new phoxy_sys_api($this, $force_raw, $expect_simple_result);
   }
