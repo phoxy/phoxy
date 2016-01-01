@@ -10,7 +10,7 @@ function IncludeModule( $dir, $module )
     $module = $module[0];
   }
 
-  if (substr($dir, 0, 2) == './')
+  if (substr($dir, 0, 2) === './')
     $dir = substr($dir, 2);
 
   $module_file = str_replace('\\', '/', $module);
@@ -63,7 +63,12 @@ function IncludeModule( $dir, $module )
       $_phoxy_loaded_classes[$dir] = [];
     $_phoxy_loaded_classes[$dir][$module] = $obj;
     return $obj;
-  } catch (Exception $e)
+  }
+  catch (phoxy_protected_call_error $e)
+  {
+    throw $e;
+  }
+  catch (Exception $e)
   {
     phoxy_protected_assert(false, ["error" => "Uncaught script exception at module load"]);
   }

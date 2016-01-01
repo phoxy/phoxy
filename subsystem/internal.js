@@ -1,11 +1,11 @@
-phoxy._InternalCode =
+phoxy.internal =
 {
   ChangeURL : function (url)
     {
       url = phoxy.ConstructURL(url);
 
       phoxy.Log(4, "History push", url);
-      if (url[0] != '/')
+      if (url[0] !== '/')
         url = '/' + url;
       history.pushState({}, document.title, url);
 
@@ -32,25 +32,17 @@ phoxy._InternalCode =
       var error_names = phoxy._.internal.error_names;
       var errorname = error_names[level < error_names.length ? level : error_names.length - 1];
 
-      var skipfirst = true;
-      var args = [errorname];
+      var args = [];
       for (var v in arguments)
-        if (skipfirst)
-          skipfirst = false;
-        else
-          args.push(arguments[v]);
-      var method;
-      if (level < 2)
-        method = "error";
-      else if (level === 2)
-        method = "warn";
-      else if (level === 3)
-        method = "info";
-      else
-        method = "debug";
+        args.push(arguments[v]);
+      args[0] = errorname;
+
+      var error_methods = phoxy._.internal.error_methods;
+      var method = error_methods[level < error_methods.length ? level : error_methods.length - 1];
+
       console[method].apply(console, args);
-      if (level == 0)
-        debugger;
+      if (level === 0)
+        throw "Break execution on fatal log";
     }
   ,
   Override: function(method_name, new_method)
@@ -59,17 +51,13 @@ phoxy._InternalCode =
     }
 };
 
-phoxy._InternalCode._ = {};
-phoxy._InternalCode._.internal =
+phoxy._.internal =
 {
   Load : function( )
     {
       phoxy.state.loaded = true;
 
       phoxy._.click.InitClickHook();
-
-      //if (!phoxy._.prestart.skip_initiation)
-      //  phoxy.ApiRequest(hash);
     }
   ,
   GenerateUniqueID : function()
@@ -80,7 +68,34 @@ phoxy._InternalCode._.internal =
       for (var i = 0; i < 10; i++)
         ret += dictonary.charAt(Math.floor(Math.random() * dictonary.length));
 
-      return ret;
+      return "phoxy_" + ret;
+    }
+  ,
+  DispatchEvent : function(dom_element_id, event_name)
+    {
+      var that = phoxy._.render.Div(dom_element_id);
+
+      if (document.createEvent)
+      {
+        var event = document.createEvent("HTMLEvents");
+        event.initEvent(event_name, true, true);
+        event.eventName = event_name;
+        that.dispatchEvent(event);
+      }
+      else
+      {
+        var event = document.createEventObject();
+        event.eventType = event_name;
+        event.eventName = event_name;
+        that.fireEvent("on" + event.eventType, event);
+      }
+    }
+  ,
+  HookEvent : function(dom_element_id, event_name, callback)
+    {
+      var that = phoxy._.render.Div(dom_element_id);
+
+      that.addEventListener(event_name, callback);
     }
   ,
   Override : function(object, method_name, new_method)
@@ -96,6 +111,15 @@ phoxy._InternalCode._.internal =
     "ERROR",
     "WARNING",
     "INFO",
-    "DEBUG",
+    "DEBUG"
   ],
+  error_methods :
+  [
+    "error",
+    "error",
+    "warn",
+    "info",
+    "log",
+    "debug"
+  ]
 };

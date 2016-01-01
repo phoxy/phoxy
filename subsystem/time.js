@@ -1,8 +1,8 @@
-phoxy._TimeSubsystem =
+phoxy.time =
 {
   Defer : function(callback, time)
     {
-      if (time == undefined)
+      if (time === undefined)
         time = 0;
       if (typeof callback !== 'function')
         return phoxy.Log(0, "phoxy.Defer: Callback not a function", callback);
@@ -10,7 +10,7 @@ phoxy._TimeSubsystem =
       var func = callback;
       func.bind(this);
 
-      if (time == -1)
+      if (time === -1)
         func();
       else
         setTimeout(func, time);
@@ -18,42 +18,43 @@ phoxy._TimeSubsystem =
   ,
   DDefer : function(callback, time)
     {
-      phoxy.Defer.call(this, function()
+      phoxy.Defer.call(this, function ddefer_callback()
       {
         phoxy.Defer.call(this, callback);
       }, time);
     }
 };
 
-phoxy._TimeSubsystem._ = {};
-phoxy._TimeSubsystem._.time =
+phoxy._.time =
 {
   WaitFor : function(callback_condition, callback, timeout, check_every)
     {
+      if (callback_condition())
+        return callback();
+
       var
         check_timeout = 60, // 1 minute for render to complete
         check_delay = 500; // check every 500ms
 
-      if (timeout != undefined)
+      if (timeout !== undefined)
         check_timeout = timeout;
-      if (check_every != undefined)
+
+      if (check_every !== undefined)
         check_delay = check_every;
 
-      var func = function()
+      function required_event_occured()
       {
         if (!callback_condition())
           return;
         callback();
       }
-      if (callback_condition())
-        return func();
 
       function WaitAndCallCountDown( i )
       {
         if (i <= 0)
-          return func();
+          return required_event_occured();
 
-        phoxy.Defer(function()
+        phoxy.Defer(function waiting_for_event()
         {
           if (callback_condition())
             i = 0;
@@ -64,39 +65,34 @@ phoxy._TimeSubsystem._.time =
       WaitAndCallCountDown(check_timeout * 1000 / check_delay);
     }
   ,
-  Appeared : function(jquery_selector, callback, timeout, call_delay)
+  Appeared : function(dom_element_id, callback, timeout, call_delay)
     {
-      function Div()
-      {
-        return document.getElementById(jquery_selector);
-      }
       function IsDivAppeared()
       {
-        return Div() != null;
+        return phoxy._.render.Div(dom_element_id) !== null;
       }
 
-      phoxy.Defer(function()
-      {
-        phoxy._.time.WaitFor(IsDivAppeared, function()
-        {
-          phoxy.DDefer.call(Div(), callback, call_delay);
-        }, timeout)
-      });
+      phoxy._.time.DefaultWaitBehaviour(IsDivAppeared, callback, timeout, call_delay);
     }
   ,
-  Disappeared : function(jquery_selector, callback, timeout, call_delay)
+  Disappeared : function(dom_element_id, callback, timeout, call_delay)
     {
       function IsDivDisappeared()
       {
-        return document.getElementById(jquery_selector) == null;
+        return phoxy._.render.Div(dom_element_id) === null;
       }
 
-      phoxy.Defer(function()
+      phoxy._.time.DefaultWaitBehaviour(IsDivDisappeared, callback, timeout, call_delay);
+    }
+  ,
+  DefaultWaitBehaviour : function(check_function, callback, timeout, call_delay)
+    {
+      if (typeof call_delay === 'undefined')
+        call_delay = -1;
+
+      phoxy._.time.WaitFor(check_function, function phoxy_time_wait_finished()
       {
-        phoxy._.time.WaitFor(IsDivDisappeared, function()
-        {
-          phoxy.DDefer(callback, call_delay);
-        }, timeout);
-      });
+        phoxy.Defer(callback, call_delay);
+      }, timeout);
     }
 }

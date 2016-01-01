@@ -3,12 +3,12 @@
   "description": "Making hard web development easy",
   "type": "library",
   "license": "Apache-2.0",
-  "minimal-stability": "dev",
+  "minimum-stability": "dev",
   "include-path": ["/../"],
   "require" :
   {
     "php": "~5.5",
-    "phoxy/enjs": "~2.1.2"
+    "phoxy/enjs": "~2.1.8"
   },
   "suggest" :
   {
@@ -19,6 +19,15 @@
     {
       "type": "vcs",
       "url": "https://github.com/phoxy/enjs"
+    }
+  ],
+  "authors":
+  [
+    {
+      "name": "Kirill Berezin",
+      "homepage": "http://exsul.net",
+      "email": "enelar@exsul.net",
+      "role": "Maintainer"
     }
   ]
 }

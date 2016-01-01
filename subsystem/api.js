@@ -1,4 +1,4 @@
-phoxy._ApiSubsystem =
+phoxy.api =
 {
   ApiAnswer : function(answer, callback)
     {
@@ -27,10 +27,18 @@ phoxy._ApiSubsystem =
         if (typeof phoxy._.prestart.OnAjaxBegin === 'function')
           phoxy._.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
 
-      phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function(response)
+      phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function ajax_callback(response)
         {
-          data = JSON.parse(response);
-          if (params == undefined)
+          var data = JSON.parse(response);
+
+          // http://stackoverflow.com/questions/4215737/convert-array-to-object
+          if (Array.isArray(data.data))
+            if (data.data.length === 0)
+              data.data = {};
+            else
+              data.data = data.data.reduce(function(o, v, i) { o[i] = v; return o; });
+
+          if (params === undefined)
             params = [];
           params.unshift(data);
           callback.apply(this, params);
@@ -56,24 +64,23 @@ phoxy._ApiSubsystem =
   ,
   ApiRequest : function(url, callback)
     {
-      if (phoxy._.deprecated.IsObjectOptionalDetected.apply(this, arguments))
-        phoxy._.deprecated.ObjectOptional(phoxy.MenuCall, arguments);
+      if (phoxy._.deprecated.ObjectOptionalRelaunch(this, phoxy.ApiRequest, arguments))
+        return;
 
       phoxy.AJAX(url, phoxy.ApiAnswer, [callback]);
     }
   ,
   MenuCall : function(url, callback)
     {
-      if (phoxy._.deprecated.IsObjectOptionalDetected.apply(this, arguments))
-        phoxy._.deprecated.ObjectOptional(phoxy.MenuCall, arguments);
+      if (phoxy._.deprecated.ObjectOptionalRelaunch(this, phoxy.MenuCall, arguments))
+        return;
 
       phoxy.ChangeURL(url);
       phoxy.ApiRequest(url, callback);
     }
 }
 
-phoxy._ApiSubsystem._ = {};
-phoxy._ApiSubsystem._.api =
+phoxy._.api =
 {
   ScriptsLoaded : function(answer, callback)
     {
@@ -115,31 +122,7 @@ phoxy._ApiSubsystem._.api =
       return obj[method];
     }
   ,
-  ForwardDownload : function(url, callback_or_true_for_return)
-    {
-      if (typeof(storage) === "undefined")
-        storage = {};
-
-      if (callback_or_true_for_return === true)
-        return storage[url];
-
-      function AddToLocalStorage(data)
-      {
-        storage[url] = data;
-        if (typeof(callback_or_true_for_return) === 'function')
-          callback_or_true_for_return(data);
-      }
-
-      if (storage[url] != undefined)
-      {
-        if (typeof(callback_or_true_for_return) === 'function')
-          callback_or_true_for_return(storage[url]);
-        return true;
-      }
-
-      phoxy._.internal.ajax(url, AddToLocalStorage);
-      return false;
-    }
+  ForwardDownload : "phoxy._.api.ForwardDownload is deprecated since ENJS v2.1.8 (phoxy v1.4.1.8)"
   ,
   ajax : function ()
     {
@@ -148,13 +131,13 @@ phoxy._ApiSubsystem._.api =
   ,
   Serialize : function(obj, nested_mode)
     {
-      json_encoded = JSON.stringify(obj);
-      send_string = json_encoded.substring(1, json_encoded.length - 1);
+      var json_encoded = JSON.stringify(obj);
+      var send_string = json_encoded.substring(1, json_encoded.length - 1);
 
       function EscapeReserved(str, reserved)
       {
-        reserved_characters = reserved.split('');
-        search_string = "\\" + reserved_characters.join("|\\");
+        var reserved_characters = reserved.split('');
+        var search_string = "\\" + reserved_characters.join("|\\");
         var regexp = new RegExp(search_string, "gi");
 
         return str.replace(regexp,
@@ -177,7 +160,7 @@ phoxy._ApiSubsystem._.api =
   ,
   PlugInKeyword : function(keyword, args)
   {
-    require([phoxy._.EarlyStage.subsystem_dir + "/" + keyword + ".js"], function()
+    require([phoxy._.EarlyStage.subsystem_dir + "/" + keyword + ".js"], function keyword_plugin()
     {
       if (phoxy._.api.keyword[keyword] === undefined)
         Log(0, "Keyword handler for '" + keyword + "' is missing");
@@ -187,14 +170,14 @@ phoxy._ApiSubsystem._.api =
   ,
   KeywordMissing : function(keyword)
   {
-    return function()
+    return function auto_plugin_keyword()
     {
       return phoxy._.api.PlugInKeyword(keyword, arguments);
     };
   }
 };
 
-phoxy._ApiSubsystem._.api.keyword =
+phoxy._.api.keyword =
 {
   error: function(answer, callback)
     {
@@ -232,26 +215,33 @@ phoxy._ApiSubsystem._.api.keyword =
   ,
   design: function(answer, callback, next)
     {
-      var canvas = phoxy._.render.PrepareCanvas('<render>');
+      var attributes;
+
+      if (phoxy.state.cascade_debug)
+        attributes =
+        {
+          ejs: answer.design,
+          data: JSON.stringify(answer.data),
+        };
+
+      var ancor = phoxy._.render.PrepareAncor('<KeywordDesign>', attributes);
 
       var url = phoxy.Config()['ejs_dir'] + "/" + answer.design + ".ejs";
-      phoxy._.api.ForwardDownload(url, function()
-      {
-        if (answer.replace !== undefined)
-          phoxy._.api.keyword.replace(answer, callback, canvas);
-        else if (answer.result !== undefined)
-          phoxy._.api.keyword.result(answer, callback, canvas);
-        else
-          document.getElementsByTagName('body')[0].appendChild(canvas.obj);
 
-        phoxy._.render.RenderReplace(
-          canvas.id,
-          answer.design,
-          answer.data || {},
-          next);
-      });
+      if (answer.replace !== undefined)
+        phoxy._.api.keyword.replace(answer, callback, ancor);
+      else if (answer.result !== undefined)
+        phoxy._.api.keyword.result(answer, callback, ancor);
+      else
+        document.getElementsByTagName('body')[0].appendChild(ancor.obj);
 
-      return canvas;
+      phoxy._.render.RenderStrategy(
+        ancor.id,
+        answer.design,
+        answer.data || {},
+        next);
+
+      return ancor;
     }
   ,
   replace: function(answer, callback, canvas)
@@ -267,11 +257,10 @@ phoxy._ApiSubsystem._.api.keyword =
       for (var k in answer.result)
       {
         var v = document.getElementById(answer.result[k]);
-        if (v != null)
+        if (v !== null)
           v.innerHTML = canvas.html;
       }
     }
   ,
-  exception: phoxy._ApiSubsystem._.api.KeywordMissing("exception")
-  ,
+  exception: phoxy._.api.KeywordMissing("exception")
 };

@@ -1,4 +1,4 @@
-phoxy._LegacyLand =
+phoxy.legacy =
 {
   ChangeHash : function(hash)
     {
@@ -7,28 +7,40 @@ phoxy._LegacyLand =
     }
 }
 
-phoxy._LegacyLand._ = {};
-phoxy._LegacyLand._.deprecated = {
-  IsObjectOptionalDetected(arguments)
-    {
-      if (arguments.length !== 3)
-        return false;
-      if (typeof callback === 'function')
-        return false;
-      if (typeof callback === 'undefined')
-        return false;
-      return true;
-    }
+phoxy._.deprecated =
+{
+  IsObjectOptionalDetected : function()
+  {
+    if (arguments.length !== 3)
+      return false;
+    if (typeof callback === 'function')
+      return false;
+    if (typeof callback === 'undefined')
+      return false;
+    return true;
+  }
   ,
   ObjectOptional : function(method, args)
-    {
-      phoxy.Log(1, "Object optional IS deprecated. Look at #91");
-      if (typeof url !== 'string')
-        return phoxy.Log(0, "Failed to soft translate call");
+  {
+    var url = args[0];
+    var objopt = args[1];
+    var callback = args[2];
 
-      if (typeof args[1] !== 'undefined')
-        url = [url].concat(args[1]);
+    phoxy.Log(1, "Object optional IS deprecated. Look at #91");
+    if (typeof url !== 'string')
+      return phoxy.Log(0, "Failed to soft translate call");
 
-      return method.call(this, url, args[2]);
-    }
+    if (typeof objopt !== 'undefined')
+      url = [url].concat(objopt);
+
+    return method.call(this, url, callback);
+  }
+  ,
+  ObjectOptionalRelaunch : function(method, args)
+  {
+    if (!phoxy._.deprecated.IsObjectOptionalDetected.apply(this, args))
+      return false;
+    phoxy._.deprecated.ObjectOptional(method, args);
+    return true;
+  }
 }

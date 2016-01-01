@@ -26,11 +26,11 @@ unset($_GET['url']);
 $exception_query = http_build_query(ExceptionParams($_GET));
 $query = http_build_query($_GET);
 
-if ($query != "")
+if ($query !== "")
   $url .= "?{$query}";
 
 // End of business code
-if ($exception_query != "")
+if ($exception_query !== "")
   $out = "/?{$exception_query}";
 else
   $out = "/";

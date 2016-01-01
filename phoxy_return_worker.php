@@ -60,7 +60,7 @@ class phoxy_return_worker
   {
     if (!isset($this->obj[$a]) || !count($this->obj[$a]))
       return;
-    $conf = phoxy_conf();
+    $conf = phoxy::Config();
     if (is_null($conf[$b]))
       return;
     if (is_array($this->obj[$a]))
@@ -87,7 +87,7 @@ class phoxy_return_worker
 
   private function DefaultCacheTiming()
   {
-    $conf = phoxy_conf();
+    $conf = phoxy::Config();
     if (!isset($this->obj['cache']))
       $this->obj['cache'] = [];
     $cache = $this->obj['cache'];
@@ -129,7 +129,7 @@ class phoxy_return_worker
         $no[] = $scope;
 
     foreach ($no as $scope)
-      if ($scope == 'all')
+      if ($scope === 'all')
       {
         unset($this->obj['cache']);
         break;
@@ -173,7 +173,7 @@ class phoxy_return_worker
     {
       $amount = $arr[$base + 1];
       $modifyer = $arr[$base + 2];
-      if ($modifyer == '')
+      if ($modifyer === '')
         $modifyer = 's';
       $mult = 1;
       switch ($modifyer)

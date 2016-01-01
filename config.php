@@ -2,7 +2,8 @@
 
 function phoxy_default_conf()
 {
-  return array(
+  return
+  [
     "ip" => $_SERVER['REMOTE_ADDR'],
     "site" => "http://".$_SERVER['HTTP_HOST']."/",
     "ejs_dir" => "ejs",
@@ -17,7 +18,8 @@ function phoxy_default_conf()
     "cache_local" => null,
     "autostart" => true,
     "api_xss_prevent" => true,
-    );
+    "cache" => ["session" => "1h"]
+  ];
 }
 
 if (!function_exists("phoxy_conf"))
