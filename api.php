@@ -155,10 +155,19 @@ class api
   private function Call( $name, $arguments )
   {
     if (!method_exists($this, $name))
-      return ["error" => "Unexpected RPC call (Module handler not found)"];
+      return
+      [
+        "error" => "Unexpected RPC call (Module handler not found)",
+        "description" => htmlentities($name),
+      ];
+
     $reflection = new ReflectionMethod($this, $name);
     if (!$reflection->isProtected())
-      return ["error" => "Security violation (Module handler not protected)"];
+      return
+      [
+        "error" => "Security violation (Module handler not protected)",
+        "description" => htmlentities($name),
+      ];
     $ret = call_user_func_array([$this, $name], $arguments);
     return $ret;
   }
