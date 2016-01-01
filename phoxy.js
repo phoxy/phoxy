@@ -163,6 +163,10 @@ phoxy._.EarlyStage =
         phoxy._.EarlyStage.async_require,
         function on_require_async()
         {
+          // Wait for sync code to finish
+          if (phoxy.state.runlevel < 2)
+            return setTimeout(arguments.callee, 10);
+
           phoxy._.EarlyStage.EnterFinalExecution();
         }
       );
