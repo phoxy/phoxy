@@ -25,6 +25,8 @@ phoxy._.enjs =
 
       phoxy._.internal.Override(EJS.Canvas.across.prototype, 'CascadeDesign', phoxy._.enjs.CascadeDesign);
       phoxy._.internal.Override(EJS.Canvas.across.prototype, 'CascadeRequest', phoxy._.enjs.CascadeRequest);
+      phoxy._.internal.Override(EJS.Canvas.across.prototype, 'ForeachDesign', phoxy._.enjs.ForeachDesign);
+      phoxy._.internal.Override(EJS.Canvas.across.prototype, 'ForeachRequest', phoxy._.enjs.ForeachRequest);
     }
   ,
   RenderCompleted: function()
@@ -138,6 +140,33 @@ phoxy._.enjs =
       this.escape().log("Request", url);
       return phoxy._.enjs.CascadeInit(this, url, undefined, callback, tag || "<CascadeRequest>");
     }
+  ,
+  ShortcutCallback(k, callback)
+  {
+    if (typeof callback !== 'function')
+      return undefined;
+
+    return function()
+    {
+      var args = arguments;
+      args.unshift(k);
+      return callback.apply(this, args);
+    }
+  }
+  ,
+  ForeachDesign: function(ejs, dataset, callback, tag)
+  {
+    for (var k in dataset)
+      if (dataset.hasOwnProperty(k))
+        this.CascadeDesign(ejs, dataset[k], phoxy._.enjs.ShortcutCallback(k, callback), tag);
+  }
+  ,
+  ForeachRequest: function(dataset, callback, tag)
+  {
+    for (var k in dataset)
+      if (dataset.hasOwnProperty(k))
+        this.CascadeRequest(dataset[k], phoxy._.enjs.ShortcutCallback(k, callback), tag);
+  }
   ,
   Defer: function(callback, time)
     {
