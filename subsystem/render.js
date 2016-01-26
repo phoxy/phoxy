@@ -2,6 +2,8 @@ phoxy.render =
 {
   DeferRender : function (ejs, data, rendered_callback, tag)
     {
+      var isolated_data = EJS.IsolateContext(data);
+
       phoxy.Log(4, "phoxy.DeferRender", arguments);
       if (tag === undefined)
         tag = '<defer_render>';
@@ -12,13 +14,13 @@ phoxy.render =
         attributes =
         {
           ejs: ejs,
-          data: JSON.stringify(data),
+          data: JSON.stringify(isolated_data),
         };
 
       var ancor = phoxy._.render.PrepareAncor(tag, attributes);
       var id = ancor.id;
 
-      phoxy._.render.RenderStrategy(id, ejs, data, rendered_callback);
+      phoxy._.render.RenderStrategy(id, ejs, isolated_data, rendered_callback);
 
       if (tag === null)
         return ancor;
