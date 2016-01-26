@@ -84,5 +84,5 @@ function IncludeModule( $dir, $module )
 function LoadModule( $dir, $module, $force_raw = false, $expect_simple_result = true )
 {
   $obj = IncludeModule($dir, $module);
-  return $obj($force_raw, $expect_simple_result);
+  return $obj->fork($force_raw, $expect_simple_result);
 }
