@@ -194,7 +194,18 @@ phoxy._.api.keyword =
   ,
   script: function(answer, callback, next)
     {
-      require(answer.script, next);
+      var patched = [];
+      for (var k in answer.script)
+      {
+        var locate_file = answer.script[k];
+        if (locate_file.substr(0, 1) !== '/')
+          locate_file = phoxy.Config()['js_dir'] + '/' + locate_file;
+        if (locate_file.substr(-3) !== '.js')
+          locate_file += '.js';
+        patched.push(locate_file);
+      }
+
+      require(patched, next);
     }
   ,
   before: function(answer, callback, next)
