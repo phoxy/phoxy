@@ -41,34 +41,22 @@ function IncludeModule( $dir, $module )
     if (isset($_phoxy_loaded_classes[$dir][$module]))
       return $_phoxy_loaded_classes[$dir][$module];
 
-    if (class_exists($module))
-    {
-      if (defined('tempns'))
-        if (!function_exists('uopz_undefine'))
-          die('You need uopz pecl extension for complex class cross includes');
-        else
-          uopz_undefine('tempns');
-
-      define('tempns', 'tempns_'.md5(microtime()));
-      include('virtual_namespace_helper.php');
-
-      if (!isset($_phoxy_loaded_classes[$dir]))
-        $_phoxy_loaded_classes[$dir] = [];
-      $_phoxy_loaded_classes[$dir][$module] = $obj;
-
-      return $obj;
-    }
-
+    $classname = $module;
+    $cross_include = class_exists($classname);
     include_once($file);
 
-    if (!class_exists($module))
+    if ($cross_include)
+      include('virtual_namespace_helper.php');
+
+    if (!class_exists($classname))
       die('Class include failed. File do not carrying that');
 
-    $obj = InstanceClassByName($module, $args);
+    $obj = InstanceClassByName($classname, $args);
 
     if (!isset($_phoxy_loaded_classes[$dir]))
       $_phoxy_loaded_classes[$dir] = [];
     $_phoxy_loaded_classes[$dir][$module] = $obj;
+
     return $obj;
   }
   catch (phoxy_protected_call_error $e)
