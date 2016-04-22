@@ -116,6 +116,13 @@ phoxy._.enjs =
         that.CheckIsCompleted.call(that.across);
       }
 
+      if (Array.isArray(data))
+        data = data.reduce(function(o, v, i)
+        {
+          o[i] = v;
+          return o;
+        }, {});
+
       var ancor = phoxy.DeferRender(ejs, data, CBHook, tag);
       that.Append(ancor);
 
