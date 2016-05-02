@@ -123,6 +123,9 @@ phoxy._.enjs =
           return o;
         }, {});
 
+      if (typeof data != 'object')
+        data = { data: data };
+
       var ancor = phoxy.DeferRender(ejs, data, CBHook, tag);
       that.Append(ancor);
 
