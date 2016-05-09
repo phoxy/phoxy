@@ -117,13 +117,21 @@ phoxy._.enjs =
       }
 
       if (Array.isArray(data))
+      {
+        var origin = data;
+
         data = data.reduce(function(o, v, i)
         {
           o[i] = v;
           return o;
         }, {});
 
-      if (typeof data != 'object')
+        data.length = origin.length;
+        data.origin = origin;
+      }
+
+      // Handling non arrays (ex: strings) as data objects
+      if (typeof data != 'object' && typeof data != 'undefined')
         data = { data: data };
 
       var ancor = phoxy.DeferRender(ejs, data, CBHook, tag);
