@@ -148,7 +148,7 @@ phoxy._.api =
       }
 
       var escaped_send_string = EscapeReserved(send_string, "()?#\\");
-      return encodeURIComponent(escaped_send_string);
+      return encodeURI(escaped_send_string);
     }
   ,
   IfKeyword : function(answer, callback, keyword, next)
