@@ -68,25 +68,22 @@ phoxy._.enjs =
   ,
   hook_first: function(result)
     {
-      var root;
+      var root = result;
+
       while (true)
       {
-        if (typeof root === 'undefined')
-          root = result;
-        else
-          root = root.nextSibling;
-
         if (!root)
           break;
-        if (root.nodeType !== 1)
-          continue;
 
-        if (
+        if (root.nodeType == 1 &&
           ['defer_render','render'].indexOf(root.tagName) === -1 &&
           root.classList.contains('phoxy_ignore') === false &&
           root.classList.contains('ejs_ancor') === false)
           break;
+
+        root = root.nextSibling;
       }
+
       return root;
     }
   ,
