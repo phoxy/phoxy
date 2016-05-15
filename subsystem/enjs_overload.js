@@ -84,8 +84,26 @@ phoxy._.enjs =
         root = root.nextSibling;
       }
 
+      phoxy._.enjs.update_context_after_cascade_finished(this, root);
+
       return root;
     }
+  ,
+  update_context_after_cascade_finished: function(context, root)
+  {
+    if (root == null || root.tagName.search('CASCADE') == -1)
+      return;
+
+    root.addEventListener('phoxy.rendered.alpha', function(e)
+    {
+      if (e.target != root)
+        return;
+
+      context.first_dom_element_cached = undefined;
+      context.get_first_context_dom_element(root.getAttribute('id'));
+    });
+
+  }
   ,
   DeferRender: function(ejs, data, callback, tag)
     {
