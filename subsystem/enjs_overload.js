@@ -174,7 +174,7 @@ phoxy._.enjs =
       return phoxy._.enjs.CascadeInit(this, url, undefined, callback, tag || "<CascadeRequest>");
     }
   ,
-  ShortcutCallback(k, callback)
+  ShortcutCallback: function(k, callback)
   {
     if (typeof callback !== 'function')
       return undefined;
