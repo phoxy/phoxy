@@ -1,5 +1,13 @@
 <?php
 
+function InstanceClassByName($classname, $args)
+{
+  $reflection = new \ReflectionClass($classname);
+  $obj = $reflection->newInstanceArgs($args);
+  $obj->phoxy_api_init();
+  return $obj;
+}
+
 $_phoxy_loaded_classes = [];
 function IncludeModule( $dir, $module )
 {
@@ -33,35 +41,22 @@ function IncludeModule( $dir, $module )
     if (isset($_phoxy_loaded_classes[$dir][$module]))
       return $_phoxy_loaded_classes[$dir][$module];
 
-    if (class_exists($module))
-    {
-      if (defined('tempns'))
-        if (!function_exists('uopz_undefine'))
-          die('You need uopz pecl extension for complex class cross includes');
-        else
-          uopz_undefine('tempns');
-
-      define('tempns', 'tempns_'.md5(microtime()));
-      include('virtual_namespace_helper.php');
-
-      if (!isset($_phoxy_loaded_classes[$dir]))
-        $_phoxy_loaded_classes[$dir] = [];
-      $_phoxy_loaded_classes[$dir][$module] = $obj;
-      return $obj;
-    }
-
+    $classname = $module;
+    $cross_include = class_exists($classname);
     include_once($file);
 
-    if (!class_exists($module))
+    if ($cross_include)
+      include('virtual_namespace_helper.php');
+
+    if (!class_exists($classname))
       die('Class include failed. File do not carrying that');
 
-    $reflection = new ReflectionClass($module);
-    $obj = $reflection->newInstanceArgs($args);
-    $obj->phoxy_api_init();
+    $obj = InstanceClassByName($classname, $args);
 
     if (!isset($_phoxy_loaded_classes[$dir]))
       $_phoxy_loaded_classes[$dir] = [];
     $_phoxy_loaded_classes[$dir][$module] = $obj;
+
     return $obj;
   }
   catch (phoxy_protected_call_error $e)
@@ -77,5 +72,5 @@ function IncludeModule( $dir, $module )
 function LoadModule( $dir, $module, $force_raw = false, $expect_simple_result = true )
 {
   $obj = IncludeModule($dir, $module);
-  return $obj($force_raw, $expect_simple_result);
+  return $obj->fork($force_raw, $expect_simple_result);
 }

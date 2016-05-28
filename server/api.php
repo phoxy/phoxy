@@ -53,6 +53,9 @@ class phoxy_sys_api
     if (is_a($ret, 'phoxy_return_worker'))
       $ret = $ret->obj;
 
+    if (!is_array($ret))
+      return $ret;
+
     if (isset($ret['cache']) && !$this->f) // raw calls do not affects restrictions
       phoxy_return_worker::NewCache($ret['cache']);
 
@@ -60,8 +63,6 @@ class phoxy_sys_api
         && count($ret['data']) === 1 && isset($ret['data'][$name]))
       $ret = $ret['data'][$name];
 
-    if (!is_array($ret))
-      return $ret;
     if ($this->ShouldRawReturn($name))
       return $ret;
     if (!isset($ret['data']))
@@ -177,7 +178,12 @@ class api
     $where = "{$what}{$where}";
   }
 
-  public function fork($expect_simple_result = true, $fallback_raw = false)
+  public function __invoke()
+  {
+    return $this->Reserve();
+  }
+
+  public function fork($force_raw = false, $expect_simple_result = true)
   {
     return new phoxy_sys_api($this, $force_raw, $expect_simple_result);
   }

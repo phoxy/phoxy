@@ -25,6 +25,8 @@ phoxy._.enjs =
 
       phoxy._.internal.Override(EJS.Canvas.across.prototype, 'CascadeDesign', phoxy._.enjs.CascadeDesign);
       phoxy._.internal.Override(EJS.Canvas.across.prototype, 'CascadeRequest', phoxy._.enjs.CascadeRequest);
+      phoxy._.internal.Override(EJS.Canvas.across.prototype, 'ForeachDesign', phoxy._.enjs.ForeachDesign);
+      phoxy._.internal.Override(EJS.Canvas.across.prototype, 'ForeachRequest', phoxy._.enjs.ForeachRequest);
     }
   ,
   RenderCompleted: function()
@@ -66,27 +68,42 @@ phoxy._.enjs =
   ,
   hook_first: function(result)
     {
-      var root;
+      var root = result;
+
       while (true)
       {
-        if (typeof root === 'undefined')
-          root = result;
-        else
-          root = root.nextSibling;
-
         if (!root)
           break;
-        if (root.nodeType !== 1)
-          continue;
 
-        if (
+        if (root.nodeType == 1 &&
           ['defer_render','render'].indexOf(root.tagName) === -1 &&
           root.classList.contains('phoxy_ignore') === false &&
           root.classList.contains('ejs_ancor') === false)
           break;
+
+        root = root.nextSibling;
       }
+
+      phoxy._.enjs.update_context_after_cascade_finished(this, root);
+
       return root;
     }
+  ,
+  update_context_after_cascade_finished: function(context, root)
+  {
+    if (root == null || root.tagName.search('CASCADE') == -1)
+      return;
+
+    root.addEventListener('phoxy.rendered.alpha', function(e)
+    {
+      if (e.target != root)
+        return;
+
+      context.first_dom_element_cached = undefined;
+      context.get_first_context_dom_element(root.getAttribute('id'));
+    });
+
+  }
   ,
   DeferRender: function(ejs, data, callback, tag)
     {
@@ -114,6 +131,24 @@ phoxy._.enjs =
         that.CheckIsCompleted.call(that.across);
       }
 
+      if (Array.isArray(data))
+      {
+        var origin = data;
+
+        data = data.reduce(function(o, v, i)
+        {
+          o[i] = v;
+          return o;
+        }, {});
+
+        data.length = origin.length;
+        data.origin = origin;
+      }
+
+      // Handling non arrays (ex: strings) as data objects
+      if (typeof data != 'object' && typeof data != 'undefined')
+        data = { data: data };
+
       var ancor = phoxy.DeferRender(ejs, data, CBHook, tag);
       that.Append(ancor);
 
@@ -138,6 +173,33 @@ phoxy._.enjs =
       this.escape().log("Request", url);
       return phoxy._.enjs.CascadeInit(this, url, undefined, callback, tag || "<CascadeRequest>");
     }
+  ,
+  ShortcutCallback: function(k, callback)
+  {
+    if (typeof callback !== 'function')
+      return undefined;
+
+    return function()
+    {
+      var args = arguments;
+      args.unshift(k);
+      return callback.apply(this, args);
+    }
+  }
+  ,
+  ForeachDesign: function(ejs, dataset, callback, tag)
+  {
+    for (var k in dataset)
+      if (dataset.hasOwnProperty(k))
+        this.CascadeDesign(ejs, dataset[k], phoxy._.enjs.ShortcutCallback(k, callback), tag);
+  }
+  ,
+  ForeachRequest: function(dataset, callback, tag)
+  {
+    for (var k in dataset)
+      if (dataset.hasOwnProperty(k))
+        this.CascadeRequest(dataset[k], phoxy._.enjs.ShortcutCallback(k, callback), tag);
+  }
   ,
   Defer: function(callback, time)
     {
