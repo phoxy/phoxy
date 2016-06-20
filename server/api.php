@@ -50,6 +50,7 @@ class phoxy_sys_api
   public function __call( $name, $arguments )
   {
     $ret = $this->Call($name, $arguments);
+
     if (is_a($ret, 'phoxy_return_worker'))
       $ret = $ret->obj;
 
@@ -148,6 +149,7 @@ class api
 
     $this->addons = $this->default_addons;
     $ret = $this->Call($name, $arguments);
+
     if (!is_array($ret))
     {
       $ret = [$name => $ret];
