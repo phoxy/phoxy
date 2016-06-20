@@ -127,6 +127,14 @@ class api
     $compiled = default_addons($phoxy_loading_module);
 
     $this->default_addons = array_merge_recursive($compiled, $this->addons);
+
+    $this->default_addons =
+      $this->override_addons_on_init($this->default_addons);
+  }
+
+  public function override_addons_on_init($addons)
+  {
+    return $addons;
   }
 
   public function APICall( $name, $arguments )
