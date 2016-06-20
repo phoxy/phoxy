@@ -4,7 +4,13 @@ $obj = null;
 
 $tempns = uniqid('phoxy\fork_');
 
-$code = str_replace('<?php', 'namespace '.$tempns.';', $code);
+$header = <<<END
+  namespace $tempns;
+
+  use \phoxy as phoxy;
+END;
+
+$code = str_replace('<?php', $header, $code);
 $code = preg_replace('/ api\s*\n/', '\\api', $code);
 
 eval($code);

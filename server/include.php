@@ -43,10 +43,12 @@ function IncludeModule( $dir, $module )
 
     $classname = $module;
     $cross_include = class_exists($classname);
-    include_once($file);
+
 
     if ($cross_include)
       include('virtual_namespace_helper.php');
+    else
+      include_once($file);
 
     if (!class_exists($classname))
       die('Class include failed. File do not carrying that');
