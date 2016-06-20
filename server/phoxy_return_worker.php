@@ -43,6 +43,8 @@ class phoxy_return_worker
   {
     if (!isset($this->prepared))
       $this->Prepare();
+
+    header('Content-Type: application/json; charset=utf-8');
     return $this->prepared;
   }
 
