@@ -40,7 +40,7 @@ class phoxy_sys_api
   private $f;
   private $expect_simple_result;
 
-  public function phoxy_sys_api( $obj, $force_raw = false, $expect_simple_result = false )
+  public function __construct( $obj, $force_raw = false, $expect_simple_result = false )
   {
     $this->obj = $obj;
     $this->f = $force_raw;
@@ -186,11 +186,6 @@ class api
   private function AddPrefix( &$where, $what )
   {
     $where = "{$what}{$where}";
-  }
-
-  public function __invoke()
-  {
-    return $this->Reserve();
   }
 
   public function fork($force_raw = false, $expect_simple_result = true)
