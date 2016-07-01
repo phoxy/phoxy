@@ -15,7 +15,7 @@ class phoxy extends api
   }
 
   // Calling phoxy::Load immediately loading or using preloaded module object
-  public static function Load($name, $raw_include = true)
+  public static function Load($name, $raw_include = false)
   {
     $dir = phoxy::Config()['api_dir'];
     $names = explode('/', $name);
