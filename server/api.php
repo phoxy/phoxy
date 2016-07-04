@@ -81,7 +81,7 @@ class phoxy_sys_api
     {
       if (isset($d[$name])) // directly return [function: data] values
         return $d[$name];
-      if ($this->expect_simple_result)
+      if ($this->expect_simple_result && !isset($d[0])) // only associative arrays could contain simple results
         foreach ($d as $val)
           return $val;
     }
