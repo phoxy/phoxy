@@ -146,7 +146,7 @@ phoxy._.enjs =
       }
 
       // Handling non arrays (ex: strings) as data objects
-      if (typeof data != 'object' && typeof data != 'undefined')
+      if (['object', 'undefined', 'function'].indexOf(typeof data) == -1)
         data = { data: data };
 
       var ancor = phoxy.DeferRender(ejs, data, CBHook, tag);
