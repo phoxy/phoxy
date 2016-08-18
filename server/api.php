@@ -51,9 +51,6 @@ class phoxy_sys_api
   {
     $ret = $this->Call($name, $arguments);
 
-    if (is_a($ret, 'phoxy_return_worker'))
-      $ret = $ret->obj;
-
     if (!is_array($ret))
       return $ret;
 
@@ -92,8 +89,14 @@ class phoxy_sys_api
   private function Call( $name, $arguments )
   {
     $this->obj->json = false;
-    return call_user_func_array(array($this->obj, $name), $arguments);
+    $result = call_user_func_array(array($this->obj, $name), $arguments);
+
+    if (is_a($result, 'phoxy_return_worker'))
+      return $result->obj;
+
+    return $result;
   }
+
   private function ShouldRawReturn( $name )
   {
     if ($this->f)
