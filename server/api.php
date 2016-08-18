@@ -51,6 +51,8 @@ class phoxy_sys_api
   {
     $ret = $this->Call($name, $arguments);
 
+    phoxy_protected_assert(!empty($ret['data']), "Probably internal inconsistence inside phoxy, please bug report");
+
     // raw calls do not affects restrictions
     if (!$this->f)
       phoxy_return_worker::NewCache($ret['cache']);
@@ -82,9 +84,20 @@ class phoxy_sys_api
     $result = call_user_func_array(array($this->obj, $name), $arguments);
 
     if (is_a($result, 'phoxy_return_worker'))
-      return $result->obj;
+      $result = $result->obj;
 
-    return $result;
+    if (!$this->Reflect($name)->isPublic())
+      return $result;
+
+    return
+    [
+      "data" => [$name => $result]
+    ];
+  }
+
+  private function Reflect($name)
+  {
+    return new ReflectionMethod($this->obj, $name);
   }
 
   private function ShouldRawReturn( $name )
@@ -92,8 +105,7 @@ class phoxy_sys_api
     if ($this->f)
       return true;
 
-    $reflection = new ReflectionMethod($this->obj, $name);
-    return $reflection->isPublic();
+    return $this->Reflect($name)->isPublic();
   }
 }
 
