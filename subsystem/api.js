@@ -29,7 +29,15 @@ phoxy.api =
 
       phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function ajax_callback(response)
         {
-          var data = JSON.parse(response);
+          try
+          {
+            var data = JSON.parse(response);
+          } catch (e)
+          {
+            phoxy.Log(1, url, [response]);
+            throw "Unable to decode JSON";
+          }
+
 
           // http://stackoverflow.com/questions/4215737/convert-array-to-object
           if (Array.isArray(data.data))
