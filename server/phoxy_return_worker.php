@@ -199,6 +199,9 @@ class phoxy_return_worker
 
   static public function NewCache( $array )
   {
+    if (empty($array))
+      return; // ignore fictive values
+
     if (!is_array($array))
       return self::ProcessCache('global', $array);
     foreach ($array as $key => $value)

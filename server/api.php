@@ -52,7 +52,7 @@ class phoxy_sys_api
     $ret = $this->Call($name, $arguments);
 
     // raw calls do not affects restrictions
-    if (isset($ret['cache']) && !$this->f)
+    if (!$this->f)
       phoxy_return_worker::NewCache($ret['cache']);
 
     if (!empty($ret['data'][$name]))
