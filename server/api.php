@@ -51,37 +51,27 @@ class phoxy_sys_api
   {
     $ret = $this->Call($name, $arguments);
 
-    if (!is_array($ret))
-      return $ret;
-
-    if (isset($ret['cache']) && !$this->f) // raw calls do not affects restrictions
+    // raw calls do not affects restrictions
+    if (isset($ret['cache']) && !$this->f)
       phoxy_return_worker::NewCache($ret['cache']);
 
-    if (is_array($ret) && isset($ret['data'])
-        && count($ret['data']) === 1 && isset($ret['data'][$name]))
+    if (!empty($ret['data'][$name]))
       $ret = $ret['data'][$name];
 
     if ($this->ShouldRawReturn($name))
       return $ret;
+
     if (!isset($ret['data']))
-    {
-      if (isset($ret['error']))
-        throw new phoxy_protected_call_error($ret);
-      return;
-    }
+      return phoxy_protected_assert(empty($ret['error']), $ret);
+
     $d = $ret['data'];
 
-    if (!is_array($d))
-      return $d;
-
-    if (count($d) === 1)
-    {
-      if (isset($d[$name])) // directly return [function: data] values
-        return $d[$name];
-      if ($this->expect_simple_result && !isset($d[0])) // only associative arrays could contain simple results
-        foreach ($d as $val)
-          return $val;
-    }
+    if ($this->expect_simple_result
+         && is_array($d)
+         && count($d) === 1
+         && !isset($d[0]) // only associative arrays having simple results
+         )
+      return reset($d);
 
     return $d;
   }
