@@ -37,13 +37,13 @@ if (!function_exists("default_addons"))
 class phoxy_sys_api
 {
   private $obj;
-  private $f;
+  private $skip_post_process;
   private $expect_simple_result;
 
-  public function __construct( $obj, $force_raw = false, $expect_simple_result = false )
+  public function __construct( $obj, $skip_post_process = false, $expect_simple_result = false )
   {
     $this->obj = $obj;
-    $this->f = $force_raw;
+    $this->skip_post_process = $skip_post_process;
     $this->expect_simple_result = $expect_simple_result;
   }
 
@@ -54,19 +54,19 @@ class phoxy_sys_api
     phoxy_protected_assert(!empty($ret['data']), "Probably internal inconsistence inside phoxy, please bug report");
 
     // raw calls do not affects restrictions
-    if (!$this->f)
-      phoxy_return_worker::NewCache($ret['cache']);
-
-    if (!empty($ret['data'][$name]))
-      $ret = $ret['data'][$name];
-
-    if ($this->ShouldRawReturn($name))
+    if ($this->ShouldSkipPostProcess($name))
       return $ret;
+    else
+      phoxy_return_worker::NewCache($ret['cache']);
 
     if (!isset($ret['data']))
       return phoxy_protected_assert(empty($ret['error']), $ret);
 
     $d = $ret['data'];
+
+    // Reverse public method translation
+    if (is_array($d) && !empty($d[$name]))
+      $d = $d[$name];
 
     if ($this->expect_simple_result
          && is_array($d)
@@ -100,12 +100,9 @@ class phoxy_sys_api
     return new ReflectionMethod($this->obj, $name);
   }
 
-  private function ShouldRawReturn( $name )
+  private function ShouldSkipPostProcess( $name )
   {
-    if ($this->f)
-      return true;
-
-    return $this->Reflect($name)->isPublic();
+    return $this->skip_post_process;
   }
 }
 
