@@ -200,7 +200,8 @@ phoxy._.birth = function(will, spirit, callback, raw_output)
   console.time("phoxy.birth " + this.birth_id);
   this.callback = function birth_log_report()
   {
-    this.DumpLog();
+    if (phoxy.state.verbose_birth)
+      this.DumpLog();
 
     callback.apply(this, arguments);
   }
