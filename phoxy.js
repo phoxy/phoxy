@@ -48,7 +48,12 @@ var phoxy =
     {
       active: {},
       finished: {}
-    }
+    },
+    wait:
+    {
+      timeout_seconds: 20,
+      check_every_ms: 200,
+    },
   },
   _:
   {

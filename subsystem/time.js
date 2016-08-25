@@ -33,8 +33,8 @@ phoxy._.time =
         return callback();
 
       var
-        check_timeout = 60, // 1 minute for render to complete
-        check_delay = 500; // check every 500ms
+        check_timeout = phoxy.state.wait.timeout_seconds, // 1 minute for render to complete
+        check_delay = phoxy.state.wait.check_every_ms; // check every 500ms
 
       if (timeout !== undefined)
         check_timeout = timeout;
