@@ -13,12 +13,11 @@ function phoxy_default_conf()
     "js_prefix" => null,
     "ejs_prefix" => null,
     "api_prefix" => null,
-    "cache_global" => "1d",
+    "cache_global" => null,
     "cache_session" => null,
     "cache_local" => null,
     "autostart" => true,
     "api_xss_prevent" => true,
-    "cache" => ["session" => "1h"]
   ];
 }
 
