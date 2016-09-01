@@ -60,4 +60,30 @@ class phoxy extends api
       echo new phoxy_return_worker($e->result);
     }
   }
+
+  public static function SetCacheTimeout($scope, $timeout)
+  {
+    if (is_integer($timeout))
+      return phoxy::SetCacheTimeout($scope, "{$timeout}s");
+
+    phoxy_return_worker::NewCache([$scope => $timeout]);
+  }
+
+  public static function SetCacheTimeoutTimestamp($scope, $timeout_timestamp)
+  {
+    if (!is_numeric($timeout_timestamp))
+    {
+      $dt = new DateTime($timeout_timestamp);
+      $unix_time = $dt->format('U'); // in server timezone
+
+      $timeout_timestamp = $unix_time;
+    }
+
+    $timeout = $timeout_timestamp - time();
+
+    if ($timeout < 0)
+      $timeout = 0;
+
+    phoxy::SetCacheTimeout($scope, $timeout);
+  }
 }

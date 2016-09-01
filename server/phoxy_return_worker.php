@@ -146,21 +146,28 @@ class phoxy_return_worker
   {
     $cache = $this->obj['cache'];
 
-    if (isset($cache['no']))
-    {
-      if (in_array('global', $cache['no'])
-          || in_array('all', $cache['no']))
-        header('Cache-Control: no-cache, no-store');
-    }
-    else if (isset($cache['session']))
+    // If both session and global set, privacy has a priority
+    if (isset($cache['session']))
     {
       header('Cache-Control: private, max-age='.self::ParseCache($cache['session']));
+
+      return;
     }
-    else if (isset($cache['global']))
+
+    if (isset($cache['global']))
     {
       header('Cache-Control: public, max-age='.self::ParseCache($cache['global']));
+
+      return;
     }
-    // session, local, global
+
+    if (isset($cache['no']))
+    {
+      if (in_array(['global', 'session'], $cache['no']))
+        header('Cache-Control: no-cache, no-store');
+
+      return;
+    }
   }
 
   static private function ParseCache( $str )
