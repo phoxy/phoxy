@@ -166,7 +166,12 @@ class phoxy_return_worker
   static private function ParseCache( $str )
   {
     $str = trim($str);
+
+    if ($str == 'no')
+      return -1;
+
     $arr = preg_split('/([0-9]+)([dhms]?)/', $str, -1, PREG_SPLIT_DELIM_CAPTURE);
+
     phoxy_protected_assert(count($arr) > 1, "Cache string parse error");
 
     $base = 0;
@@ -203,7 +208,14 @@ class phoxy_return_worker
       return; // ignore fictive values
 
     if (!is_array($array))
+    {
+      if ($array === 'no')
+        return self::NewCache(['no']);
+
+      // Global cache scope by default
       return self::ProcessCache('global', $array);
+    }
+
     foreach ($array as $key => $value)
       self::ProcessCache($key, $value);
   }
@@ -215,9 +227,18 @@ class phoxy_return_worker
       if (is_array($value))
       {
         foreach ($value as $scope)
-          self::ProcessCache('no', $scope);
+          self::ProcessCache('no', trim($scope));
         return;
       }
+
+      if (is_string($value))
+      {
+        if (trim($value) =='all')
+          return self::ProcessCache($key, "global, session, local");
+        if (strpos($value, ",") !== false)
+          return self::ProcessCache($key, explode(",", $value));
+      }
+
       if (!isset(self::$minimal_cache['no']))
         self::$minimal_cache['no'] = [];
       if (!in_array($value, self::$minimal_cache['no']))
@@ -230,16 +251,18 @@ class phoxy_return_worker
     if ($value === 'no')
     {
       if ($key === 0)
-        return self::$minimal_cache = ['no' => 'all'];
+        return self::ProcessCache('no', 'all');
+
       self::$minimal_cache[$key] = 'no';
       return;
     }
 
     $curmin = &self::$minimal_cache[$key];
+    $new_value = trim($value);
 
     if (!isset($curmin))
-     $curmin = $value;
-    if (self::ParseCache($curmin) > self::ParseCache($value))
-      $curmin = $value;
+      $curmin = $new_value;
+    if (self::ParseCache($curmin) > self::ParseCache($new_value))
+      $curmin = $new_value;
   }
 }
