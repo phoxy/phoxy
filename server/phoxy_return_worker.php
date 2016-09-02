@@ -177,7 +177,7 @@ class phoxy_return_worker
     if ($str == 'no')
       return -1;
 
-    $arr = preg_split('/([0-9]+)([dhms]?)/', $str, -1, PREG_SPLIT_DELIM_CAPTURE);
+    $arr = preg_split('/([0-9]+)([wdhms]?)/', $str, -1, PREG_SPLIT_DELIM_CAPTURE);
 
     phoxy_protected_assert(count($arr) > 1, "Cache string parse error");
 
@@ -192,6 +192,8 @@ class phoxy_return_worker
       $mult = 1;
       switch ($modifyer)
       {
+      case 'w':
+        $mult *= 7;
       case 'd':
         $mult *= 24;
       case 'h':
