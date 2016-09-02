@@ -1,20 +1,37 @@
 phoxy._.EarlyStage.ajax = function (url, callback, data, x)
-{  // https://gist.github.com/Xeoncross/7663273
-  try
+{
+  function ajax_Fetch(url, callback, data, x)
   {
-    x = new(window.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
-    x.open(data ? 'POST' : 'GET', url, 1);
-    x.setRequestHeader('X-Lain', 'Wake up');
-    x.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-    x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-    x.onreadystatechange = function () {
-      x.readyState > 3 && callback && callback(x.responseText, x);
-    };
-    x.send(data)
-  } catch (e)
-  {
-    window.console && console.log(e);
   }
+
+  function ajax_XMLHttpRequest(url, callback, data, x)
+  {
+    try
+    {
+      x = new (window.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
+
+      x.open(data ? 'POST' : 'GET', url, 1);
+
+      x.setRequestHeader('X-Lain', 'Wake up');
+      x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+      x.onload = function () {
+        callback(x.responseText, x);
+      };
+
+      x.send(data)
+    } catch (e)
+    {
+      window.console && console.log(e);
+    }
+  }
+
+  if (typeof window.fetch != 'undefined')
+    phoxy._.EarlyStage.ajax = ajax_Fetch;
+  else
+    phoxy._.EarlyStage.ajax = ajax_XMLHttpRequest;
+
+  phoxy._.EarlyStage.ajax.apply(this, arguments);
 };
 
 
