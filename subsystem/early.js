@@ -1,7 +1,31 @@
 phoxy._.EarlyStage.ajax = function (url, callback, data, x)
 {
+
+
   function ajax_Fetch(url, callback, data, x)
   {
+    var fetch_params =
+    {
+      'headers':
+      {
+        'X-Lain': 'Wake up',
+        'Content-type': 'application/x-www-form-urlencoded',
+      },
+      'credentials': 'include',
+    };
+
+    if (data)
+    {
+      fetch_params.method = 'post';
+      fetch_params.body = data;
+    }
+
+    function FetchPromise(response)
+    {
+      response.text().then(callback);
+    }
+
+    window.fetch(url, fetch_params).then(FetchPromise);
   }
 
   function ajax_XMLHttpRequest(url, callback, data, x)
