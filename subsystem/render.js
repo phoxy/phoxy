@@ -57,9 +57,6 @@ phoxy._.render =
       {
         phoxy._.render.CheckIfMultiplySpawned(target, ejs, data);
         phoxy._.render.Replace.call(phoxy, target, obj.html, arguments);
-
-        for (var k in obj.defer)
-          obj.defer[k]();
       }
 
       function async_strategy_birth(obj, ejs, data)
@@ -394,22 +391,8 @@ phoxy._.birth.prototype =
   ,
   Render: function(design, data, cb)
   {
-    var async = typeof cb === 'function';
-
-    if (design.indexOf(".ejs") === -1)
-        design += ".ejs";
-
-    var callback = async ? WhenReady : undefined;
-    var obj =
-    {
-      domain: phoxy.Config().site,
-      url: design,
-    };
-
-    var ejs = new EJS(obj, callback);
-
     var that = this;
-    function WhenReady()
+    function WhenReady(ejs)
     {
       function log()
       {
@@ -428,7 +411,21 @@ phoxy._.birth.prototype =
       return obj;
     }
 
+    if (design.indexOf(".ejs") === -1)
+        design += ".ejs";
+
+    var async = typeof cb === 'function';
+
+    var callback = async ? WhenReady : undefined;
+    var obj =
+    {
+      domain: phoxy.Config().site,
+      url: design,
+    };
+
+    var ejs = new EJS(obj, callback);
+
     if (!async)
-      return WhenReady();
+      return WhenReady(ejs);
   }
 }
