@@ -57,6 +57,9 @@ phoxy._.render =
       {
         phoxy._.render.CheckIfMultiplySpawned(target, ejs, data);
         phoxy._.render.Replace.call(phoxy, target, obj.html, arguments);
+
+        // Flag ENJS that anchor appeared
+        obj.try_discover_dom();
       }
 
       function async_strategy_birth(obj, ejs, data)
@@ -89,6 +92,9 @@ phoxy._.render =
       {
         phoxy._.render.AfterENJSFinished(target, obj, ejs, data, rendered_callback);
         phoxy._.render.Replace.call(phoxy, target, obj.html, arguments);
+
+        // Flag ENJS that anchor appeared
+        obj.try_discover_dom();
       }
 
       phoxy._.time.Appeared(target, sync_strategy_wait_for_apperance);
