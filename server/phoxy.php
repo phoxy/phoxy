@@ -60,10 +60,14 @@ class phoxy extends api
       $result = new phoxy_return_worker($e->result);
     }
 
-    if (phoxy_conf()["debug_api"] && !phoxy_conf()["is_ajax_request"])
-      var_dump($result);
+    $prepared = (string)$result;
 
-    echo $result;
+    if (phoxy_conf()["debug_api"] && !phoxy_conf()["is_ajax_request"])
+      var_dump($result->obj);
+    else
+      header('Content-Type: application/json; charset=utf-8');
+
+    echo $prepared;
   }
 
   public static function SetCacheTimeout($scope, $timeout)
