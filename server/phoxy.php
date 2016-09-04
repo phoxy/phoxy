@@ -54,11 +54,16 @@ class phoxy extends api
       if (is_string($method))
         $method = [$method, []];
 
-      echo $a->APICall($method[0], $method[1]);
+      $result = $a->APICall($method[0], $method[1]);
     } catch (phoxy_protected_call_error $e)
     {
-      echo new phoxy_return_worker($e->result);
+      $result = new phoxy_return_worker($e->result);
     }
+
+    if (phoxy_conf()["debug_api"] && !phoxy_conf()["is_ajax_request"])
+      var_dump($result);
+
+    echo $result;
   }
 
   public static function SetCacheTimeout($scope, $timeout)
