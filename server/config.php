@@ -19,7 +19,7 @@ function phoxy_default_conf()
     "cache_session" => null,
     "cache_local" => null,
     "autostart" => true,
-    "api_xss_prevent" => true,
+    "api_csrf_prevent" => true,
   ];
 }
 

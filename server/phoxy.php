@@ -30,8 +30,8 @@ class phoxy extends api
   public static function Start()
   {
     global $_SERVER;
-    if (phoxy_conf()["api_xss_prevent"] && $_SERVER['HTTP_X_LAIN'] !== 'Wake up')
-      die("Request aborted due API direct XSS warning");
+    if (!phoxy_conf()["is_ajax_request"] && phoxy_conf()["api_csrf_prevent"])
+      die("Request aborted due API direct CSRF warning");
 
     global $_GET;
     $get_param = phoxy::Config()["get_api_param"];
