@@ -20,6 +20,7 @@ function phoxy_default_conf()
     "cache_local" => null,
     "autostart" => true,
     "api_csrf_prevent" => true,
+    "sync_cascade" => false,
   ];
 }
 

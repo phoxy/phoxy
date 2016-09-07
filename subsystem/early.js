@@ -118,7 +118,12 @@ phoxy._.EarlyStage.Compile = function()
     delete phoxy[system_name];
   }
 
-  if (phoxy._.prestart.sync_cascade)
+  var sync_cascade =
+    typeof phoxy._.prestart.sync_cascade != 'undefined'
+    ? phoxy._.prestart.sync_cascade
+    : phoxy.Config()['sync_cascade'];
+
+  if (sync_cascade)
   {
     phoxy.state.sync_cascade = true;
     phoxy._.render.RenderStrategy = phoxy._.render.SyncRender_Strategy;
