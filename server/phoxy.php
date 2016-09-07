@@ -33,6 +33,9 @@ class phoxy extends api
     if (!phoxy_conf()["is_ajax_request"] && phoxy_conf()["api_csrf_prevent"])
       die("Request aborted due API direct CSRF warning");
 
+    if (phoxy_conf()["buffered_output"])
+      ob_start();
+
     global $_GET;
     $get_param = phoxy::Config()["get_api_param"];
     $file = $_GET[$get_param];
@@ -62,12 +65,24 @@ class phoxy extends api
 
     $prepared = (string)$result;
 
+    if (phoxy_conf()["buffered_output"])
+    {
+      $buffered_output = ob_get_contents();
+      ob_end_clean();
+    }
+
     if (phoxy_conf()["debug_api"] && !phoxy_conf()["is_ajax_request"])
+    {
+      echo "<h1>Result</h1>\n";
       var_dump($result->obj);
+    }
     else
       header('Content-Type: application/json; charset=utf-8');
 
-    echo $prepared;
+    if (phoxy_conf()["is_ajax_request"])
+      echo $prepared;
+    else if (phoxy_conf()["buffered_output"])
+      echo "\n<hr><h1>Log</h1>\n{$buffered_output}";
   }
 
   public static function SetCacheTimeout($scope, $timeout)
