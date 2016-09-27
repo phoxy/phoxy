@@ -121,8 +121,11 @@ class phoxy_return_worker
 
     if (!isset($cache['no']))
       $no = [];
-    else
+    else if (is_string($cache['no']))
       $no = explode(',', $cache['no']);
+    else
+      $no = $cache['no'];
+
     $dictionary = ["global", "session", "local"];
 
     foreach ($dictionary as $scope)
