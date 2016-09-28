@@ -32,11 +32,27 @@ class phoxy_return_worker
         call_user_func(self::$add_hook_cb, $this);
   }
 
+  // http://stackoverflow.com/a/38398648
+  private function array_utf8_encode($dat)
+  {
+      if (is_string($dat))
+          return utf8_encode($dat);
+      if (!is_array($dat))
+          return $dat;
+      $ret = array();
+      foreach ($dat as $i => $d)
+          $ret[$i] = self::array_utf8_encode($d);
+      return $ret;
+  }
+
   private function Prepare()
   {
     foreach ($this->hooks as $hook)
         $hook($this);
-    return $this->prepared = json_encode($this->obj, JSON_UNESCAPED_UNICODE);
+
+    $force_utf8 = $this->array_utf8_encode($this->obj);
+
+    return $this->prepared = json_encode($force_utf8, JSON_UNESCAPED_UNICODE);
   }
 
   public function __toString()
