@@ -2,11 +2,21 @@
 $code = file_get_contents($file);
 $obj = null;
 
-$tempns = uniqid('phoxy\fork_');
+if ($classname != 'phoxy')
+{
+  $tempns = uniqid('phoxy\fork_');
 
-$code = str_replace('<?php', 'namespace '.$tempns.';', $code);
-$code = preg_replace('/ api\s*\n/', '\\api', $code);
+  $header = <<<END
+  namespace $tempns;
 
-eval($code);
+  use \phoxy as phoxy;
+END;
 
-$classname = "\\".$tempns."\\$module";
+  $code = str_replace('<?php', $header, $code);
+  $code = preg_replace('/ api\s*\n/', ' \\api', $code);
+
+
+  eval($code);
+
+  $classname = "\\".$tempns."\\$module";
+}

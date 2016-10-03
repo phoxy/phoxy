@@ -117,9 +117,7 @@ class rpc_string_parser
     $pos++;
     $argstring = substr($token, $pos, $length - $pos - 1);
 
-    $unescaped = str_replace(
-      ["%28", "%29", "%3F", "%23", "%5C"],
-      ["(", ")", "?", "#", "\\"], $argstring);
+    $unescaped = rawurldecode($argstring);
     $args = json_decode("[$unescaped]");
 
     if ($args === null && strlen($unescaped) > 0)

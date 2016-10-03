@@ -36,13 +36,18 @@ class phoxy_return_worker
   {
     foreach ($this->hooks as $hook)
         $hook($this);
-    return $this->prepared = json_encode($this->obj, JSON_UNESCAPED_UNICODE);
+
+    $this->prepared = json_encode($this->obj, JSON_UNESCAPED_UNICODE);
+
+    if (!$this->prepared)
+      throw new phoxy_protected_call_error("Unable to encode json: ".json_last_error_msg());
   }
 
   public function __toString()
   {
     if (!isset($this->prepared))
       $this->Prepare();
+
     return $this->prepared;
   }
 
@@ -120,8 +125,11 @@ class phoxy_return_worker
 
     if (!isset($cache['no']))
       $no = [];
-    else
+    else if (is_string($cache['no']))
       $no = explode(',', $cache['no']);
+    else
+      $no = $cache['no'];
+
     $dictionary = ["global", "session", "local"];
 
     foreach ($dictionary as $scope)
@@ -144,27 +152,41 @@ class phoxy_return_worker
   {
     $cache = $this->obj['cache'];
 
-    if (isset($cache['no']))
-    {
-      if (in_array('global', $cache['no'])
-          || in_array('all', $cache['no']))
-        header('Cache-Control: no-cache, no-store');
-    }
-    else if (isset($cache['session']))
+    // If both session and global set, privacy has a priority
+    if (isset($cache['session']) && $cache['session'] != 'no')
     {
       header('Cache-Control: private, max-age='.self::ParseCache($cache['session']));
+
+      return;
     }
-    else if (isset($cache['global']))
+
+    if (isset($cache['global']) && $cache['global'] != 'no')
     {
       header('Cache-Control: public, max-age='.self::ParseCache($cache['global']));
+
+      return;
     }
-    // session, local, global
+
+    if (isset($cache['no']))
+    {
+      $find = array_intersect(['global', 'session'], $cache['no']);
+
+      if (count($find) > 0)
+        header('Cache-Control: no-cache, no-store');
+
+      return;
+    }
   }
 
   static private function ParseCache( $str )
   {
     $str = trim($str);
-    $arr = preg_split('/([0-9]+)([dhms]?)/', $str, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+    if ($str == 'no')
+      return -1;
+
+    $arr = preg_split('/([0-9]+)([wdhms]?)/', $str, -1, PREG_SPLIT_DELIM_CAPTURE);
+
     phoxy_protected_assert(count($arr) > 1, "Cache string parse error");
 
     $base = 0;
@@ -178,6 +200,8 @@ class phoxy_return_worker
       $mult = 1;
       switch ($modifyer)
       {
+      case 'w':
+        $mult *= 7;
       case 'd':
         $mult *= 24;
       case 'h':
@@ -197,8 +221,18 @@ class phoxy_return_worker
 
   static public function NewCache( $array )
   {
+    if (empty($array))
+      return; // ignore fictive values
+
     if (!is_array($array))
+    {
+      if ($array === 'no')
+        return self::NewCache(['no']);
+
+      // Global cache scope by default
       return self::ProcessCache('global', $array);
+    }
+
     foreach ($array as $key => $value)
       self::ProcessCache($key, $value);
   }
@@ -210,9 +244,18 @@ class phoxy_return_worker
       if (is_array($value))
       {
         foreach ($value as $scope)
-          self::ProcessCache('no', $scope);
+          self::ProcessCache('no', trim($scope));
         return;
       }
+
+      if (is_string($value))
+      {
+        if (trim($value) =='all')
+          return self::ProcessCache($key, "global, session, local");
+        if (strpos($value, ",") !== false)
+          return self::ProcessCache($key, explode(",", $value));
+      }
+
       if (!isset(self::$minimal_cache['no']))
         self::$minimal_cache['no'] = [];
       if (!in_array($value, self::$minimal_cache['no']))
@@ -225,16 +268,18 @@ class phoxy_return_worker
     if ($value === 'no')
     {
       if ($key === 0)
-        return self::$minimal_cache = ['no' => 'all'];
+        return self::ProcessCache('no', 'all');
+
       self::$minimal_cache[$key] = 'no';
       return;
     }
 
     $curmin = &self::$minimal_cache[$key];
+    $new_value = trim($value);
 
     if (!isset($curmin))
-     $curmin = $value;
-    if (self::ParseCache($curmin) > self::ParseCache($value))
-      $curmin = $value;
+      $curmin = $new_value;
+    if (self::ParseCache($curmin) > self::ParseCache($new_value))
+      $curmin = $new_value;
   }
 }

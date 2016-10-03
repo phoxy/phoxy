@@ -37,53 +37,43 @@ if (!function_exists("default_addons"))
 class phoxy_sys_api
 {
   private $obj;
-  private $f;
+  private $skip_post_process;
   private $expect_simple_result;
 
-  public function phoxy_sys_api( $obj, $force_raw = false, $expect_simple_result = false )
+  public function __construct( $obj, $skip_post_process = false, $expect_simple_result = false )
   {
     $this->obj = $obj;
-    $this->f = $force_raw;
+    $this->skip_post_process = $skip_post_process;
     $this->expect_simple_result = $expect_simple_result;
   }
 
   public function __call( $name, $arguments )
   {
     $ret = $this->Call($name, $arguments);
-    if (is_a($ret, 'phoxy_return_worker'))
-      $ret = $ret->obj;
 
-    if (!is_array($ret))
+    phoxy_protected_assert(!empty($ret['data']), "Probably internal inconsistence inside phoxy, please bug report");
+
+    // raw calls do not affects restrictions
+    if ($this->ShouldSkipPostProcess($name))
       return $ret;
-
-    if (isset($ret['cache']) && !$this->f) // raw calls do not affects restrictions
+    else
       phoxy_return_worker::NewCache($ret['cache']);
 
-    if (is_array($ret) && isset($ret['data'])
-        && count($ret['data']) === 1 && isset($ret['data'][$name]))
-      $ret = $ret['data'][$name];
-
-    if ($this->ShouldRawReturn($name))
-      return $ret;
     if (!isset($ret['data']))
-    {
-      if (isset($ret['error']))
-        throw new phoxy_protected_call_error($ret);
-      return;
-    }
+      return phoxy_protected_assert(empty($ret['error']), $ret);
+
     $d = $ret['data'];
 
-    if (!is_array($d))
-      return $d;
+    // Reverse public method translation
+    if (is_array($d) && !empty($d[$name]))
+      $d = $d[$name];
 
-    if (count($d) === 1)
-    {
-      if (isset($d[$name])) // directly return [function: data] values
-        return $d[$name];
-      if ($this->expect_simple_result)
-        foreach ($d as $val)
-          return $val;
-    }
+    if ($this->expect_simple_result
+         && is_array($d)
+         && count($d) === 1
+         && !isset($d[0]) // only associative arrays having simple results
+         )
+      return reset($d);
 
     return $d;
   }
@@ -91,15 +81,28 @@ class phoxy_sys_api
   private function Call( $name, $arguments )
   {
     $this->obj->json = false;
-    return call_user_func_array(array($this->obj, $name), $arguments);
-  }
-  private function ShouldRawReturn( $name )
-  {
-    if ($this->f)
-      return true;
+    $result = call_user_func_array(array($this->obj, $name), $arguments);
 
-    $reflection = new ReflectionMethod($this->obj, $name);
-    return $reflection->isPublic();
+    if (is_a($result, 'phoxy_return_worker'))
+      $result = $result->obj;
+
+    if (!$this->Reflect($name)->isPublic())
+      return $result;
+
+    return
+    [
+      "data" => [$name => $result]
+    ];
+  }
+
+  private function Reflect($name)
+  {
+    return new ReflectionMethod($this->obj, $name);
+  }
+
+  private function ShouldSkipPostProcess( $name )
+  {
+    return $this->skip_post_process;
   }
 }
 
@@ -127,6 +130,14 @@ class api
     $compiled = default_addons($phoxy_loading_module);
 
     $this->default_addons = array_merge_recursive($compiled, $this->addons);
+
+    $this->default_addons =
+      $this->override_addons_on_init($this->default_addons);
+  }
+
+  public function override_addons_on_init($addons)
+  {
+    return $addons;
   }
 
   public function APICall( $name, $arguments )
@@ -140,6 +151,7 @@ class api
 
     $this->addons = $this->default_addons;
     $ret = $this->Call($name, $arguments);
+
     if (!is_array($ret))
     {
       $ret = [$name => $ret];
@@ -176,11 +188,6 @@ class api
   private function AddPrefix( &$where, $what )
   {
     $where = "{$what}{$where}";
-  }
-
-  public function __invoke()
-  {
-    return $this->Reserve();
   }
 
   public function fork($force_raw = false, $expect_simple_result = true)

@@ -25,6 +25,7 @@ phoxy._.enjs =
 
       phoxy._.internal.Override(EJS.Canvas.across.prototype, 'CascadeDesign', phoxy._.enjs.CascadeDesign);
       phoxy._.internal.Override(EJS.Canvas.across.prototype, 'CascadeRequest', phoxy._.enjs.CascadeRequest);
+      phoxy._.internal.Override(EJS.Canvas.across.prototype, 'CascadeSupply', phoxy._.enjs.CascadeSupply);
       phoxy._.internal.Override(EJS.Canvas.across.prototype, 'ForeachDesign', phoxy._.enjs.ForeachDesign);
       phoxy._.internal.Override(EJS.Canvas.across.prototype, 'ForeachRequest', phoxy._.enjs.ForeachRequest);
     }
@@ -146,7 +147,7 @@ phoxy._.enjs =
       }
 
       // Handling non arrays (ex: strings) as data objects
-      if (typeof data != 'object' && typeof data != 'undefined')
+      if (['object', 'undefined', 'function'].indexOf(typeof data) == -1)
         data = { data: data };
 
       var ancor = phoxy.DeferRender(ejs, data, CBHook, tag);
@@ -172,6 +173,26 @@ phoxy._.enjs =
 
       this.escape().log("Request", url);
       return phoxy._.enjs.CascadeInit(this, url, undefined, callback, tag || "<CascadeRequest>");
+    }
+  ,
+  CascadeSupply: function(design, url, callback, tag)
+    {
+      if (typeof url !== 'string' && !Array.isArray(url))
+        return phoxy.Log(1, "Are you sure that URL parameters of CascadeRequest right?");
+
+      this.escape().log("Supply", design, url);
+
+      // Workaround issue caused cascade support array/string types
+      // - main types for url handling
+      function hook_data_ready(cb)
+      {
+        phoxy.AJAX(url, function (data)
+        {
+          cb(data.data);
+        });
+      }
+
+      return phoxy._.enjs.CascadeInit(this, design, hook_data_ready, callback, tag || "<CascadeRequest>");
     }
   ,
   ShortcutCallback: function(k, callback)

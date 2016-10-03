@@ -1,20 +1,61 @@
 phoxy._.EarlyStage.ajax = function (url, callback, data, x)
-{  // https://gist.github.com/Xeoncross/7663273
-  try
+{
+
+
+  function ajax_Fetch(url, callback, data, x)
   {
-    x = new(window.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
-    x.open(data ? 'POST' : 'GET', url, 1);
-    x.setRequestHeader('X-Lain', 'Wake up');
-    x.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-    x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-    x.onreadystatechange = function () {
-      x.readyState > 3 && callback && callback(x.responseText, x);
+    var fetch_params =
+    {
+      'headers':
+      {
+        'X-Lain': 'Wake up',
+        'Content-type': 'application/x-www-form-urlencoded',
+      },
+      'credentials': 'include',
     };
-    x.send(data)
-  } catch (e)
-  {
-    window.console && console.log(e);
+
+    if (data)
+    {
+      fetch_params.method = 'post';
+      fetch_params.body = data;
+    }
+
+    function FetchPromise(response)
+    {
+      response.text().then(callback);
+    }
+
+    window.fetch(url, fetch_params).then(FetchPromise);
   }
+
+  function ajax_XMLHttpRequest(url, callback, data, x)
+  {
+    try
+    {
+      x = new (window.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
+
+      x.open(data ? 'POST' : 'GET', url, 1);
+
+      x.setRequestHeader('X-Lain', 'Wake up');
+      x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+      x.onload = function () {
+        callback(x.responseText, x);
+      };
+
+      x.send(data)
+    } catch (e)
+    {
+      window.console && console.log(e);
+    }
+  }
+
+  if (typeof window.fetch != 'undefined')
+    phoxy._.EarlyStage.ajax = ajax_Fetch;
+  else
+    phoxy._.EarlyStage.ajax = ajax_XMLHttpRequest;
+
+  phoxy._.EarlyStage.ajax.apply(this, arguments);
 };
 
 
@@ -77,7 +118,12 @@ phoxy._.EarlyStage.Compile = function()
     delete phoxy[system_name];
   }
 
-  if (phoxy._.prestart.sync_cascade)
+  var sync_cascade =
+    typeof phoxy._.prestart.sync_cascade != 'undefined'
+    ? phoxy._.prestart.sync_cascade
+    : phoxy.Config()['sync_cascade'];
+
+  if (sync_cascade)
   {
     phoxy.state.sync_cascade = true;
     phoxy._.render.RenderStrategy = phoxy._.render.SyncRender_Strategy;
