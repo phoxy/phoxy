@@ -23,7 +23,7 @@ class phoxy extends api
     $module = array_pop($names);
     $directory = $dir.'/'.implode('/', $names);
 
-    return LoadModule($directory, $module, $raw_include);
+    return LoadModule($directory, $module, $force_raw_return);
   }
 
   // Begin default phoxy behaviour
