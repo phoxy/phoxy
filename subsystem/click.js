@@ -7,49 +7,72 @@ phoxy._.click =
 {
   InitClickHook: function()
     {
-      document.querySelector('body').addEventListener('click', function click_hook(event)
-      {
-        var target = event.target;
-        while (true)
-        {
-          if (target === null)
-            return;
-          if (target.nodeName === 'A')
-            break; // only click on A is triggered
-          target = target.parentElement;
-        }
-
-        var url = target.getAttribute('href');
-
-        if (url === undefined || target.hasAttribute('not-phoxy'))
-          return;
-
-        if (phoxy._.click.OnClick(url, false))
-          return;
-
-        event.preventDefault()
-      }, true);
+      document
+        .querySelector('body')
+        .addEventListener('click', phoxy._.click.OnClick, true);
 
       window.onpopstate = phoxy._.click.OnPopState;
     }
   ,
-  OnClick: function (url, not_push)
+  IsURLSupported: function(url)
     {
-      // Element without url
+      // Returns false for default browser action
+      // Returns true on phoxy handling
+
       if (!url)
-        return true;
+        return false;
 
-      if (url.indexOf('#') !== -1)
-        return true;
+      // Link begins with # - hash ancoring
+      if (url.substring(0, 1) == '#')
+        return false;
 
+      // Link begins with // - definitely not phoxy
+      if (url.substring(0, 2) == "//")
+        return false;
+
+      // Link begins with proto:// - probably not phoxy
+      if (url.match(/^\w+:\/\//) !== null)
+        return false;
+
+      return true;
+    }
+  ,
+  PhoxyAction: function(url, skip_history_push)
+    {
       if (url[0] === '/')
         url = url.substring(1);
 
-      if (not_push)
+      if (skip_history_push)
         phoxy.ApiRequest(url);
       else
         phoxy.MenuCall(url);
-      return false;
+    }
+  ,
+  OnClick: function (event)
+    {
+      var target = event.target;
+      while (true)
+      {
+        if (target === null)
+          return;
+        if (target.nodeName === 'A')
+          break; // only click on A is triggered
+        target = target.parentElement;
+      }
+
+      var path = target.getAttribute('href');
+
+      // If phoxy action not forced and url not supported
+      // or action forbidden explicitly with not-phoxy
+      // then cancel
+      if (target.hasAttribute('not-phoxy')
+        || (!target.hasAttribute('force-phoxy')
+          && !phoxy._.click.IsURLSupported(path))
+         )
+        return;
+
+      phoxy._.click.PhoxyAction(path, false);
+      event.preventDefault();
     }
   ,
   OnPopState: function(e)
@@ -57,6 +80,7 @@ phoxy._.click =
       var path = e.target.location.pathname;
       var hash = e.target.location.hash;
 
-      phoxy._.click.OnClick(path, true);
+      if (phoxy._.click.IsURLSupported(path))
+        phoxy._.click.PhoxyAction(path, true);
     }
 };
