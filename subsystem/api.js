@@ -151,7 +151,7 @@ phoxy._.api =
         return str.replace(regexp,
           function(matched)
           {
-            return escape(escape(matched));
+            return escape(matched);
           });
       }
 
