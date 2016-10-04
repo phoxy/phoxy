@@ -9,7 +9,7 @@ phoxy._.click =
     {
       document
         .querySelector('body')
-        .addEventListener('click', phoxy._.click.OnClick, true);
+        .addEventListener('click', phoxy._.click.OnClick, false);
 
       window.onpopstate = phoxy._.click.OnPopState;
     }
