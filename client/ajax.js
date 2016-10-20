@@ -7,6 +7,11 @@ phoxy._.ajax =
 
   legacy_request: function(url, post, success, error)
   {
+    var after_ajax_loaded = function()
+    {
+      success(x.responseText, x);
+    }
+
     try
     {
       x = new (window.XMLHttpRequest || ActiveXObject)('MSXML2.XMLHTTP.3.0');
@@ -17,15 +22,12 @@ phoxy._.ajax =
       x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 
 
-      x.addEventListener("load", function()
-      {
-        success(x.responseText, x);
-      });
+      x.addEventListener("load", after_ajax_loaded);
 
       x.addEventListener("error", error);
       x.addEventListener("abort", error);
 
-      x.send(data)
+      x.send(post)
     } catch (e)
     {
       error(e);
