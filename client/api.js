@@ -57,6 +57,27 @@ phoxy._.api =
 
     success(obj);
   }
+  ,
+  initial_api_request: function()
+  {
+    var commands = document.getElementsByTagName('phoxy-initial-api-request');
+
+    var done = 0;
+
+    for (var k = 0; k < commands.length; k++)
+    {
+      var command = commands[k].getAttribute('src');
+
+      // Todo: allow update commands as well
+      if (command)
+        phoxy._.api.read(command, function after_another_initial_request_done()
+        {
+          if (++done == commands.length)
+            console.log("Initial api requests finished");
+        }, console.log);
+    }
+  }
 }
 
 phoxy._.api.request = phoxy._.api.request_through_ajax;
+phoxy._.api.initial_api_request();

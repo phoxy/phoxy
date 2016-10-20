@@ -25,12 +25,12 @@ script_loader.LoadScript = function(name, success, error)
 
 script_loader.FindScriptDirectivesFromDom = function()
 {
-  var scripts = document.getElementsByTagName('script');
+  var scripts = document.getElementsByTagName('phoxy-load-script');
 
   for (var k = 0; k < scripts.length; k++)
   {
     var script = scripts[k];
-    var load_attribute = script.getAttribute('phoxy-load-script');
+    var load_attribute = script.getAttribute('src');
 
     if (load_attribute)
       script_loader.LoadScript(load_attribute);
