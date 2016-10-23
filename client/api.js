@@ -89,3 +89,4 @@ phoxy._.api =
 
 phoxy._.api.default_request_method = phoxy._.api.request_through_ajax;
 phoxy._.api.initial_api_request();
+
