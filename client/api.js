@@ -10,6 +10,14 @@ phoxy._.api =
     phoxy._.api.request(false, url, success, error);
   }
   ,
+  request: function(is_fetching_only, url, success, error)
+  {
+    phoxy._.api.default_request_method(is_fetching_only, url, function(obj)
+    {
+      phoxy._.reactor.react(obj, success, error);
+    }, error);
+  }
+  ,
   request_through_ajax: function(is_fetching_only, url, success, error)
   {
     phoxy._.api.construct_ajax_params(is_fetching_only, url, function before_ajax_request(get, post)
@@ -79,5 +87,5 @@ phoxy._.api =
   }
 }
 
-phoxy._.api.request = phoxy._.api.request_through_ajax;
+phoxy._.api.default_request_method = phoxy._.api.request_through_ajax;
 phoxy._.api.initial_api_request();
