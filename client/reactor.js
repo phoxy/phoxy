@@ -10,9 +10,21 @@ phoxy._.reactor =
 
   }
   ,
-  add_queue: function(queue, before, success, error)
+  add_queue: function(queue, after, success, error)
   {
+    if (!phoxy._.reactor.queues[queue] == undefined)
+      throw "Queue already added";
 
+    if (typeof after == 'string')
+      after = [after];
+
+    phoxy._.reactor.queues[queue] =
+    {
+      require: after,
+    };
+
+    phoxy._.reactor.queues.__proto__.length =
+      1 + (phoxy._.reactor.queues.__proto__.length || 0);
   }
   ,
   ignite_next_queue: function(obj, current, trail, success, error)
@@ -39,17 +51,42 @@ phoxy._.reactor =
   ,
   find_next_queue: function(trail, success, error)
   {
+    if (trail.length - 1 == phoxy._.reactor.queues.length)
+      error("Reaction is over");
 
+    for (var queue in phoxy._.reactor.queues)
+    {
+      if (trail.indexOf(queue) != -1)
+        continue;
+      if (!phoxy._.reactor.queue_requirment_met(queue, trail))
+        continue;
+
+      return success(queue);
+    }
+
+    error(trail);
+  }
+  ,
+  queue_requirment_met: function(queue, trail)
+  {
+    // Probably refactor as async too
+    for (var k in queue.require)
+      if (-1 != trail.indexOf(queue.require[k]))
+        return false;
+    return true;
   }
   ,
   execute_queue: function(obj, name, trail, success, error)
   {
 
   }
+  ,
+  queues : {}
+  ,
 };
 
-phoxy._.reactor.add_queue('pre', 'now');
-phoxy._.reactor.add_queue('now', 'post');
+phoxy._.reactor.add_queue('now', 'pre');
+phoxy._.reactor.add_queue('post', 'now');
 
 phoxy._.reactor.add_pre_reaction = phoxy._.reactor.add_reaction.bind('pre');
 phoxy._.reactor.add_now_reaction = phoxy._.reactor.add_reaction.bind('now');
