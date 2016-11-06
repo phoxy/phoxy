@@ -39,7 +39,7 @@ phoxy._.reactor.default_reagents.apply('add_pre_reaction',
     if (typeof obj.script === 'undefined')
       return success(obj);
 
-    phoxy._.script_loader.LoadScript(obj.script, function()
+    phoxy._.script_loader.LoadScript(obj.script, function script_loaded()
     {
       success(obj);
     }, error);
