@@ -22,7 +22,7 @@ phoxy._.api =
   {
     phoxy._.api.construct_ajax_params(is_fetching_only, url, function before_ajax_request(get, post)
     {
-      phoxy._.ajax.request(get, post, function before_response_parsing(response)
+      phoxy._.ajax.request(phoxy._.url(get), post, function before_response_parsing(response)
       {
           phoxy._.api.parse_json(response, function api_request_finished(obj)
           {
@@ -89,4 +89,3 @@ phoxy._.api =
 
 phoxy._.api.default_request_method = phoxy._.api.request_through_ajax;
 phoxy._.api.initial_api_request();
-

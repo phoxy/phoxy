@@ -21,7 +21,11 @@ phoxy._.script_loader.LoadScript
           , '/phoxy/client/default.reagents.js'
           , '/phoxy/client/lurk.for.keyword.js'
         ]
-        , '/phoxy/client/api.js'
+        ,
+        [
+          '/phoxy/client/url.js'
+          , '/phoxy/client/api.js'
+        ]
       ]
       ,
       function api_ready()
