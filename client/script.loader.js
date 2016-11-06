@@ -2,6 +2,9 @@ var script_loader = {};
 
 script_loader.LoadScript = function(name, success, error)
 {
+  if (typeof name != 'string')
+    return script_loader.ArrayLoadScript(name, success, error);
+
   var js = document.createElement("script");
   js.type = "text/javascript";
   js.src = name;
@@ -21,6 +24,23 @@ script_loader.LoadScript = function(name, success, error)
     };
 
   document.head.appendChild(js);
+}
+
+script_loader.ArrayLoadScript = function(name, success, error)
+{
+  if (!Array.isArray(name))
+    return error("Unexpected type", name)
+
+  var i = 0;
+
+  function Load()
+  {
+    var script = name[i++];
+    var next = i < name.length ? Load : success;
+    script_loader.LoadScript(script, next, error);
+  }
+
+  Load();
 }
 
 script_loader.FindScriptDirectivesFromDom = function()
