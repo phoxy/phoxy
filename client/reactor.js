@@ -5,9 +5,17 @@ phoxy._.reactor =
     phoxy._.reactor.ignite_next_queue(obj, 'warming_reactor', [], success, error);
   }
   ,
-  add_reaction: function(queue, method, require_main_thread, success, error)
+  add_reaction: function(queue_name, method, require_main_thread, success, error)
   {
+    var queue = phoxy._.reactor.queues[queue_name];
 
+    if (queue == undefined)
+      return error("Queue not registered");
+
+    var handlers = queue.handlers;
+
+    handlers.push(method);
+    return success("Handler registered");
   }
   ,
   add_queue: function(queue, after, success, error)
@@ -109,7 +117,6 @@ phoxy._.reactor.add_queue('pre', []);
 phoxy._.reactor.add_queue('now', 'pre');
 phoxy._.reactor.add_queue('post', 'now');
 
-phoxy._.reactor.add_pre_reaction = phoxy._.reactor.add_reaction.bind('pre');
-phoxy._.reactor.add_now_reaction = phoxy._.reactor.add_reaction.bind('now');
-phoxy._.reactor.add_post_reaction = phoxy._.reactor.add_reaction.bind('post');
-
+phoxy._.reactor.add_pre_reaction = phoxy._.reactor.add_reaction.bind(phoxy._.reactor, 'pre');
+phoxy._.reactor.add_now_reaction = phoxy._.reactor.add_reaction.bind(phoxy._.reactor, 'now');
+phoxy._.reactor.add_post_reaction = phoxy._.reactor.add_reaction.bind(phoxy._.reactor, 'post');
