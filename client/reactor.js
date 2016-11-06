@@ -26,7 +26,7 @@ phoxy._.reactor =
     if (typeof after == 'string')
       after = [after];
 
-    phoxy._.reactor.queues.push(
+    phoxy._.reactor.queues.unshift(
     {
       name: queue,
       require: after,
