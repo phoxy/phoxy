@@ -9,7 +9,7 @@ phoxy._.script_loader.LoadScript
     '/phoxy/client/ajax.js'
     , '/phoxy/client/module.loader.js'
   ]
-, function()
+, function loading_reactor()
   {
     phoxy._.script_loader.LoadScript
     (
@@ -23,5 +23,10 @@ phoxy._.script_loader.LoadScript
         ]
         , '/phoxy/client/api.js'
       ]
+      ,
+      function api_ready()
+      {
+
+      }
     );
   });

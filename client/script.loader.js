@@ -38,9 +38,11 @@ script_loader.ArrayLoadScript = function(name, success, error)
 
   function Load()
   {
+    if (i == name.length)
+      return success();
+
     var script = name[i++];
-    var next = i < name.length ? Load : success;
-    script_loader.LoadScript(script, next, error);
+    script_loader.LoadScript(script, Load, error);
   }
 
   Load();
@@ -50,14 +52,18 @@ script_loader.FindScriptDirectivesFromDom = function()
 {
   var scripts = document.getElementsByTagName('phoxy-load-script');
 
+  var scripts_to_load = [];
+
   for (var k = 0; k < scripts.length; k++)
   {
     var script = scripts[k];
     var load_attribute = script.getAttribute('src');
 
     if (load_attribute)
-      script_loader.LoadScript(load_attribute);
+      scripts_to_load.push(load_attribute);
   }
+
+  script_loader.LoadScript(scripts_to_load, console.log);
 }
 
 script_loader.FindScriptDirectivesFromDom();
