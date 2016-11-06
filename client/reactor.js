@@ -2,43 +2,41 @@ phoxy._.reactor =
 {
   react: function(obj, success, error)
   {
-    phoxy._.reactor.ignite_next_queue(obj, 'warming_reactor', [], success, error);
+    phoxy._.reactor.ignite_next_queue(obj, {name: 'warming_reactor'}, [], success, error);
   }
   ,
   add_reaction: function(queue_name, method, require_main_thread, success, error)
   {
-    var queue = phoxy._.reactor.queues[queue_name];
+    for (var i = 0; i < phoxy._.reactor.queues.length; i++)
+      if (phoxy._.reactor.queues[i].name == queue_name)
+        break;
+    if (i == phoxy._.reactor.queues.length)
+      return error("Queue not registered", queue_name);
 
-    if (queue == undefined)
-      return error("Queue not registered");
-
+    var queue = phoxy._.reactor.queues[i];
     var handlers = queue.handlers;
 
     handlers.push(method);
     return success("Handler registered");
   }
   ,
+  // TODO: Add before word
   add_queue: function(queue, after, success, error)
   {
-    if (!phoxy._.reactor.queues[queue] == undefined)
-      throw "Queue already added";
-
     if (typeof after == 'string')
       after = [after];
 
-    phoxy._.reactor.queues[queue] =
+    phoxy._.reactor.queues.push(
     {
+      name: queue,
       require: after,
       handlers: [],
-    };
-
-    phoxy._.reactor.queues.__proto__.length =
-      1 + (phoxy._.reactor.queues.__proto__.length || 0);
+    });
   }
   ,
   ignite_next_queue: function(obj, current, trail, success, error)
   {
-    trail.push(current);
+    trail.push(current.name);
 
     phoxy._.reactor.find_next_queue(trail
       , function next_queue_found(queue)
@@ -64,19 +62,19 @@ phoxy._.reactor =
     if (trail.length - 1 == phoxy._.reactor.queues.length)
       return error("Reaction is over");
 
-    for (var queue_name in phoxy._.reactor.queues)
+    for (var k in phoxy._.reactor.queues)
     {
-      if (!phoxy._.reactor.queues.hasOwnProperty(queue_name))
+      if (!phoxy._.reactor.queues.hasOwnProperty(k))
         continue;
-      if (trail.indexOf(queue_name) != -1)
-        continue;
+      var queue = phoxy._.reactor.queues[k];
 
-      var queue = phoxy._.reactor.queues[queue_name];
+      if (trail.indexOf(queue.name) != -1)
+        continue;
 
       if (!phoxy._.reactor.queue_requirment_met(queue, trail))
         continue;
 
-      return success(queue_name);
+      return success(queue);
     }
 
     return error(trail);
@@ -91,15 +89,15 @@ phoxy._.reactor =
     return true;
   }
   ,
-  execute_queue: function(obj, name, trail, success, error)
+  execute_queue: function(obj, queue, trail, success, error)
   {
-    var handlers = phoxy._.reactor.queues[name].handlers;
+    var handlers = queue.handlers;
     var handler_id = 0;
 
     var next_handler = function(obj)
     {
       if (handler_id >= handlers.length)
-        return success(obj, name, trail, success, error);
+        return success(obj, queue.name, trail, success, error);
 
       var handler = handlers[handler_id++];
 
@@ -109,11 +107,12 @@ phoxy._.reactor =
     next_handler(obj);
   }
   ,
-  queues : {}
+  queues : []
   ,
 };
 
-phoxy._.reactor.add_queue('pre', []);
+phoxy._.reactor.add_queue('reaction_began', 'warming_reactor')
+phoxy._.reactor.add_queue('pre', 'reaction_began');
 phoxy._.reactor.add_queue('now', 'pre');
 phoxy._.reactor.add_queue('post', 'now');
 
