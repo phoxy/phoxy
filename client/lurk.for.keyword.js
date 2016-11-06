@@ -1,19 +1,38 @@
 phoxy._.reactor.autoload =
 {
-  registered_keywords: ['data']
+  registered_keywords:
+  [
+    'data'
+    , 'error'
+    , 'script'
+    , 'routeline'
+    , 'cache'
+  ]
   ,
-  Init: function()
+  keyword_autoload_location: '/on_unknown_keyword'
+  ,
+  init: function()
   {
     phoxy._.reactor.add_queue('autoload', 'warming_reactor');
-    phoxy._.reactor.add_reaction('autoload', phoxy._.reactor.autoload.CheckObject, false, console.log);
+    phoxy._.reactor.add_reaction('autoload', phoxy._.reactor.autoload.update_lurk_location, false, console.log);
+    phoxy._.reactor.add_reaction('autoload', phoxy._.reactor.autoload.check_object, false, console.log);
   }
   ,
-  IgnoreKeyword: function(keyword)
+  ignore_keyword: function(keyword)
   {
-
+    phoxy._.reactor.registered_keywords.push(keyword);
   }
   ,
-  CheckObject: function(obj, success, error)
+  update_lurk_location: function(obj, success, error)
+  {
+    if (typeof obj.keyword_autoload_location !== 'undefined')
+      phoxy._.reactor.autoload.keyword_autoload_location
+        = obj.keyword_autoload_location;
+
+    success(obj);
+  }
+  ,
+  check_object: function(obj, success, error)
   {
     var object_keys = Object.keys(obj);
     var i = 0;
@@ -25,28 +44,38 @@ phoxy._.reactor.autoload =
 
       var keyword = object_keys[i++];
 
-      phoxy._.reactor.autoload.IsKeywordKnown(keyword, next, load_keyword);
+      phoxy._.reactor.autoload.is_keyword_known(keyword, next, load_keyword);
     }
 
     function load_keyword(keyword)
     {
-      phoxy._.reactor.autoload.TryLoadNewKeyword(keyword, next, error);
+      phoxy._.reactor.autoload.try_load_new_keyword(keyword, next, error);
     }
 
     next();
   }
   ,
-  IsKeywordKnown: function(keyword, success, error)
+  is_keyword_known: function(keyword, success, error)
   {
     if (-1 == phoxy._.reactor.autoload.registered_keywords.indexOf(keyword))
       return error(keyword);
     return success();
   }
   ,
-  TryLoadNewKeyword: function(keyword, success, error)
+  try_load_new_keyword: function(keyword, success, error)
   {
-
+    phoxy._.api.read([phoxy._.reactor.autoload.keyword_autoload_location, keyword]
+      ,
+      function on_server_respond_with_keyword()
+      {
+        debugger;
+      }
+      ,
+      function on_server_didnt_respond_keyword()
+      {
+        error("Server doesn't know keyword", keyword);
+      })
   }
 }
 
-phoxy._.reactor.autoload.Init();
+phoxy._.reactor.autoload.init();
