@@ -31,6 +31,9 @@ script_loader.ArrayLoadScript = function(name, success, error)
   if (!Array.isArray(name))
     return error("Unexpected type", name)
 
+  if (name.length == 0)
+    return success();
+
   var i = 0;
 
   function Load()

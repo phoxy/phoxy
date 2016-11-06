@@ -23,11 +23,43 @@ phoxy._.reactor.default_reagents.apply = function(where, method)
   );
 }
 
-phoxy._.reactor.default_reagents.apply('add_now_reaction',
-  function error(obj, success, error)
+phoxy._.reactor.default_reagents.apply('add_pre_reaction',
+  function handle_error_keyword(obj, success, error)
   {
-    debugger;
-
     if (typeof obj.error === 'undefined')
       return success(obj);
+
+    console.log("Server returned error", obj.error);
+    error(obj);
+  });
+
+phoxy._.reactor.default_reagents.apply('add_pre_reaction',
+  function handle_script_keyword(obj, success, error)
+  {
+    if (typeof obj.script === 'undefined')
+      return success(obj);
+
+    phoxy._.script_loader.LoadScript(obj.script, function()
+    {
+      success(obj);
+    }, error);
+  });
+
+phoxy._.reactor.default_reagents.apply('add_pre_reaction',
+  function handle_routeline_keyword(obj, success, error)
+  {
+    if (typeof obj.routeline === 'undefined')
+      return success(obj);
+
+    throw "TODO: Handle routeline keyword";
+  });
+
+
+phoxy._.reactor.default_reagents.apply('add_now_reaction',
+  function handle_design_keyword(obj, success, error)
+  {
+    if (typeof obj.design === 'undefined')
+      return success(obj);
+
+    throw "TODO: Handle design keyword";
   });
