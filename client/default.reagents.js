@@ -53,13 +53,3 @@ phoxy._.reactor.default_reagents.apply('add_pre_reaction',
 
     throw "TODO: Handle routeline keyword";
   });
-
-
-phoxy._.reactor.default_reagents.apply('add_now_reaction',
-  function handle_design_keyword(obj, success, error)
-  {
-    if (typeof obj.design === 'undefined')
-      return success(obj);
-
-    throw "TODO: Handle design keyword";
-  });
