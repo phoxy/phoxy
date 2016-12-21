@@ -7,6 +7,7 @@ phoxy._.reactor.autoload =
     , 'script'
     , 'routeline'
     , 'cache'
+    , 'keyword_autoload_location'
   ]
   ,
   keyword_autoload_location: '/on_unknown_keyword'
@@ -75,7 +76,7 @@ phoxy._.reactor.autoload =
       function on_server_respond_with_keyword()
       {
         phoxy._.reactor.autoload.active_searches.pop();
-        debugger;
+        success();
       }
       ,
       function on_server_didnt_respond_keyword()
