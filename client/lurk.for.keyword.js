@@ -11,6 +11,8 @@ phoxy._.reactor.autoload =
   ,
   keyword_autoload_location: '/on_unknown_keyword'
   ,
+  active_searches: [ ]
+  ,
   init: function()
   {
     phoxy._.reactor.add_queue('autoload', 'warming_reactor');
@@ -64,16 +66,22 @@ phoxy._.reactor.autoload =
   ,
   try_load_new_keyword: function(keyword, success, error)
   {
+    if (phoxy._.reactor.autoload.active_searches.indexOf(keyword) != -1)
+      return error("Autoloading keyword leading to recursion", [phoxy._.reactor.autoload.active_searches, keyword]);
+    phoxy._.reactor.autoload.active_searches.push(keyword);
+
     phoxy._.api.read([phoxy._.reactor.autoload.keyword_autoload_location, keyword]
       ,
       function on_server_respond_with_keyword()
       {
+        phoxy._.reactor.autoload.active_searches.pop();
         debugger;
       }
       ,
       function on_server_didnt_respond_keyword()
       {
-        error("Server doesn't know keyword", keyword);
+        phoxy._.reactor.autoload.active_searches.pop();
+        error("Server doesn't know keyword", [keyword, arguments]);
       })
   }
 }
