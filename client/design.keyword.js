@@ -22,15 +22,22 @@ phoxy._.module.design =
     phoxy._.script_loader.LoadScript
       (
         '/phoxy/client/refactor/enjs/load.js'
-        , phoxy._.module.design.enjs_loaded_hook
+        ,
+        function ()
+        {
+          // Extended check
+          if (typeof phoxy._.module.design.enjs === "undefined")
+            throw "Failed to load ENJS ecosystem";
+
+          phoxy._.module.design.enjs.init(phoxy._.module.design.enjs_loaded_hook, function()
+          {
+            console.log("Issue during initialisation ENJS ecosystem", arguments);
+          });
+        }
       )
   },
   enjs_loaded_hook: function()
   {
-    // Extended check
-    if (typeof phoxy._.module.design.enjs === "undefined")
-      throw "Failed to load ENJS ecosystem";
-
     while (phoxy._.module.design.enjs_loaded_listeners.length > 0)
     {
       var listener = phoxy._.module.design.enjs_loaded_listeners.pop();
