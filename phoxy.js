@@ -151,6 +151,7 @@ phoxy._.EarlyStage =
         function on_require_systems()
         {
           phoxy.state.runlevel += 0.5;
+          phoxy._.EarlyStage.critpath_ready = true;
         }
       );
 
@@ -159,6 +160,7 @@ phoxy._.EarlyStage =
         phoxy._.EarlyStage.sync_require,
         function on_require_sync()
         {
+          phoxy._.EarlyStage.sync_ready = true;
           phoxy.state.runlevel += 0.5;
           phoxy._.EarlyStage.Ready();
         }
@@ -169,10 +171,7 @@ phoxy._.EarlyStage =
         phoxy._.EarlyStage.async_require,
         function on_require_async()
         {
-          // Wait for sync code to finish
-          if (phoxy.state.runlevel < 2)
-            return setTimeout(arguments.callee, 10);
-
+          phoxy._.EarlyStage.async_ready = true;
           phoxy._.EarlyStage.EnterFinalExecution();
         }
       );

@@ -73,15 +73,15 @@ phoxy._.EarlyStage.LoadConfig = function()
 
 phoxy._.EarlyStage.DependenciesLoaded = function()
 {
-  if (phoxy.state.ready_to_compile)
-    return;
-
-  // wait until phoxy.Config()uration loaded
-  if (phoxy.state.runlevel < 2 || !phoxy.state.conf_loaded)
+  if (phoxy.state.runlevel < 2
+    || !phoxy.state.conf_loaded)
     return setTimeout(arguments.callee, 100);
 
+  if (phoxy._.EarlyStage.triggered_compile_process)
+    return
+  phoxy._.EarlyStage.triggered_compile_process = true;
+
   phoxy.state.runlevel += 0.5; // because config downloaded
-  phoxy.state.ready_to_compile = true;
 
   if (typeof phoxy._.prestart.OnBeforeCompile === 'function')
     phoxy._.prestart.OnBeforeCompile();
@@ -98,6 +98,8 @@ phoxy._.EarlyStage.DependenciesLoaded = function()
 
   // Entering runlevel 3, compilation finished
   phoxy.state.runlevel += 0.5;
+
+  phoxy._.EarlyStage.EnterFinalExecution();
 };
 
 phoxy._.EarlyStage.Compile = function()
@@ -178,8 +180,13 @@ phoxy._.EarlyStage.PreloadInitialClientCode = function()
 
 phoxy._.EarlyStage.EnterFinalExecution = function()
 {
-  if (phoxy.state.runlevel < 3)
-    return setTimeout(arguments.callee, 50);
+  if (phoxy.state.runlevel < 3
+    || !phoxy._.EarlyStage.async_ready)
+    return setTimeout(arguments.callee, 100);
+
+  if (phoxy._.EarlyStage.triggered_final_execution)
+    return;
+  phoxy._.EarlyStage.triggered_final_execution = true;
 
   phoxy._.enjs.OverloadENJSCanvas();
   requirejs.config({baseUrl: phoxy.Config()['js_dir']});
