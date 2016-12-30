@@ -50,6 +50,9 @@ phoxy._.click =
   ,
   OnClick: function (event)
     {
+      if (window.event.ctrlKey)
+        return; // Ctrl + Click = open in new tab
+
       var target = event.target;
       while (true)
       {
