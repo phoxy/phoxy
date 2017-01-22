@@ -79,7 +79,7 @@ class phoxy extends api
     else
       header('Content-Type: application/json; charset=utf-8');
 
-    if (phoxy_conf()["is_ajax_request"])
+    if (!phoxy_conf()["debug_api"] || phoxy_conf()["is_ajax_request"])
       echo $prepared;
     else if (phoxy_conf()["buffered_output"])
       echo "\n<hr><h1>Log</h1>\n{$buffered_output}";
