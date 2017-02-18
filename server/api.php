@@ -181,7 +181,9 @@ class api
         "error" => "Security violation (Module handler not protected)",
         "description" => htmlentities($name),
       ];
+
     $ret = call_user_func_array([$this, $name], $arguments);
+
     return $ret;
   }
 
