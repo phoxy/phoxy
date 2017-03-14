@@ -40,7 +40,8 @@ phoxy._.EarlyStage.ajax = function (url, callback, data, x)
       x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 
       x.onload = function () {
-        callback(x.responseText, x);
+        if (callback)
+          callback(x.responseText, x);
       };
 
       x.send(data)
