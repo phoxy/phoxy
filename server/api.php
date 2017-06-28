@@ -51,11 +51,11 @@ class phoxy_sys_api
   {
     $ret = $this->Call($name, $arguments);
 
-    if ($this->Reflect($name)->isProtected())
-      phoxy_protected_assert(!empty($ret['data']), "Protected method executed with phoxy::Load, but no _data_ were found. Check return values of {$name}");
-    else
-      phoxy_protected_assert(!empty($ret['data']), "Probably internal inconsistence inside phoxy, please bug report. Failed to detect data of {$name}");
-
+    if (!$this->skip_post_process && empty($ret['data']))
+      if ($this->Reflect($name)->isProtected())
+        throw new phoxy_protected_call_error("Protected method executed with phoxy::Load, but no _data_ were found. Check return values of {$name}");
+      else
+        throw new phoxy_protected_call_error("Probably internal inconsistence inside phoxy, please bug report. Failed to detect data of {$name}");
 
 
     // raw calls do not affects restrictions
