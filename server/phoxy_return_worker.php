@@ -46,7 +46,14 @@ class phoxy_return_worker
   public function __toString()
   {
     if (!isset($this->prepared))
-      $this->Prepare();
+      try
+      {
+        $this->Prepare();
+      } catch (phoxy_protected_call_error $e)
+      {
+        echo "<h1>Uncaught exception</h1><br>";
+        var_dump($e->result);
+      }
 
     return $this->prepared;
   }
