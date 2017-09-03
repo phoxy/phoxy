@@ -172,6 +172,11 @@ phoxy._.EarlyStage =
         function on_require_async()
         {
           phoxy._.EarlyStage.async_ready = true;
+
+          // Wait until final execution module is ready
+          if (!phoxy._.EarlyStage.critpath_ready)
+            return setTimeout(arguments.callee, 10);
+
           phoxy._.EarlyStage.EnterFinalExecution();
         }
       );
