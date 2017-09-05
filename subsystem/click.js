@@ -74,6 +74,10 @@ phoxy._.click =
          )
         return;
 
+
+      phoxy._.click.StoreScroll();
+      phoxy._.click.RestoreScroll(0);
+
       phoxy._.click.PhoxyAction(path, false);
       event.preventDefault();
     }
@@ -84,10 +88,37 @@ phoxy._.click =
       var path = e.target.location.pathname;
       var hash = e.target.location.hash;
 
+      var restore_state = state == null ? null : phoxy._.click.RestoreState.bind(this, state);
+      phoxy._.click.StoreScroll();
+
       if (phoxy._.click.IsURLSupported(path))
-        phoxy._.click.PhoxyAction(path, true, function()
-        {
-          document.documentElement.scrollTop = document.body.scrollTop = state.scroll;
-        });
+        phoxy._.click.PhoxyAction(path, true, restore_state);
     }
+  ,
+  StoreScroll: function()
+  {
+    // save current scroll position
+    var state_obj =
+    {
+      scroll: document.documentElement.scrollTop || document.body.scrollTop,
+      height: document.documentElement.scrollHeight || document.body.scrollHeight,
+    };
+
+    history.replaceState(state_obj, document.title, document.location);
+  }
+  ,
+  RestoreScroll: function(pos)
+  {
+    document.documentElement.scrollTop = document.body.scrollTop = pos;
+  }
+  ,
+  RestoreState: function(state)
+  {
+    var height = document.documentElement.scrollHeight || document.body.scrollHeight;
+    if (height < state.height * 0.9)
+      return phoxy.Defer(arguments.callee.bind(this, state), 100);
+
+    phoxy._.click.RestoreScroll(state.scroll);
+  }
+  ,
 };

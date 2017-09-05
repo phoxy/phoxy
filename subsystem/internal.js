@@ -7,13 +7,7 @@ phoxy.internal =
       phoxy.Log(4, "History push", url);
       if (url[0] !== '/')
         url = '/' + url;
-
-      var state_obj =
-      {
-        scroll: document.documentElement.scrollTop || document.body.scrollTop,
-      };
-
-      history.pushState(state_obj, document.title, url);
+      history.pushState({}, document.title, url);
 
       return false;
     }
