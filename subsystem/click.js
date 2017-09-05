@@ -37,15 +37,15 @@ phoxy._.click =
       return true;
     }
   ,
-  PhoxyAction: function(url, skip_history_push)
+  PhoxyAction: function(url, skip_history_push, cb)
     {
       if (url[0] === '/')
         url = url.substring(1);
 
       if (skip_history_push)
-        phoxy.ApiRequest(url);
+        phoxy.ApiRequest(url, cb);
       else
-        phoxy.MenuCall(url);
+        phoxy.MenuCall(url, cb);
     }
   ,
   OnClick: function (event)
@@ -80,10 +80,14 @@ phoxy._.click =
   ,
   OnPopState: function(e)
     {
+      var state = e.state;
       var path = e.target.location.pathname;
       var hash = e.target.location.hash;
 
       if (phoxy._.click.IsURLSupported(path))
-        phoxy._.click.PhoxyAction(path, true);
+        phoxy._.click.PhoxyAction(path, true, function()
+        {
+          document.documentElement.scrollTop = document.body.scrollTop = state.scroll;
+        });
     }
 };
