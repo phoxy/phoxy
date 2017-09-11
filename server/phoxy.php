@@ -60,7 +60,8 @@ class phoxy extends api
       $result = $a->APICall($method[0], $method[1]);
     } catch (phoxy_protected_call_error $e)
     {
-      $result = new phoxy_return_worker(["error" => $e->result]);
+      $error = isset($e->result['error']) ? $e->result : ["error" => $e->result];
+      $result = new phoxy_return_worker($error);
     }
 
     $prepared = (string)$result;
