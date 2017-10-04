@@ -74,10 +74,9 @@ class phoxy_sys_api
       $d = $d[$name];
 
     if ($this->expect_simple_result
+         && $this->Reflect($name)->isProtected() // all public results are simple
          && is_array($d)
-         && count($d) === 1
-         && !isset($d[0]) // only associative arrays having simple results
-         )
+         && count($d) === 1)
       return reset($d);
 
     return $d;
@@ -197,7 +196,7 @@ class api
     $where = "{$what}{$where}";
   }
 
-  public function fork($force_raw = false, $expect_simple_result = true)
+  public function fork($force_raw = false, $expect_simple_result = false)
   {
     return new phoxy_sys_api($this, $force_raw, $expect_simple_result);
   }

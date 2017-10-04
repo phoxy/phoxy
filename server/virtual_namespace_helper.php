@@ -15,7 +15,6 @@ END;
   $code = str_replace('<?php', $header, $code);
   $code = preg_replace('/ api\s*\n/', ' \\api', $code);
 
-
   eval($code);
 
   $classname = "\\".$tempns."\\$module";
