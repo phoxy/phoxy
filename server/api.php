@@ -40,7 +40,7 @@ class phoxy_sys_api
   private $skip_post_process;
   private $expect_simple_result;
 
-  public function __construct( $obj, $skip_post_process = false, $expect_simple_result = false )
+  public function __construct( $obj, $skip_post_process = false, $expect_simple_result = true )
   {
     $this->obj = $obj;
     $this->skip_post_process = $skip_post_process;
