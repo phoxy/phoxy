@@ -70,7 +70,7 @@ class phoxy_sys_api
     $d = $ret['data'];
 
     // Reverse public method translation
-    if (is_array($d) && !empty($d[$name]))
+    if (is_array($d) && array_key_exists($name, $d))
       $d = $d[$name];
 
     if ($this->expect_simple_result
