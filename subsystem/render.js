@@ -427,6 +427,7 @@ phoxy._.birth.prototype =
     {
       domain: phoxy.Config().site,
       url: design,
+      debug_ancors: phoxy.state.verbose_ancors,
     };
 
     var ejs = new EJS(obj, callback);

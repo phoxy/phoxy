@@ -29,6 +29,7 @@ var phoxy =
     },
     verbose : typeof phoxy.verbose === 'undefined' ? 10 : phoxy.verbose,
     verbose_birth : typeof phoxy.verbose_birth === 'undefined' ? 1 : phoxy.verbose_birth,
+    verbose_ancors : typeof phoxy.verbose_ancors === 'undefined' ? 1 : phoxy.verbose_ancors,
     early:
     {
       require: 0,
