@@ -11,7 +11,7 @@ phoxy._.api.keyword.exception = function(answer, callstack)
 
   function catch_exception()
   {
-    phoxy.ApiRequest(answer.origin, callstack);
+    phoxy.AJAX(answer.origin, callstack);
   }
 
   handler(catch_exception, phoxy.state.exception.cases[exception], answer);

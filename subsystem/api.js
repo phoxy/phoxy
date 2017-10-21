@@ -51,7 +51,7 @@ phoxy.api =
             if (params === undefined)
               params = [];
             params.unshift(data);
-            callback.apply(this, params);            
+            callback.apply(this, params);
           }
 
           if (!--phoxy.state.ajax.nesting_level)
@@ -95,7 +95,7 @@ phoxy._.api =
 {
   ScriptsLoaded : function(answer, callback)
     {
-      function ScriptsFiresUp()
+      function ScriptsFiresUp(answer)
       {
         phoxy._.api.keyword.routeline(answer, callback);
         if (callback)

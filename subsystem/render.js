@@ -372,10 +372,15 @@ phoxy._.birth.prototype =
     // Those ignored since it phoxy.Fancy.(low level rendering) Place to render already choosed
     delete obj.result;
     delete obj.replace;
+
     var that = this;
-    phoxy.ApiAnswer(obj, function on_default_action_done()
+    phoxy.ApiAnswer(obj, function on_default_action_done(obj)
     {
-      cb.call(that, answer);
+      if (!answer.exception)
+        return cb.call(that, answer);
+
+      // if we just handled exception - it has better data for original request
+      return cb.call(that, obj);
     });
   }
   ,
