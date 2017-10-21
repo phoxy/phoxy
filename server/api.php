@@ -23,6 +23,7 @@ function phoxy_protected_assert( $cond, $message, $debug_message = null )
     return true;
   if (is_string($message))
     $message = ["error" => $message];
+
   throw new phoxy_protected_call_error($message);
 }
 

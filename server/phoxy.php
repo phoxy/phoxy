@@ -60,7 +60,12 @@ class phoxy extends api
       $result = $a->APICall($method[0], $method[1]);
     } catch (phoxy_protected_call_error $e)
     {
-      $error = isset($e->result['error']) ? $e->result : ["error" => $e->result];
+      $error = $e->result;
+
+      if (!isset($error['error']))
+        $error['phoxy_comment'] = "Phoxy caught soft error. Look inside network log";
+
+
       $result = new phoxy_return_worker($error);
     }
 
