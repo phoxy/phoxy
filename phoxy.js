@@ -44,7 +44,10 @@ var phoxy =
       cases: {},
       handlers: {}
     },
-    cascade_debug: true,
+    cascade_debug: typeof phoxy.cascade_debug === 'undefined' ? 1 : phoxy.cascade_debug,
+    sticky_cascade_strategy: typeof phoxy.sticky_cascade_strategy === 'undefined' ? 1 : phoxy.sticky_cascade_strategy,
+    sync_foreach_design: typeof phoxy.sync_foreach_design == 'undefined' ? 1 : phoxy.sync_foreach_design,
+    async_foreach_request: typeof phoxy.sync_foreach_request == 'undefined' ? 1 : phoxy.sync_foreach_request,
     birth:
     {
       active: {},
