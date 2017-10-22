@@ -240,7 +240,7 @@ phoxy._.enjs =
 
       // In sync cascade defer executing immideately
       var OriginDefer = arguments.callee.origin;
-      if (phoxy.state.sync_cascade)
+      if (that.sync_cascade)
         return OriginDefer.call(this, defer_cb, time);
 
       if (typeof that.defer === 'undefined')

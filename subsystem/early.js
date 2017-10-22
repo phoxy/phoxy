@@ -134,16 +134,7 @@ phoxy._.EarlyStage.Compile = function()
     ? phoxy._.prestart.sync_cascade
     : phoxy.Config()['sync_cascade'];
 
-  if (sync_cascade)
-  {
-    phoxy.state.sync_cascade = true;
-    phoxy._.render.RenderStrategy = phoxy._.render.SyncRender_Strategy;
-  }
-  else
-  {
-    phoxy.state.sync_cascade = false;
-    phoxy._.render.RenderStrategy = phoxy._.render.AsyncRender_Strategy;
-  }
+  phoxy.state.sync_cascade = !!sync_cascade;
 
   // Move bootstrapped ajax into his place
   phoxy._.internal.ajax = phoxy._.EarlyStage.ajax;

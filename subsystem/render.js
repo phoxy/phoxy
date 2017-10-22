@@ -1,6 +1,6 @@
 phoxy.render =
 {
-  DeferRender : function (ejs, data, rendered_callback, tag)
+  DeferRender : function (ejs, data, rendered_callback, tag, sync_cascade)
     {
       var isolated_data = EJS.IsolateContext(data);
 
@@ -20,7 +20,15 @@ phoxy.render =
       var ancor = phoxy._.render.PrepareAncor(tag, attributes);
       var id = ancor.id;
 
-      phoxy._.render.RenderStrategy(id, ejs, isolated_data, rendered_callback);
+      if (sync_cascade == undefined)
+        sync_cascade = phoxy.state.sync_cascade;
+
+      var strategy =
+        sync_cascade
+        ? phoxy._.render.SyncRender_Strategy
+        : phoxy._.render.AsyncRender_Strategy;
+
+      strategy(id, ejs, isolated_data, rendered_callback);
 
       if (tag === null)
         return ancor;
@@ -49,7 +57,15 @@ phoxy._.render =
       return new phoxy._.birth(args[0], args[1], callback, true);
     }
   ,
-  RenderStrategy : "Will be replaced by selected strategy after compilation."
+  RenderStrategy : function()
+  {
+    var strategy =
+      phoxy.state.sync_cascade
+      ? phoxy._.render.SyncRender_Strategy
+      : phoxy._.render.AsyncRender_Strategy;
+
+    strategy.apply(this, arguments);
+  }
   ,
   AsyncRender_Strategy : function (target, ejs, data, rendered_callback)
     { // AsyncRender strategy: for production
@@ -66,6 +82,8 @@ phoxy._.render =
       {
         var _obj = obj;
         var _args = arguments;
+
+        obj.sync_cascade = true;
 
         phoxy._.render.AfterENJSFinished(target, obj, ejs, data, rendered_callback);
 
@@ -90,6 +108,7 @@ phoxy._.render =
 
       function sync_strategy_birth(obj, ejs, data)
       {
+        obj.sync_cascade = false;
         phoxy._.render.AfterENJSFinished(target, obj, ejs, data, rendered_callback);
         phoxy._.render.Replace.call(phoxy, target, obj.html, arguments);
 
