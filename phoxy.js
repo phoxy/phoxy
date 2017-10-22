@@ -29,6 +29,7 @@ var phoxy =
     },
     verbose : typeof phoxy.verbose === 'undefined' ? 10 : phoxy.verbose,
     verbose_birth : typeof phoxy.verbose_birth === 'undefined' ? 1 : phoxy.verbose_birth,
+    verbose_ancors : typeof phoxy.verbose_ancors === 'undefined' ? 1 : phoxy.verbose_ancors,
     early:
     {
       require: 0,
@@ -43,7 +44,10 @@ var phoxy =
       cases: {},
       handlers: {}
     },
-    cascade_debug: true,
+    cascade_debug: typeof phoxy.cascade_debug === 'undefined' ? 1 : phoxy.cascade_debug,
+    sticky_cascade_strategy: typeof phoxy.sticky_cascade_strategy === 'undefined' ? 1 : phoxy.sticky_cascade_strategy,
+    sync_foreach_design: typeof phoxy.sync_foreach_design == 'undefined' ? 1 : phoxy.sync_foreach_design,
+    async_foreach_request: typeof phoxy.sync_foreach_request == 'undefined' ? 1 : phoxy.sync_foreach_request,
     birth:
     {
       active: {},
@@ -151,6 +155,7 @@ phoxy._.EarlyStage =
         function on_require_systems()
         {
           phoxy.state.runlevel += 0.5;
+          phoxy._.EarlyStage.critpath_ready = true;
         }
       );
 
@@ -159,6 +164,7 @@ phoxy._.EarlyStage =
         phoxy._.EarlyStage.sync_require,
         function on_require_sync()
         {
+          phoxy._.EarlyStage.sync_ready = true;
           phoxy.state.runlevel += 0.5;
           phoxy._.EarlyStage.Ready();
         }
@@ -169,8 +175,10 @@ phoxy._.EarlyStage =
         phoxy._.EarlyStage.async_require,
         function on_require_async()
         {
-          // Wait for sync code to finish
-          if (phoxy.state.runlevel < 2)
+          phoxy._.EarlyStage.async_ready = true;
+
+          // Wait until final execution module is ready
+          if (!phoxy._.EarlyStage.critpath_ready)
             return setTimeout(arguments.callee, 10);
 
           phoxy._.EarlyStage.EnterFinalExecution();

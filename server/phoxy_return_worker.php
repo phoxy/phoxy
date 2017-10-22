@@ -46,7 +46,14 @@ class phoxy_return_worker
   public function __toString()
   {
     if (!isset($this->prepared))
-      $this->Prepare();
+      try
+      {
+        $this->Prepare();
+      } catch (phoxy_protected_call_error $e)
+      {
+        echo "<h1>Uncaught exception</h1><br>";
+        var_dump($e->result);
+      }
 
     return $this->prepared;
   }
@@ -123,27 +130,14 @@ class phoxy_return_worker
     if (!$simple_mode && !isset($this->obj['cache']['no']))
       return;
 
-    if (!isset($cache['no']))
-      $no = [];
-    else if (is_string($cache['no']))
-      $no = explode(',', $cache['no']);
-    else
-      $no = $cache['no'];
-
     $dictionary = ["global", "session", "local"];
 
     foreach ($dictionary as $scope)
-      if (!isset($cache[$scope]) && !in_array($scope, $no))
+      if (!isset($cache[$scope]) || $cache[$scope] == 'no')
         $no[] = $scope;
 
     foreach ($no as $scope)
-      if ($scope === 'all')
-      {
-        unset($this->obj['cache']);
-        break;
-      }
-      else
-        unset($this->obj['cache'][$scope]);
+      unset($this->obj['cache'][$scope]);
 
     $this->obj['cache']['no'] = $no;
   }

@@ -23,6 +23,7 @@ function phoxy_protected_assert( $cond, $message, $debug_message = null )
     return true;
   if (is_string($message))
     $message = ["error" => $message];
+
   throw new phoxy_protected_call_error($message);
 }
 
@@ -40,7 +41,7 @@ class phoxy_sys_api
   private $skip_post_process;
   private $expect_simple_result;
 
-  public function __construct( $obj, $skip_post_process = false, $expect_simple_result = false )
+  public function __construct( $obj, $skip_post_process = false, $expect_simple_result = true )
   {
     $this->obj = $obj;
     $this->skip_post_process = $skip_post_process;
@@ -51,7 +52,12 @@ class phoxy_sys_api
   {
     $ret = $this->Call($name, $arguments);
 
-    phoxy_protected_assert(!empty($ret['data']), "Probably internal inconsistence inside phoxy, please bug report");
+    if (!$this->skip_post_process && empty($ret['data']))
+      if ($this->Reflect($name)->isProtected())
+        throw new phoxy_protected_call_error("Protected method executed with phoxy::Load, but no _data_ were found. Check return values of {$name}");
+      else
+        throw new phoxy_protected_call_error("Probably internal inconsistence inside phoxy, please bug report. Failed to detect data of {$name}");
+
 
     // raw calls do not affects restrictions
     if ($this->ShouldSkipPostProcess($name))
@@ -65,14 +71,13 @@ class phoxy_sys_api
     $d = $ret['data'];
 
     // Reverse public method translation
-    if (is_array($d) && !empty($d[$name]))
+    if (is_array($d) && array_key_exists($name, $d))
       $d = $d[$name];
 
     if ($this->expect_simple_result
+         && $this->Reflect($name)->isProtected() // all public results are simple
          && is_array($d)
-         && count($d) === 1
-         && !isset($d[0]) // only associative arrays having simple results
-         )
+         && count($d) === 1)
       return reset($d);
 
     return $d;
@@ -181,7 +186,9 @@ class api
         "error" => "Security violation (Module handler not protected)",
         "description" => htmlentities($name),
       ];
+
     $ret = call_user_func_array([$this, $name], $arguments);
+
     return $ret;
   }
 
@@ -190,7 +197,7 @@ class api
     $where = "{$what}{$where}";
   }
 
-  public function fork($force_raw = false, $expect_simple_result = true)
+  public function fork($force_raw = false, $expect_simple_result = false)
   {
     return new phoxy_sys_api($this, $force_raw, $expect_simple_result);
   }

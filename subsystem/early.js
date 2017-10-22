@@ -22,7 +22,10 @@ phoxy._.EarlyStage.ajax = function (url, callback, data, x)
 
     function FetchPromise(response)
     {
-      response.text().then(callback);
+      var promise = response.text()
+
+      if (callback)
+        promise.then(callback);
     }
 
     window.fetch(url, fetch_params).then(FetchPromise);
@@ -40,7 +43,8 @@ phoxy._.EarlyStage.ajax = function (url, callback, data, x)
       x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 
       x.onload = function () {
-        callback(x.responseText, x);
+        if (callback)
+          callback(x.responseText, x);
       };
 
       x.send(data)
@@ -67,15 +71,20 @@ phoxy._.EarlyStage.LoadConfig = function()
     var data = JSON.parse(response);
     phoxy._.config = data;
     phoxy.state.conf_loaded = true;
+    phoxy._.EarlyStage.DependenciesLoaded();
   })
 }
 
 phoxy._.EarlyStage.DependenciesLoaded = function()
 {
-  if (phoxy.state.runlevel < 2)
-    return setTimeout(arguments.callee, 10);
-  if (!phoxy.state.conf_loaded) // wait until phoxy.Config()uration loaded
-    return setTimeout(arguments.callee, 10);
+  if (phoxy.state.runlevel < 2
+    || !phoxy.state.conf_loaded)
+    return setTimeout(arguments.callee, 100);
+
+  if (phoxy._.EarlyStage.triggered_compile_process)
+    return
+  phoxy._.EarlyStage.triggered_compile_process = true;
+
   phoxy.state.runlevel += 0.5; // because config downloaded
 
   if (typeof phoxy._.prestart.OnBeforeCompile === 'function')
@@ -93,6 +102,8 @@ phoxy._.EarlyStage.DependenciesLoaded = function()
 
   // Entering runlevel 3, compilation finished
   phoxy.state.runlevel += 0.5;
+
+  phoxy._.EarlyStage.EnterFinalExecution();
 };
 
 phoxy._.EarlyStage.Compile = function()
@@ -123,16 +134,7 @@ phoxy._.EarlyStage.Compile = function()
     ? phoxy._.prestart.sync_cascade
     : phoxy.Config()['sync_cascade'];
 
-  if (sync_cascade)
-  {
-    phoxy.state.sync_cascade = true;
-    phoxy._.render.RenderStrategy = phoxy._.render.SyncRender_Strategy;
-  }
-  else
-  {
-    phoxy.state.sync_cascade = false;
-    phoxy._.render.RenderStrategy = phoxy._.render.AsyncRender_Strategy;
-  }
+  phoxy.state.sync_cascade = !!sync_cascade;
 
   // Move bootstrapped ajax into his place
   phoxy._.internal.ajax = phoxy._.EarlyStage.ajax;
@@ -173,8 +175,13 @@ phoxy._.EarlyStage.PreloadInitialClientCode = function()
 
 phoxy._.EarlyStage.EnterFinalExecution = function()
 {
-  if (phoxy.state.runlevel < 3)
-    return setTimeout(arguments.callee, 50);
+  if (phoxy.state.runlevel < 3
+    || !phoxy._.EarlyStage.async_ready)
+    return setTimeout(arguments.callee, 100);
+
+  if (phoxy._.EarlyStage.triggered_final_execution)
+    return;
+  phoxy._.EarlyStage.triggered_final_execution = true;
 
   phoxy._.enjs.OverloadENJSCanvas();
   requirejs.config({baseUrl: phoxy.Config()['js_dir']});

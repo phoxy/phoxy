@@ -5,7 +5,7 @@ function phoxy_default_conf()
   return
   [
     "ip" => $_SERVER['REMOTE_ADDR'],
-    "site" => "http://".$_SERVER['HTTP_HOST']."/",
+    "site" => "http" . ["","s"][!!$_SERVER['HTTPS']] . "://".$_SERVER['HTTP_HOST'],
     "debug_api" => true,
     "is_ajax_request" => @$_SERVER['HTTP_X_LAIN'] === 'Wake up',
     "ejs_dir" => "ejs",

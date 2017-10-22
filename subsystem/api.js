@@ -29,27 +29,30 @@ phoxy.api =
 
       phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function ajax_callback(response)
         {
-          try
+          if (typeof callback === 'function')
           {
-            var data = JSON.parse(response);
-          } catch (e)
-          {
-            phoxy.Log(1, url, [response]);
-            throw "Unable to decode JSON";
+            try
+            {
+              var data = JSON.parse(response);
+            } catch (e)
+            {
+              phoxy.Log(1, url, [response]);
+              throw "Unable to decode JSON";
+            }
+
+
+            // http://stackoverflow.com/questions/4215737/convert-array-to-object
+            if (Array.isArray(data.data))
+              if (data.data.length === 0)
+                data.data = {};
+              else
+                data.data = data.data.reduce(function(o, v, i) { o[i] = v; return o; });
+
+            if (params === undefined)
+              params = [];
+            params.unshift(data);
+            callback.apply(this, params);
           }
-
-
-          // http://stackoverflow.com/questions/4215737/convert-array-to-object
-          if (Array.isArray(data.data))
-            if (data.data.length === 0)
-              data.data = {};
-            else
-              data.data = data.data.reduce(function(o, v, i) { o[i] = v; return o; });
-
-          if (params === undefined)
-            params = [];
-          params.unshift(data);
-          callback.apply(this, params);
 
           if (!--phoxy.state.ajax.nesting_level)
             if (typeof phoxy._.prestart.OnAjaxEnd === 'function')
@@ -92,7 +95,7 @@ phoxy._.api =
 {
   ScriptsLoaded : function(answer, callback)
     {
-      function ScriptsFiresUp()
+      function ScriptsFiresUp(answer)
       {
         phoxy._.api.keyword.routeline(answer, callback);
         if (callback)

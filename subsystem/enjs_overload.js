@@ -20,7 +20,6 @@ phoxy._.enjs =
       phoxy._.internal.Override(EJS.Canvas.prototype, 'CheckIsCompleted', phoxy._.enjs.CheckIsCompleted);
       phoxy._.internal.Override(EJS.Canvas.prototype, 'hook_first', phoxy._.enjs.hook_first);
 
-      phoxy._.internal.Override(EJS.Canvas.across.prototype, 'DeferRender', phoxy._.enjs.DeferRender);
       phoxy._.internal.Override(EJS.Canvas.across.prototype, 'DeferCascade', phoxy._.enjs.DeferCascade);
 
       phoxy._.internal.Override(EJS.Canvas.across.prototype, 'CascadeDesign', phoxy._.enjs.CascadeDesign);
@@ -106,17 +105,7 @@ phoxy._.enjs =
 
   }
   ,
-  DeferRender: function(ejs, data, callback, tag)
-    {
-      phoxy.Log(2, "__this.DeferRender is deprecated. Use __this.CascadeDesign or __this.CascadeRequest");
-
-      if (data === undefined || data === null )
-        return this.CascadeRequest.call(this, ejs, callback);
-
-      return this.CascadeDesign.apply(this, arguments);
-    }
-  ,
-  CascadeInit: function(across, ejs, data, callback, tag)
+  CascadeInit: function(across, ejs, data, callback, tag, sync_cascade)
     {
       var that = across.escape();
       phoxy._.enjs.RequireENJSRutime(that);
@@ -150,32 +139,35 @@ phoxy._.enjs =
       if (['object', 'undefined', 'function'].indexOf(typeof data) == -1)
         data = { data: data };
 
-      var ancor = phoxy.DeferRender(ejs, data, CBHook, tag);
+      if (phoxy.state.sticky_cascade_strategy)
+        sync_cascade = sync_cascade || that.sync_cascade;
+
+      var ancor = phoxy.DeferRender(ejs, data, CBHook, tag, sync_cascade);
       that.Append(ancor);
 
       return "<!-- <%= %> IS OBSOLETE. Refactor " + that.name + " -->";
     }
   ,
-  CascadeDesign: function(ejs, data, callback, tag)
+  CascadeDesign: function(ejs, data, callback, tag, sync_cascade)
     {
       if (data === undefined || data === null)
         if (typeof ejs !== 'object')
           data = {};
 
       this.escape().log("Design", ejs, data);
-      return phoxy._.enjs.CascadeInit(this, ejs, data, callback, tag || "<CascadeDesign>");
+      return phoxy._.enjs.CascadeInit(this, ejs, data, callback, tag || "<CascadeDesign>", sync_cascade);
     }
   ,
-  CascadeRequest: function(url, callback, tag)
+  CascadeRequest: function(url, callback, tag, sync_cascade)
     {
       if (typeof url !== 'string' && !Array.isArray(url))
         return phoxy.Log(1, "Are you sure that URL parameters of CascadeRequest right?");
 
       this.escape().log("Request", url);
-      return phoxy._.enjs.CascadeInit(this, url, undefined, callback, tag || "<CascadeRequest>");
+      return phoxy._.enjs.CascadeInit(this, url, undefined, callback, tag || "<CascadeRequest>", sync_cascade);
     }
   ,
-  CascadeSupply: function(design, url, callback, tag)
+  CascadeSupply: function(design, url, callback, tag, sync_cascade)
     {
       if (typeof url !== 'string' && !Array.isArray(url))
         return phoxy.Log(1, "Are you sure that URL parameters of CascadeRequest right?");
@@ -192,7 +184,7 @@ phoxy._.enjs =
         });
       }
 
-      return phoxy._.enjs.CascadeInit(this, design, hook_data_ready, callback, tag || "<CascadeRequest>");
+      return phoxy._.enjs.CascadeInit(this, design, hook_data_ready, callback, tag || "<CascadeRequest>", sync_cascade);
     }
   ,
   ShortcutCallback: function(k, callback)
@@ -208,18 +200,24 @@ phoxy._.enjs =
     }
   }
   ,
-  ForeachDesign: function(ejs, dataset, callback, tag)
+  ForeachDesign: function(ejs, dataset, callback, tag, sync_cascade)
   {
+    if (phoxy.state.sync_foreach_design)
+      sync_cascade = sync_cascade || true;
+
     for (var k in dataset)
       if (dataset.hasOwnProperty(k))
-        this.CascadeDesign(ejs, dataset[k], phoxy._.enjs.ShortcutCallback(k, callback), tag);
+        this.CascadeDesign(ejs, dataset[k], phoxy._.enjs.ShortcutCallback(k, callback), tag, sync_cascade);
   }
   ,
-  ForeachRequest: function(dataset, callback, tag)
+  ForeachRequest: function(dataset, callback, tag, sync_cascade)
   {
+    if (phoxy.state.sync_foreach_request)
+      sync_cascade = sync_cascade || false;
+
     for (var k in dataset)
       if (dataset.hasOwnProperty(k))
-        this.CascadeRequest(dataset[k], phoxy._.enjs.ShortcutCallback(k, callback), tag);
+        this.CascadeRequest(dataset[k], phoxy._.enjs.ShortcutCallback(k, callback), tag, sync_cascade);
   }
   ,
   Defer: function(callback, time)
@@ -240,7 +238,7 @@ phoxy._.enjs =
 
       // In sync cascade defer executing immideately
       var OriginDefer = arguments.callee.origin;
-      if (phoxy.state.sync_cascade)
+      if (that.sync_cascade)
         return OriginDefer.call(this, defer_cb, time);
 
       if (typeof that.defer === 'undefined')

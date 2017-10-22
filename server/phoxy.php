@@ -23,7 +23,7 @@ class phoxy extends api
     $module = array_pop($names);
     $directory = $dir.'/'.implode('/', $names);
 
-    return LoadModule($directory, $module, $raw_include);
+    return LoadModule($directory, $module, $force_raw_return);
   }
 
   // Begin default phoxy behaviour
@@ -60,7 +60,13 @@ class phoxy extends api
       $result = $a->APICall($method[0], $method[1]);
     } catch (phoxy_protected_call_error $e)
     {
-      $result = new phoxy_return_worker($e->result);
+      $error = $e->result;
+
+      if (!isset($error['error']))
+        $error['phoxy_comment'] = "Phoxy caught soft error. Look inside network log";
+
+
+      $result = new phoxy_return_worker($error);
     }
 
     $prepared = (string)$result;
@@ -79,7 +85,7 @@ class phoxy extends api
     else
       header('Content-Type: application/json; charset=utf-8');
 
-    if (phoxy_conf()["is_ajax_request"])
+    if (!phoxy_conf()["debug_api"] || phoxy_conf()["is_ajax_request"])
       echo $prepared;
     else if (phoxy_conf()["buffered_output"])
       echo "\n<hr><h1>Log</h1>\n{$buffered_output}";
