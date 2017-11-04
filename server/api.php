@@ -13,6 +13,9 @@ class phoxy_protected_call_error extends Exception
   public $result;
   public function __construct( $result )
   {
+    if (is_string($result))
+      $result = ["error" => $result];
+
     $this->result = $result;
   }
 }
@@ -21,8 +24,6 @@ function phoxy_protected_assert( $cond, $message, $debug_message = null )
 {
   if ($cond)
     return true;
-  if (is_string($message))
-    $message = ["error" => $message];
 
   throw new phoxy_protected_call_error($message);
 }

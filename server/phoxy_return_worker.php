@@ -10,6 +10,13 @@ class phoxy_return_worker
 
   public function __construct( $obj )
   {
+    if (is_string($obj))
+      $obj =
+      [
+        "error" => "phoxy_return_worker received string instead of object",
+        "data" => $obj,
+      ];
+
     $this->obj = $obj;
 
     $func_list =
@@ -180,7 +187,6 @@ class phoxy_return_worker
       return -1;
 
     $arr = preg_split('/([0-9]+)([wdhms]?)/', $str, -1, PREG_SPLIT_DELIM_CAPTURE);
-
     phoxy_protected_assert(count($arr) > 1, "Cache string parse error");
 
     $base = 0;

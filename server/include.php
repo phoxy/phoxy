@@ -50,9 +50,7 @@ function IncludeModule( $dir, $module )
     else
       include_once($file);
 
-    if (!class_exists($classname))
-      die('Class include failed. File do not carrying that');
-
+    phoxy_protected_assert(class_exists($classname), "Failed to locate class {$dir} {$module}");
     $obj = InstanceClassByName($classname, $args);
 
     if (!isset($_phoxy_loaded_classes[$dir]))
@@ -67,12 +65,13 @@ function IncludeModule( $dir, $module )
   }
   catch (Exception $e)
   {
-    phoxy_protected_assert(false, ["error" => "Uncaught script exception at module load"]);
+    phoxy_protected_assert(false, ["error" => "Uncaught script exception at module load", "exception" => $e]);
   }
 }
 
 function LoadModule( $dir, $module, $force_raw = false, $expect_simple_result = true )
 {
   $obj = IncludeModule($dir, $module);
+  phoxy_protected_assert(!is_null($obj), "Failed to load module {$dir} {$module}");
   return $obj->fork($force_raw, $expect_simple_result);
 }
