@@ -77,18 +77,22 @@ class phoxy extends api
       ob_end_clean();
     }
 
-    if (phoxy_conf()["debug_api"] && !phoxy_conf()["is_ajax_request"])
+    $return_json = !phoxy_conf()["debug_api"] || phoxy_conf()["is_ajax_request"];
+
+    if ($return_json)
     {
-      echo "<h1>Result</h1>\n";
-      var_dump($result->obj);
+      header('Content-Type: application/json; charset=utf-8');
+      echo $prepared;
     }
     else
-      header('Content-Type: application/json; charset=utf-8');
+    {
+      header('Cache-Control: no-cache, no-store');
+      echo "<h1>Result</h1>\n";
+      var_dump($result->obj);
 
-    if (!phoxy_conf()["debug_api"] || phoxy_conf()["is_ajax_request"])
-      echo $prepared;
-    else if (phoxy_conf()["buffered_output"])
-      echo "\n<hr><h1>Log</h1>\n{$buffered_output}";
+      if (phoxy_conf()["buffered_output"])
+        echo "\n<hr><h1>Log</h1>\n{$buffered_output}";
+    }
   }
 
   public static function SetCacheTimeout($scope, $timeout)
