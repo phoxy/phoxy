@@ -154,11 +154,11 @@ phoxy._.api =
         return str.replace(regexp,
           function(matched)
           {
-            return escape(matched);
+            return encodeURIComponent(matched);
           });
       }
 
-      var escaped_send_string = EscapeReserved(send_string, "()?#\\");
+      var escaped_send_string = EscapeReserved(send_string, "+()?#\\");
       return encodeURI(escaped_send_string);
     }
   ,
