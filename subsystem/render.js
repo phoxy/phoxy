@@ -177,6 +177,7 @@ phoxy._.render =
   Replace : function(target, html)
     {
       var that = document.getElementById(target);
+
       that.insertAdjacentHTML("afterEnd", html);
 
       phoxy._.render.TriggerRenderedEvent(target);

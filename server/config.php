@@ -22,6 +22,7 @@ function phoxy_default_conf()
     "api_csrf_prevent" => true,
     "sync_cascade" => false,
     "buffered_output" => true,
+    "rethrow_phoxy_exception" => false,
   ];
 }
 

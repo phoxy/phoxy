@@ -121,23 +121,7 @@ phoxy._.enjs =
         that.CheckIsCompleted.call(that.across);
       }
 
-      if (Array.isArray(data))
-      {
-        var origin = data;
-
-        data = data.reduce(function(o, v, i)
-        {
-          o[i] = v;
-          return o;
-        }, {});
-
-        data.length = origin.length;
-        data.origin = origin;
-      }
-
-      // Handling non arrays (ex: strings) as data objects
-      if (['object', 'undefined', 'function'].indexOf(typeof data) == -1)
-        data = { data: data };
+      data = phoxy._.enjs.InitData(data);
 
       if (phoxy.state.sticky_cascade_strategy)
         sync_cascade = sync_cascade || that.sync_cascade;
@@ -147,6 +131,29 @@ phoxy._.enjs =
 
       return "<!-- <%= %> IS OBSOLETE. Refactor " + that.name + " -->";
     }
+  ,
+  InitData: function(data)
+  {
+    if (Array.isArray(data))
+    {
+      var origin = data;
+
+      data = data.reduce(function(o, v, i)
+      {
+        o[i] = v;
+        return o;
+      }, {});
+
+      data.length = origin.length;
+      data.origin = origin;
+    }
+
+    // Handling non arrays (ex: strings) as data objects
+    if (['object', 'undefined', 'function'].indexOf(typeof data) == -1)
+      data = { data: data };
+
+    return data;
+  }
   ,
   CascadeDesign: function(ejs, data, callback, tag, sync_cascade)
     {
@@ -202,12 +209,143 @@ phoxy._.enjs =
   ,
   ForeachDesign: function(ejs, dataset, callback, tag, sync_cascade)
   {
-    if (phoxy.state.sync_foreach_design)
-      sync_cascade = sync_cascade || true;
+    var that = this.escape();
 
+    if (!tag)
+      tag = "<cascadedesign>";
+
+    if (phoxy.state.sync_foreach_request)
+      sync_cascade = sync_cascade || false;
+
+    var render_tasks = [];
     for (var k in dataset)
       if (dataset.hasOwnProperty(k))
-        this.CascadeDesign(ejs, dataset[k], phoxy._.enjs.ShortcutCallback(k, callback), tag, sync_cascade);
+        render_tasks.push(dataset[k]);
+
+    var k = 0;
+    var done = 0;
+    var scout_count = Math.min(render_tasks.length, phoxy.state.cascade_foreach_scouts);
+    var chunk_size = scout_count * phoxy.state.cascade_foreach_chunks || 1;
+    var ancor_visible = true;
+    var render_continue = false;
+
+    that.recursive += render_tasks.length;
+
+    function last_scout_done()
+    {
+      var origin_cb = phoxy._.enjs.ShortcutCallback(k++, callback);
+
+      return function plan_next_scout()
+      {
+        that.CheckIsCompleted.call(that.across);
+        done++;
+
+        if (origin_cb)
+          origin_cb.apply(this, args);
+
+        if (done == render_tasks.length)
+          phoxy._.render.Replace.call(phoxy, scout_delimeter.id, '');
+
+        if (k == render_tasks.length)
+          return;
+
+        var render_task = chunk_size;
+
+        if (done != 1)
+        {
+          if (done % chunk_size)
+            return; // render with chunks
+        }
+        else {
+          render_task = scout_count;
+
+          window.requestIdleCallback(function()
+          {
+            if (k >= render_tasks.length)
+              return;
+
+            var data = phoxy._.enjs.InitData(render_tasks[k]);
+            var ancor = phoxy.DeferRender(ejs, data, last_scout_done(), tag, sync_cascade);
+            phoxy._.render.Replace.call(phoxy, scout_delimeter.id, ancor + scout_delimeter.html);
+
+            window.requestIdleCallback(arguments.callee);
+          })
+        }
+
+
+        render_continue += render_task;
+        if (ancor_visible)
+          on_scroll();
+        render_continue_func();
+      }
+    };
+
+    if (!scout_count)
+      return;
+
+    var scout_element;
+    function on_scroll()
+    {
+      if (!scout_element)
+      {
+        scout_element = document.getElementById(scout_delimeter.id);
+
+        if (!scout_element)
+        {
+          document.removeEventListener('scroll', on_scroll);
+          k = render_tasks.length * 100;
+          ancor_visible = null;
+        }
+
+        return;
+      }
+
+      var rect = scout_element.getBoundingClientRect();
+      if (!rect.top && !rect.bottom)
+      {
+        scout_element = null;
+        ancor_visible = false;
+        return on_scroll();
+      }
+
+      var preload_coef = 2;
+
+      var isVisible =  rect.top < window.innerHeight * preload_coef;
+
+      ancor_visible = isVisible;
+
+      if (isVisible)
+        render_continue_func();
+    }
+
+    function render_continue_func(force)
+    {
+      if (!ancor_visible && !force)
+        return;
+
+      var render_task = render_continue;
+      render_continue = 0;
+
+      if (!render_task && force)
+        render_task = chunk_size;
+
+      for (var i = 0; i < render_task; i++)
+        if (k < render_tasks.length)
+        {
+          var data = phoxy._.enjs.InitData(render_tasks[k]);
+          var ancor = phoxy.DeferRender(ejs, data, last_scout_done(), tag, sync_cascade);
+
+          phoxy._.render.Replace.call(phoxy, scout_delimeter.id, ancor + scout_delimeter.html);
+        }
+    }
+
+    var scroll_watch_dog = document.addEventListener('scroll', on_scroll);
+
+    for (var i = 0; i < chunk_size; i++)
+      this.CascadeDesign(ejs, render_tasks[k], last_scout_done(), tag, true);
+
+    var scout_delimeter = phoxy._.render.PrepareAncor("<foreachdesign>");
+    that.Append(scout_delimeter.html);
   }
   ,
   ForeachRequest: function(dataset, callback, tag, sync_cascade)

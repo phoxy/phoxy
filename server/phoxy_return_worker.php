@@ -6,7 +6,7 @@ class phoxy_return_worker
   private $prepared;
   public $hooks = [];
   public static $add_hook_cb;
-  private static $minimal_cache = [];
+  public static $minimal_cache = [];
 
   public function __construct( $obj )
   {
@@ -153,7 +153,16 @@ class phoxy_return_worker
   {
     $cache = $this->obj['cache'];
 
-    // If both session and global set, privacy has a priority
+    var_dump($cache);
+
+    if (isset($cache['local']) && $cache['local'] != 'no')
+    {
+      header('Cache-Control: max-age='.self::ParseCache($cache['local']));
+
+      return;
+    }
+
+
     if (isset($cache['session']) && $cache['session'] != 'no')
     {
       header('Cache-Control: private, max-age='.self::ParseCache($cache['session']));

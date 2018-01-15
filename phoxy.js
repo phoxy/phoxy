@@ -48,6 +48,8 @@ var phoxy =
     sticky_cascade_strategy: typeof phoxy.sticky_cascade_strategy === 'undefined' ? 1 : phoxy.sticky_cascade_strategy,
     sync_foreach_design: typeof phoxy.sync_foreach_design == 'undefined' ? 1 : phoxy.sync_foreach_design,
     async_foreach_request: typeof phoxy.sync_foreach_request == 'undefined' ? 1 : phoxy.sync_foreach_request,
+    cascade_foreach_scouts: typeof phoxy.cascade_foreach_scouts == 'undefined' ? 6 : phoxy.cascade_foreach_scouts,
+    cascade_foreach_chunks: typeof phoxy.cascade_foreach_chunks == 'undefined' ? 1 : phoxy.cascade_foreach_chunks,
     birth:
     {
       active: {},

@@ -60,6 +60,9 @@ class phoxy extends api
       $result = $a->APICall($method[0], $method[1]);
     } catch (phoxy_protected_call_error $e)
     {
+      if (phoxy_conf()["rethrow_phoxy_exception"])
+        throw $e;
+
       $error = $e->result;
 
       if (!isset($error['error']))
