@@ -241,7 +241,7 @@ phoxy._.enjs =
         done++;
 
         if (origin_cb)
-          origin_cb.apply(this, args);
+          origin_cb.apply(this, arguments);
 
         if (done == render_tasks.length)
           phoxy._.render.Replace.call(phoxy, scout_delimeter.id, '');
@@ -258,18 +258,6 @@ phoxy._.enjs =
         }
         else {
           render_task = scout_count;
-
-          window.requestIdleCallback(function()
-          {
-            if (k >= render_tasks.length)
-              return;
-
-            var data = phoxy._.enjs.InitData(render_tasks[k]);
-            var ancor = phoxy.DeferRender(ejs, data, last_scout_done(), tag, sync_cascade);
-            phoxy._.render.Replace.call(phoxy, scout_delimeter.id, ancor + scout_delimeter.html);
-
-            window.requestIdleCallback(arguments.callee);
-          })
         }
 
 
@@ -300,6 +288,9 @@ phoxy._.enjs =
         return;
       }
 
+      if (typeof tag != 'undefined')
+        return;
+
       var rect = scout_element.getBoundingClientRect();
       if (!rect.top && !rect.bottom)
       {
@@ -329,14 +320,17 @@ phoxy._.enjs =
       if (!render_task && force)
         render_task = chunk_size;
 
+      var render_ancors = "";
       for (var i = 0; i < render_task; i++)
         if (k < render_tasks.length)
         {
           var data = phoxy._.enjs.InitData(render_tasks[k]);
           var ancor = phoxy.DeferRender(ejs, data, last_scout_done(), tag, sync_cascade);
 
-          phoxy._.render.Replace.call(phoxy, scout_delimeter.id, ancor + scout_delimeter.html);
+          render_ancors += ancor;
         }
+
+      phoxy._.render.Replace.call(phoxy, scout_delimeter.id, render_ancors + scout_delimeter.html);
     }
 
     var scroll_watch_dog = document.addEventListener('scroll', on_scroll);
@@ -344,7 +338,7 @@ phoxy._.enjs =
     for (var i = 0; i < chunk_size; i++)
       this.CascadeDesign(ejs, render_tasks[k], last_scout_done(), tag, true);
 
-    var scout_delimeter = phoxy._.render.PrepareAncor("<foreachdesign>");
+    var scout_delimeter = phoxy._.render.PrepareAncor(typeof tag == 'undefined' ? "<foreachdesign>" : tag);
     that.Append(scout_delimeter.html);
   }
   ,
