@@ -157,7 +157,7 @@ class phoxy_return_worker
 
     if (isset($cache['local']) && $cache['local'] != 'no')
     {
-      header('Cache-Control: max-age='.self::ParseCache($cache['local']));
+      header('Cache-Control: private, immutable, max-age='.self::ParseCache($cache['local']));
 
       return;
     }
@@ -165,14 +165,14 @@ class phoxy_return_worker
 
     if (isset($cache['session']) && $cache['session'] != 'no')
     {
-      header('Cache-Control: private, max-age='.self::ParseCache($cache['session']));
+      header('Cache-Control: private, immutable, max-age='.self::ParseCache($cache['session']));
 
       return;
     }
 
     if (isset($cache['global']) && $cache['global'] != 'no')
     {
-      header('Cache-Control: public, max-age='.self::ParseCache($cache['global']));
+      header('Cache-Control: public, immutable, max-age='.self::ParseCache($cache['global']));
 
       return;
     }
