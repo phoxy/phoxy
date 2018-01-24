@@ -60,6 +60,12 @@ var phoxy =
       timeout_seconds: 20,
       check_every_ms: 200,
     },
+    render:
+    {
+      sheduled: false,
+      dom_fps: typeof phoxy.render_dom_fps == 'undefined' ? 10 : phoxy.render_dom_fps,
+      queue: [],
+    },
   },
   _:
   {

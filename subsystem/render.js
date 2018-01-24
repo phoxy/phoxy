@@ -83,7 +83,7 @@ phoxy._.render =
         var _obj = obj;
         var _args = arguments;
 
-        obj.sync_cascade = true;
+        obj.sync_cascade = false;
 
         phoxy._.render.AfterENJSFinished(target, obj, ejs, data, rendered_callback);
 
@@ -108,7 +108,7 @@ phoxy._.render =
 
       function sync_strategy_birth(obj, ejs, data)
       {
-        obj.sync_cascade = false;
+        obj.sync_cascade = true;
         phoxy._.render.AfterENJSFinished(target, obj, ejs, data, rendered_callback);
         phoxy._.render.Replace.call(phoxy, target, obj.html, arguments);
 
@@ -144,6 +144,9 @@ phoxy._.render =
         stack.push(div);
       }
 
+      if (!stack.length) // not even on page
+        return false;
+
       stack[0].id = target;
 
       function multiplied_spawn_empty_cb() {};
@@ -177,6 +180,9 @@ phoxy._.render =
   Replace : function(target, html)
     {
       var that = document.getElementById(target);
+
+      if (that === null)
+        return;
 
       that.insertAdjacentHTML("afterEnd", html);
 
