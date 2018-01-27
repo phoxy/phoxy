@@ -27,22 +27,8 @@ phoxy.api =
         if (typeof phoxy._.prestart.OnAjaxBegin === 'function')
           phoxy._.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
 
-      phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function ajax_callback(text, raw_response)
+      phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function ajax_callback(json, raw_response)
         {
-          function ParseJson(cb)
-          {
-            try
-            {
-              var data = JSON.parse(text);
-            } catch (e)
-            {
-              phoxy.Log(1, url, [response]);
-              throw "Unable to decode JSON";
-            }
-
-            cb(data);
-          }
-
           function ApplyJson(data)
           {
             // http://stackoverflow.com/questions/4215737/convert-array-to-object
@@ -66,15 +52,11 @@ phoxy.api =
             delete phoxy.state.ajax.active[current_ajax_id];
           }
 
-          if (typeof callback !== 'function')
-            return debug_stats_update();
-
-          ParseJson(function json_ready(json)
-          {
+          if (typeof callback === 'function')
             ApplyJson(json);
-            debug_stats_update();
-          });
-        });
+
+          debug_stats_update();
+        }, undefined, true);
     }
   ,
   ConstructURL : function(arr)

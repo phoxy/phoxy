@@ -2,7 +2,7 @@ phoxy._.EarlyStage.ajax = function (url, callback, data, x)
 {
 
 
-  function ajax_Fetch(url, callback, data, x)
+  function ajax_Fetch(url, callback, data, parse_json)
   {
     var fetch_params =
     {
@@ -22,21 +22,31 @@ phoxy._.EarlyStage.ajax = function (url, callback, data, x)
 
     function FetchPromise(response)
     {
-      var promise = response.text()
+      if (!callback)
+        return;
 
+      var promise
+        = parse_json
+        ? response.json()
+        : response.text();
 
+      promise.then(function(text)
+      {
+        callback(text, response);
+      }, function ()
+      {
+        if (!parse_json)
+          throw "Unable to read fetch result";
 
-      if (callback)
-        promise.then(function(text)
-        {
-          callback(text, response);
-        });
+        phoxy.Log(1, url, [text]);
+        throw "Unable to decode JSON";
+      });
     }
 
     window.fetch(url, fetch_params).then(FetchPromise);
   }
 
-  function ajax_XMLHttpRequest(url, callback, data, x)
+  function ajax_XMLHttpRequest(url, callback, data, parse_json)
   {
     try
     {
@@ -48,8 +58,24 @@ phoxy._.EarlyStage.ajax = function (url, callback, data, x)
       x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 
       x.onload = function () {
-        if (callback)
-          callback(x.responseText, x);
+        if (!callback)
+          return;
+
+        var text = x.responseText;
+
+        if (!parse_json)
+          callback(text, x);
+
+        try
+        {
+          var data = JSON.parse(text);
+          callback(data, x);
+        }
+        catch (e)
+        {
+          phoxy.Log(1, url, [text]);
+          throw "Unable to decode JSON";
+        }
       };
 
       x.send(data)
