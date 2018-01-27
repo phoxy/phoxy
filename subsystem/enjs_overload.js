@@ -91,6 +91,9 @@ phoxy._.enjs =
   ,
   update_context_after_cascade_finished: function(context, root)
   {
+    if (!phoxy.state.trigger_rendered_hook)
+      return;
+
     if (root == null || root.tagName.search('CASCADE') == -1)
       return;
 
@@ -226,8 +229,7 @@ phoxy._.enjs =
     var done = 0;
     var scout_count = Math.min(render_tasks.length, phoxy.state.cascade_foreach_scouts);
     var chunk_size = scout_count * phoxy.state.cascade_foreach_chunks || 1;
-    var ancor_visible = true;
-    var render_continue = false;
+    var render_continue = 0;
 
     that.recursive += render_tasks.length;
 
@@ -256,14 +258,14 @@ phoxy._.enjs =
           if (done % chunk_size)
             return; // render with chunks
         }
-        else {
+        else
+        {
           render_task = scout_count;
         }
 
 
         render_continue += render_task;
-        if (ancor_visible)
-          on_scroll();
+        still_present();
         render_continue_func();
       }
     };
@@ -272,48 +274,17 @@ phoxy._.enjs =
       return;
 
     var scout_element;
-    function on_scroll()
+    function still_present()
     {
-      if (!scout_element)
-      {
-        scout_element = document.getElementById(scout_delimeter.id);
+      if (document.getElementById(scout_delimeter.id))
+        return true;
 
-        if (!scout_element)
-        {
-          document.removeEventListener('scroll', on_scroll);
-          k = render_tasks.length * 100;
-          ancor_visible = null;
-        }
-
-        return;
-      }
-
-      if (typeof tag != 'undefined')
-        return;
-
-      var rect = scout_element.getBoundingClientRect();
-      if (!rect.top && !rect.bottom)
-      {
-        scout_element = null;
-        ancor_visible = false;
-        return on_scroll();
-      }
-
-      var preload_coef = 2;
-
-      var isVisible =  rect.top < window.innerHeight * preload_coef;
-
-      ancor_visible = isVisible;
-
-      if (isVisible)
-        render_continue_func();
+      k = render_tasks.length * 100;
+      return false;
     }
 
-    function render_continue_func(force)
+    function render_continue_func()
     {
-      if (!ancor_visible && !force)
-        return;
-
       var render_task = render_continue;
       render_continue = 0;
 
@@ -332,8 +303,6 @@ phoxy._.enjs =
 
       phoxy._.render.Replace.call(phoxy, scout_delimeter.id, render_ancors + scout_delimeter.html);
     }
-
-    var scroll_watch_dog = document.addEventListener('scroll', on_scroll);
 
     for (var i = 0; i < chunk_size; i++)
       this.CascadeDesign(ejs, render_tasks[k], last_scout_done(), tag, true);
