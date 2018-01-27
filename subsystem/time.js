@@ -114,10 +114,13 @@ phoxy._.time =
       || !phoxy.state.render.dom_fps)
       return phoxy._.time.DOMRenderFrame();
 
+    if (typeof window.requestIdleCallback !== 'undefined')
+      return window.requestIdleCallback(phoxy._.time.DOMRenderFrame, { timeout: 1000 / phoxy.state.render.dom_fps });
+
     setTimeout(phoxy._.time.DOMRenderFrame, 1000 / phoxy.state.render.dom_fps);
   }
   ,
-  DOMRenderFrame: function()
+  DOMRenderFrame: function( idle_deadline )
   {
     var queue = phoxy.state.render.queue;
     phoxy.state.render.queue = [];
@@ -125,8 +128,32 @@ phoxy._.time =
     if (!queue.length)
       return phoxy.state.render.sheduled = false;
 
+    var continue_condition =
+      function ()
+      {
+        if (typeof idle_deadline != 'undefined')
+          return !idle_deadline.didTimeout;
+        return true;
+      };
+
+
     for (var k in queue)
-      queue[k]();
+    {
+      try
+      {
+        queue[k]();
+      } catch (e)
+      {
+        console.log(e);
+      }
+
+      if (!continue_condition() && k > queue.length / 4)
+      {
+        var remain = queue.slice(k);
+        phoxy.state.render.queue.push.apply(phoxy.state.render.queue, remain);
+        break;
+      }
+    }
 
     phoxy.state.render.sheduled = true;
     phoxy._.time.SheduleDomRenderFrame();
