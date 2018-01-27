@@ -27,20 +27,24 @@ phoxy.api =
         if (typeof phoxy._.prestart.OnAjaxBegin === 'function')
           phoxy._.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
 
-      phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function ajax_callback(response)
+      phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function ajax_callback(text, raw_response)
         {
-          if (typeof callback === 'function')
+          function ParseJson(cb)
           {
             try
             {
-              var data = JSON.parse(response);
+              var data = JSON.parse(text);
             } catch (e)
             {
               phoxy.Log(1, url, [response]);
               throw "Unable to decode JSON";
             }
 
+            cb(data);
+          }
 
+          function ApplyJson(data)
+          {
             // http://stackoverflow.com/questions/4215737/convert-array-to-object
             if (Array.isArray(data.data))
               if (data.data.length === 0)
@@ -54,10 +58,22 @@ phoxy.api =
             callback.apply(this, params);
           }
 
-          if (!--phoxy.state.ajax.nesting_level)
-            if (typeof phoxy._.prestart.OnAjaxEnd === 'function')
-              phoxy._.prestart.OnAjaxEnd(phoxy.state.ajax.active[current_ajax_id]);
-          delete phoxy.state.ajax.active[current_ajax_id];
+          function debug_stats_update()
+          {
+            if (!--phoxy.state.ajax.nesting_level)
+              if (typeof phoxy._.prestart.OnAjaxEnd === 'function')
+                phoxy._.prestart.OnAjaxEnd(phoxy.state.ajax.active[current_ajax_id]);
+            delete phoxy.state.ajax.active[current_ajax_id];
+          }
+
+          if (typeof callback !== 'function')
+            return debug_stats_update();
+
+          ParseJson(function json_ready(json)
+          {
+            ApplyJson(json);
+            debug_stats_update();
+          });
         });
     }
   ,

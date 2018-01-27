@@ -142,7 +142,8 @@ phoxy._.time =
       try
       {
         queue[k]();
-      } catch (e)
+      }
+      catch (e)
       {
         console.log(e);
       }

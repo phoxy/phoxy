@@ -24,8 +24,13 @@ phoxy._.EarlyStage.ajax = function (url, callback, data, x)
     {
       var promise = response.text()
 
+
+
       if (callback)
-        promise.then(callback);
+        promise.then(function(text)
+        {
+          callback(text, response);
+        });
     }
 
     window.fetch(url, fetch_params).then(FetchPromise);
