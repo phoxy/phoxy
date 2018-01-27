@@ -150,7 +150,7 @@ phoxy._.time =
 
       if (!continue_condition() && k > queue.length / 4)
       {
-        var remain = queue.slice(k);
+        var remain = queue.slice(parseInt(k) + 1);
         phoxy.state.render.queue.push.apply(phoxy.state.render.queue, remain);
         break;
       }
