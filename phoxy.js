@@ -50,6 +50,9 @@ var phoxy =
     async_foreach_request: typeof phoxy.sync_foreach_request == 'undefined' ? 1 : phoxy.sync_foreach_request,
     cascade_foreach_scouts: typeof phoxy.cascade_foreach_scouts == 'undefined' ? 6 : phoxy.cascade_foreach_scouts,
     cascade_foreach_chunks: typeof phoxy.cascade_foreach_chunks == 'undefined' ? 1 : phoxy.cascade_foreach_chunks,
+    check_if_multiply_spawned: typeof phoxy.check_if_multiply_spawned ? false :  phoxy.check_if_multiply_spawned,
+    trigger_rendered_hook: typeof phoxy.trigger_rendered_hook ? false : phoxy.trigger_rendered_hook,
+
     birth:
     {
       active: {},
