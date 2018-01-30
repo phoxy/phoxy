@@ -204,7 +204,7 @@ phoxy._.enjs =
 
     return function()
     {
-      var args = arguments;
+      var args = [].slice.call(arguments);
       args.unshift(k);
       return callback.apply(this, args);
     }
