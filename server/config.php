@@ -19,6 +19,7 @@ function phoxy_default_conf()
     "cache_session" => null,
     "cache_local" => null,
     "autostart" => true,
+    "autoload" => true,
     "api_csrf_prevent" => true,
     "sync_cascade" => false,
     "buffered_output" => true,
