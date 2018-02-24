@@ -7,8 +7,8 @@
   "include-path": ["/../"],
   "require" :
   {
-    "php": "~5.5 || ~7.0",
-    "phoxy/enjs": "~2.2.1"
+    "php": "~7.0",
+    "phoxy/enjs": "~2.3"
   },
   "suggest" :
   {
