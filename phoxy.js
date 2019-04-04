@@ -48,6 +48,11 @@ var phoxy =
     sticky_cascade_strategy: typeof phoxy.sticky_cascade_strategy === 'undefined' ? 1 : phoxy.sticky_cascade_strategy,
     sync_foreach_design: typeof phoxy.sync_foreach_design == 'undefined' ? 1 : phoxy.sync_foreach_design,
     async_foreach_request: typeof phoxy.sync_foreach_request == 'undefined' ? 1 : phoxy.sync_foreach_request,
+    cascade_foreach_scouts: typeof phoxy.cascade_foreach_scouts == 'undefined' ? 6 : phoxy.cascade_foreach_scouts,
+    cascade_foreach_chunks: typeof phoxy.cascade_foreach_chunks == 'undefined' ? 1 : phoxy.cascade_foreach_chunks,
+    check_if_multiply_spawned: typeof phoxy.check_if_multiply_spawned ? false :  phoxy.check_if_multiply_spawned,
+    trigger_rendered_hook: typeof phoxy.trigger_rendered_hook ? false : phoxy.trigger_rendered_hook,
+
     birth:
     {
       active: {},
@@ -57,6 +62,12 @@ var phoxy =
     {
       timeout_seconds: 20,
       check_every_ms: 200,
+    },
+    render:
+    {
+      sheduled: false,
+      dom_fps: typeof phoxy.render_dom_fps == 'undefined' ? 10 : phoxy.render_dom_fps,
+      queue: [],
     },
   },
   _:

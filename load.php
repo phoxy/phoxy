@@ -1,4 +1,5 @@
 <?php namespace phoxy;
+
 header('Lain: Hot');
 if (strnatcmp(phpversion(),'5.5') < 0)
   exit("PHP 5.5 or newer is required");
@@ -6,8 +7,8 @@ if (strnatcmp(phpversion(),'5.5') < 0)
 include('server/config.php');
 include('server/include.php');
 
-LoadModule('phoxy/server', 'phoxy');
+if (\phoxy_conf()['autoload'])
+  LoadModule('phoxy/server', 'phoxy');
 
-
-if (\phoxy::Config()['autostart'])
+if (\phoxy_conf()['autostart'])
   \phoxy::Start();

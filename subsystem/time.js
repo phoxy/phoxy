@@ -72,7 +72,13 @@ phoxy._.time =
         return phoxy._.render.Div(dom_element_id) !== null;
       }
 
-      phoxy._.time.DefaultWaitBehaviour(IsDivAppeared, callback, timeout, call_delay);
+      function ready_for_dom_frame()
+      {
+        phoxy.state.render.queue.push(callback.bind(this, arguments));
+        phoxy._.time.SheduleDomRenderFrame();
+      }
+
+      phoxy._.time.DefaultWaitBehaviour(IsDivAppeared, ready_for_dom_frame, timeout, call_delay);
     }
   ,
   Disappeared : function(dom_element_id, callback, timeout, call_delay)
@@ -82,7 +88,13 @@ phoxy._.time =
         return phoxy._.render.Div(dom_element_id) === null;
       }
 
-      phoxy._.time.DefaultWaitBehaviour(IsDivDisappeared, callback, timeout, call_delay);
+      function ready_for_dom_frame()
+      {
+        phoxy.state.render.queue.push(callback.bind(this, arguments));
+        phoxy._.time.SheduleDomRenderFrame();
+      }
+
+      phoxy._.time.DefaultWaitBehaviour(IsDivDisappeared, ready_for_dom_frame, timeout, call_delay);
     }
   ,
   DefaultWaitBehaviour : function(check_function, callback, timeout, call_delay)
@@ -95,4 +107,56 @@ phoxy._.time =
         phoxy.Defer(callback, call_delay);
       }, timeout);
     }
+  ,
+  SheduleDomRenderFrame: function()
+  {
+    if (!phoxy.state.render.sheduled
+      || !phoxy.state.render.dom_fps)
+      return phoxy._.time.DOMRenderFrame();
+
+    if (typeof window.requestIdleCallback !== 'undefined')
+      return window.requestIdleCallback(phoxy._.time.DOMRenderFrame, { timeout: 1000 / phoxy.state.render.dom_fps });
+
+    setTimeout(phoxy._.time.DOMRenderFrame, 1000 / phoxy.state.render.dom_fps);
+  }
+  ,
+  DOMRenderFrame: function( idle_deadline )
+  {
+    var queue = phoxy.state.render.queue;
+    phoxy.state.render.queue = [];
+
+    if (!queue.length)
+      return phoxy.state.render.sheduled = false;
+
+    var continue_condition =
+      function ()
+      {
+        if (typeof idle_deadline != 'undefined')
+          return !idle_deadline.didTimeout;
+        return true;
+      };
+
+
+    for (var k in queue)
+    {
+      try
+      {
+        queue[k]();
+      }
+      catch (e)
+      {
+        console.log(e);
+      }
+
+      if (!continue_condition())
+      {
+        var remain = queue.slice(parseInt(k) + 1);
+        phoxy.state.render.queue.push.apply(phoxy.state.render.queue, remain);
+        break;
+      }
+    }
+
+    phoxy.state.render.sheduled = true;
+    phoxy._.time.SheduleDomRenderFrame();
+  }
 }

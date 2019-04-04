@@ -27,20 +27,10 @@ phoxy.api =
         if (typeof phoxy._.prestart.OnAjaxBegin === 'function')
           phoxy._.prestart.OnAjaxBegin(phoxy.state.ajax.active[current_ajax_id]);
 
-      phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function ajax_callback(response)
+      phoxy._.api.ajax(phoxy.Config()['api_dir'] + "/" + url, function ajax_callback(json, raw_response)
         {
-          if (typeof callback === 'function')
+          function ApplyJson(data)
           {
-            try
-            {
-              var data = JSON.parse(response);
-            } catch (e)
-            {
-              phoxy.Log(1, url, [response]);
-              throw "Unable to decode JSON";
-            }
-
-
             // http://stackoverflow.com/questions/4215737/convert-array-to-object
             if (Array.isArray(data.data))
               if (data.data.length === 0)
@@ -54,11 +44,19 @@ phoxy.api =
             callback.apply(this, params);
           }
 
-          if (!--phoxy.state.ajax.nesting_level)
-            if (typeof phoxy._.prestart.OnAjaxEnd === 'function')
-              phoxy._.prestart.OnAjaxEnd(phoxy.state.ajax.active[current_ajax_id]);
-          delete phoxy.state.ajax.active[current_ajax_id];
-        });
+          function debug_stats_update()
+          {
+            if (!--phoxy.state.ajax.nesting_level)
+              if (typeof phoxy._.prestart.OnAjaxEnd === 'function')
+                phoxy._.prestart.OnAjaxEnd(phoxy.state.ajax.active[current_ajax_id]);
+            delete phoxy.state.ajax.active[current_ajax_id];
+          }
+
+          if (typeof callback === 'function')
+            ApplyJson(json);
+
+          debug_stats_update();
+        }, undefined, true);
     }
   ,
   ConstructURL : function(arr)
@@ -154,11 +152,11 @@ phoxy._.api =
         return str.replace(regexp,
           function(matched)
           {
-            return escape(matched);
+            return encodeURIComponent(matched);
           });
       }
 
-      var escaped_send_string = EscapeReserved(send_string, "()?#\\");
+      var escaped_send_string = EscapeReserved(send_string, "+()?#\\");
       return encodeURI(escaped_send_string);
     }
   ,

@@ -6,10 +6,17 @@ class phoxy_return_worker
   private $prepared;
   public $hooks = [];
   public static $add_hook_cb;
-  private static $minimal_cache = [];
+  public static $minimal_cache = [];
 
   public function __construct( $obj )
   {
+    if (is_string($obj))
+      $obj =
+      [
+        "error" => "phoxy_return_worker received string instead of object",
+        "data" => $obj,
+      ];
+
     $this->obj = $obj;
 
     $func_list =
@@ -146,17 +153,26 @@ class phoxy_return_worker
   {
     $cache = $this->obj['cache'];
 
-    // If both session and global set, privacy has a priority
+    var_dump($cache);
+
+    if (isset($cache['local']) && $cache['local'] != 'no')
+    {
+      header('Cache-Control: private, immutable, max-age='.self::ParseCache($cache['local']));
+
+      return;
+    }
+
+
     if (isset($cache['session']) && $cache['session'] != 'no')
     {
-      header('Cache-Control: private, max-age='.self::ParseCache($cache['session']));
+      header('Cache-Control: private, immutable, max-age='.self::ParseCache($cache['session']));
 
       return;
     }
 
     if (isset($cache['global']) && $cache['global'] != 'no')
     {
-      header('Cache-Control: public, max-age='.self::ParseCache($cache['global']));
+      header('Cache-Control: public, immutable, max-age='.self::ParseCache($cache['global']));
 
       return;
     }
@@ -180,7 +196,6 @@ class phoxy_return_worker
       return -1;
 
     $arr = preg_split('/([0-9]+)([wdhms]?)/', $str, -1, PREG_SPLIT_DELIM_CAPTURE);
-
     phoxy_protected_assert(count($arr) > 1, "Cache string parse error");
 
     $base = 0;

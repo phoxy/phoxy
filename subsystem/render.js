@@ -71,11 +71,7 @@ phoxy._.render =
     { // AsyncRender strategy: for production
       function async_strategy_wait_for_apperance(obj, ejs, data)
       {
-        phoxy._.render.CheckIfMultiplySpawned(target, ejs, data);
-        phoxy._.render.Replace.call(phoxy, target, obj.html, arguments);
-
-        // Flag ENJS that anchor appeared
-        obj.try_discover_dom();
+        phoxy._.render.FinalizeDomAncor(target, obj, ejs, data, rendered_callback);
       }
 
       function async_strategy_birth(obj, ejs, data)
@@ -83,7 +79,7 @@ phoxy._.render =
         var _obj = obj;
         var _args = arguments;
 
-        obj.sync_cascade = true;
+        obj.sync_cascade = false;
 
         phoxy._.render.AfterENJSFinished(target, obj, ejs, data, rendered_callback);
 
@@ -108,16 +104,28 @@ phoxy._.render =
 
       function sync_strategy_birth(obj, ejs, data)
       {
-        obj.sync_cascade = false;
-        phoxy._.render.AfterENJSFinished(target, obj, ejs, data, rendered_callback);
-        phoxy._.render.Replace.call(phoxy, target, obj.html, arguments);
-
-        // Flag ENJS that anchor appeared
-        obj.try_discover_dom();
+        obj.sync_cascade = true;
+        phoxy._.render.FinalizeDomAncor(target, obj, ejs, data, rendered_callback);
       }
 
       phoxy._.time.Appeared(target, sync_strategy_wait_for_apperance);
     }
+  ,
+  FinalizeDomAncor: function(target, obj, ejs, data, rendered_callback)
+  {
+    var args = arguments;
+    function actual_work()
+    {
+      phoxy._.render.AfterENJSFinished(target, obj, ejs, data, rendered_callback);
+      phoxy._.render.Replace.call(phoxy, target, obj.html, args);
+
+      obj.try_discover_dom();
+    }
+
+    if (typeof window.requestAnimationFrame != 'undefined')
+      return window.requestAnimationFrame(actual_work);
+    actual_work();
+  }
   ,
   AppendBirthToState : function(target, ejs, data, cb, raw)
     {
@@ -135,6 +143,9 @@ phoxy._.render =
   ,
   CheckIfMultiplySpawned : function(target, ejs, data)
     {
+      if (!phoxy.state.check_if_multiply_spawned)
+        return false;
+
       var stack = [];
       var div;
 
@@ -143,6 +154,9 @@ phoxy._.render =
         div.id = phoxy._.internal.GenerateUniqueID();
         stack.push(div);
       }
+
+      if (!stack.length) // not even on page
+        return false;
 
       stack[0].id = target;
 
@@ -169,6 +183,9 @@ phoxy._.render =
   ,
   TriggerRenderedEvent : function(target)
     {
+      if (!phoxy.state.trigger_rendered_hook)
+        return;
+
       var event_name = 'phoxy.rendered.alpha';
 
       phoxy._.internal.DispatchEvent(target, event_name);
@@ -177,6 +194,10 @@ phoxy._.render =
   Replace : function(target, html)
     {
       var that = document.getElementById(target);
+
+      if (that === null)
+        return;
+
       that.insertAdjacentHTML("afterEnd", html);
 
       phoxy._.render.TriggerRenderedEvent(target);

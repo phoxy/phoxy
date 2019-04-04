@@ -13,6 +13,9 @@ class phoxy_protected_call_error extends Exception
   public $result;
   public function __construct( $result )
   {
+    if (is_string($result))
+      $result = ["error" => $result];
+
     $this->result = $result;
   }
 }
@@ -21,8 +24,6 @@ function phoxy_protected_assert( $cond, $message, $debug_message = null )
 {
   if ($cond)
     return true;
-  if (is_string($message))
-    $message = ["error" => $message];
 
   throw new phoxy_protected_call_error($message);
 }
@@ -53,11 +54,16 @@ class phoxy_sys_api
     $ret = $this->Call($name, $arguments);
 
     if (!$this->skip_post_process && empty($ret['data']))
-      if ($this->Reflect($name)->isProtected())
-        throw new phoxy_protected_call_error("Protected method executed with phoxy::Load, but no _data_ were found. Check return values of {$name}");
-      else
-        throw new phoxy_protected_call_error("Probably internal inconsistence inside phoxy, please bug report. Failed to detect data of {$name}");
-
+      throw new phoxy_protected_call_error(
+        (
+          $this->Reflect($name)->isProtected()
+          ?
+            "Protected method executed with phoxy::Load, but no _data_ were found. "
+          :
+            "Probably internal inconsistence inside phoxy, please bug report. Unable to detect data of "
+        ) . "{$name} in "
+          . $this->Reflect($name)->getFileName());
+          
 
     // raw calls do not affects restrictions
     if ($this->ShouldSkipPostProcess($name))
@@ -172,20 +178,18 @@ class api
 
   private function Call( $name, $arguments )
   {
-    if (!method_exists($this, $name))
-      return
+    phoxy_protected_assert(method_exists($this, $name),
       [
         "error" => "Unexpected RPC call (Module handler not found)",
         "description" => htmlentities($name),
-      ];
+      ]);
 
     $reflection = new ReflectionMethod($this, $name);
-    if (!$reflection->isProtected())
-      return
+    phoxy_protected_assert($reflection->isProtected(),
       [
         "error" => "Security violation (Module handler not protected)",
         "description" => htmlentities($name),
-      ];
+      ]);
 
     $ret = call_user_func_array([$this, $name], $arguments);
 
