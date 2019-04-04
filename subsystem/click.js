@@ -1,21 +1,19 @@
 phoxy.click =
-{
-  _: {}
-};
+  {
+    _: {}
+  };
 
 phoxy._.click =
-{
-  InitClickHook: function()
-    {
+  {
+    InitClickHook: function () {
       document
         .querySelector('body')
         .addEventListener('click', phoxy._.click.OnClick, false);
 
       window.onpopstate = phoxy._.click.OnPopState;
     }
-  ,
-  IsURLSupported: function(url)
-    {
+    ,
+    IsURLSupported: function (url) {
       // Returns false for default browser action
       // Returns true on phoxy handling
 
@@ -36,9 +34,8 @@ phoxy._.click =
 
       return true;
     }
-  ,
-  PhoxyAction: function(url, skip_history_push, cb)
-    {
+    ,
+    PhoxyAction: function (url, skip_history_push, cb) {
       if (url[0] === '/')
         url = url.substring(1);
 
@@ -47,15 +44,13 @@ phoxy._.click =
       else
         phoxy.MenuCall(url, cb);
     }
-  ,
-  OnClick: function (event)
-    {
+    ,
+    OnClick: function (event) {
       if (event.ctrlKey)
         return; // Ctrl + Click = open in new tab
 
       var target = event.target;
-      while (true)
-      {
+      while (true) {
         if (target === null)
           return;
         if (target.nodeName === 'A')
@@ -71,7 +66,7 @@ phoxy._.click =
       if (target.hasAttribute('not-phoxy')
         || (!target.hasAttribute('force-phoxy')
           && !phoxy._.click.IsURLSupported(path))
-         )
+      )
         return;
 
 
@@ -81,9 +76,8 @@ phoxy._.click =
       phoxy._.click.PhoxyAction(path, false);
       event.preventDefault();
     }
-  ,
-  OnPopState: function(e)
-    {
+    ,
+    OnPopState: function (e) {
       var state = e.state;
       var path = e.target.location.pathname;
       var hash = e.target.location.hash;
@@ -94,31 +88,30 @@ phoxy._.click =
       if (phoxy._.click.IsURLSupported(path))
         phoxy._.click.PhoxyAction(path, true, restore_state);
     }
-  ,
-  StoreScroll: function()
-  {
-    // save current scroll position
-    var state_obj =
-    {
-      scroll: document.documentElement.scrollTop || document.body.scrollTop,
-      height: document.documentElement.scrollHeight || document.body.scrollHeight,
-    };
+    ,
+    StoreScroll: function () {
+      // save current scroll position
+      var state_obj =
+      {
+        scroll: document.documentElement.scrollTop || document.body.scrollTop,
+        height: document.documentElement.scrollHeight || document.body.scrollHeight,
+      };
 
-    history.replaceState(state_obj, document.title, document.location);
-  }
-  ,
-  RestoreScroll: function(pos)
-  {
-    document.documentElement.scrollTop = document.body.scrollTop = pos;
-  }
-  ,
-  RestoreState: function(state)
-  {
-    var height = document.documentElement.scrollHeight || document.body.scrollHeight;
-    if (height < state.height * 0.9)
-      return phoxy.Defer(arguments.callee.bind(this, state), 100);
+      history.replaceState(state_obj, document.title, document.location);
+    }
+    ,
+    RestoreScroll: function (pos) {
+      document.documentElement.scrollTop = document.body.scrollTop = pos;
+    }
+    ,
+    RestoreState: function (state, cb) {
+      var height = document.documentElement.scrollHeight || document.body.scrollHeight;
+      if (height < state.height * 0.9)
+        return phoxy.Defer(arguments.callee.bind(this, state), 100);
 
-    phoxy._.click.RestoreScroll(state.scroll);
-  }
-  ,
-};
+      phoxy._.click.RestoreScroll(state.scroll);
+      if (cb)
+        cb();
+    }
+    ,
+  };
